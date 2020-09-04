@@ -78,7 +78,7 @@
     "svelte": "^3.24",
     "svelte-awesome": "^2.2.1",
     "svelte-notifications": "^0.9.8",
-    "svelte-preprocess": "^3.2.0",
+    "svelte-preprocess": "^4",
     "svelte-preprocess-postcss": "^1.1.1",
     "svelte-select": "^3.1.2",
     "tailwindcss": "^1.2.0",

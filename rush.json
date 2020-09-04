@@ -390,6 +390,10 @@
       "projectFolder": "apps/stakes"
     },
     {
+      "packageName": "records",
+      "projectFolder": "apps/records"
+    },
+    {
       "packageName": "trading-data",
       "projectFolder": "libs/trading-data"
     },
@@ -400,6 +404,10 @@
     {
       "packageName": "options-analysis",
       "projectFolder": "libs/options-analysis"
+    },
+    {
+      "packageName": "tm-automation",
+      "projectFolder": "libs/tm-automation"
     }
     // {
     //   /**

@@ -24,7 +24,7 @@ export async function load() : Promise<DbData> {
   };
 }
 
-const column_set = new pgp.helpers.ColumnSet([
+const positionColumns = new pgp.helpers.ColumnSet([
     'id',
     { name: 'tags', cast: 'int[]'},
     'symbol',
@@ -44,10 +44,10 @@ const column_set = new pgp.helpers.ColumnSet([
   ],
 );
 
-let update_position_fields = column_set.columns.map((x) => x.name).filter((x) => x !== 'id')
+let update_position_fields = positionColumns.columns.map((x) => x.name).filter((x) => x !== 'id')
 
 export function write_positions(positions : IPosition[]) {
-  let insert = pgp.helpers.insert(positions, column_set, config.postgres.tables.positions);
+  let insert = pgp.helpers.insert(positions, positionColumns, config.postgres.tables.positions);
   let update = _.map(update_position_fields, (f) => `${pgp.as.name(f)}=EXCLUDED.${pgp.as.name(f)}`).join(', ');
   let query = `${insert}
     ON CONFLICT (id) DO UPDATE SET ${update}`;
@@ -55,3 +55,14 @@ export function write_positions(positions : IPosition[]) {
   debug(query);
   return db.query(query);
 }
+
+
+export const tradeColumns = new pgp.helpers.ColumnSet([
+  { name: 'id', cnd: true },
+  'position',
+  { name: 'legs', mod: ':json' },
+  { name: 'tags', mod: ':json' },
+  'gross',
+  'traded',
+  'commissions',
+]);
