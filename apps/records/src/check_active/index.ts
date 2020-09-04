@@ -129,7 +129,7 @@ async function leg_prices(leg_set : Set<string>) {
   for(let i = 0; i < legs.length; i += LEGS_PER_REQUEST) {
     let theseSymbols = legs.slice(i, i + LEGS_PER_REQUEST);
     debug("Getting quotes", theseSymbols);
-    let quotes = await api.get_quotes(theseSymbols);
+    let quotes = await api.getQuotes(theseSymbols);
     debug("Got quotes", _.keys(quotes));
     _.extend(results, quotes);
   }

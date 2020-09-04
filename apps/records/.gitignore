@@ -61,3 +61,4 @@ typings/
 .vscode
 dist
 tda_auth.json
+tos-trades.json

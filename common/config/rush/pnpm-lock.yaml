@@ -34,7 +34,6 @@ dependencies:
   '@types/inquirer': 0.0.41
   '@types/jest': 24.9.1
   '@types/mocha': 5.2.7
-  '@types/puppeteer': 1.20.6
   '@types/request': 2.48.5
   '@types/request-promise-native': 1.0.17
   '@types/split2': 2.1.6
@@ -89,7 +88,7 @@ dependencies:
   svelte: 3.24.1
   svelte-awesome: 2.3.0
   svelte-notifications: 0.9.9
-  svelte-preprocess: 4.2.1_cd79a35b1bb3ca48f7fd7ac8160a126d
+  svelte-preprocess: 4.2.1_postcss@7.0.32+svelte@3.24.1
   svelte-preprocess-postcss: 1.1.1_postcss@7.0.32
   svelte-select: 3.11.1
   syncthrough: 0.5.0
@@ -1773,10 +1772,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-pYC/tp6UctD/laukjIoO48Owmf4OacwEKaDErnlarkatott0j3B5wp9q2M0zn/XgZUpebuFeKMX4UFf578/+Vw==
-  /@types/node/12.12.55:
-    dev: false
-    resolution:
-      integrity: sha512-Vd6xQUVvPCTm7Nx1N7XHcpX6t047ltm7TgcsOr4gFHjeYgwZevo+V7I1lfzHnj5BT5frztZ42+RTG4MwYw63dw==
   /@types/node/14.6.4:
     dev: false
     resolution:
@@ -8904,7 +8899,7 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-iagQGcKgCwlSKcKJ2GA3SznjWKwz4Q4yAkYdVMvgE8hQ+vTlvjjRcpCo/9P7u+otr5DLG16PPMwgVQZ3h51cKQ==
-  /svelte-preprocess/4.2.1_cd79a35b1bb3ca48f7fd7ac8160a126d:
+  /svelte-preprocess/4.2.1_postcss@7.0.32+svelte@3.24.1:
     dependencies:
       '@types/pug': 2.0.4
       '@types/sass': 1.16.0
@@ -8912,7 +8907,6 @@ packages:
       postcss: 7.0.32
       strip-indent: 3.0.0
       svelte: 3.24.1
-      typescript: 4.0.2
     dev: false
     engines:
       node: '>= 9.11.2'
@@ -9797,7 +9791,7 @@ packages:
       '@types/inquirer': 0.0.41
       '@types/lodash': 4.14.161
       '@types/mocha': 5.2.7
-      '@types/node': 12.12.55
+      '@types/node': 14.6.4
       '@types/request': 2.48.5
       '@types/request-promise-native': 1.0.17
       '@types/split2': 2.1.6
@@ -9826,7 +9820,7 @@ packages:
     dev: false
     name: '@rush-temp/records'
     resolution:
-      integrity: sha512-AU/X8ww9iqbtcUrNLTn6ErHCPTxihQsIE9q8Zadwifc4f9Xt52b119M8/Cu7PEoVpfx+Fk+VoyYOMV89OUAOpg==
+      integrity: sha512-nYQ9iY15DdZXi9IfF4T6M22f7RiN3qTk4S+JfCVnxJVxkxpAYQnv9hE/rQ07L1Und0WWc4BBHggoTdDvHxag4g==
       tarball: 'file:projects/records.tgz'
     version: 0.0.0
   'file:projects/stakes.tgz':
@@ -9939,7 +9933,7 @@ packages:
     dev: false
     name: '@rush-temp/tm-automation'
     resolution:
-      integrity: sha512-W1+wjSV26r37TQq+a9NyWeqcbLojTjsQgPSLJcFWLgrcAIGJhdCh3ybY34JPrJQKGGL6Ewy/OuoL4rZIXXPWFA==
+      integrity: sha512-+9wSklcydPByxG/guQBqu+hvopS0SR1HcfyREn0cLelKNPTMIce3RuIULxqUY6hIY/FJ60oMSa3sX7rStsfE7Q==
       tarball: 'file:projects/tm-automation.tgz'
     version: 0.0.0
   'file:projects/trading-data.tgz':
@@ -10046,7 +10040,6 @@ specifiers:
   '@types/inquirer': ^0.0.41
   '@types/jest': ^24.0.23
   '@types/mocha': ^5.2.0
-  '@types/puppeteer': ^1.3.2
   '@types/request': ^2.47.0
   '@types/request-promise-native': ^1.0.14
   '@types/split2': ^2.1.6

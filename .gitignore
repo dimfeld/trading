@@ -63,3 +63,7 @@ common/deploy/
 common/temp/
 common/autoinstallers/*/.npmrc
 **/.rush/temp/
+tda_auth.json
+alpaca_auth.json
+alpaca_auth_paper.json
+

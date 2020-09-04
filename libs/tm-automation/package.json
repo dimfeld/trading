@@ -6,6 +6,9 @@
   "repository": "https://github.com/dimfeld/tm_automation",
   "author": "Daniel Imfeld",
   "license": "Apache-2.0",
+  "scripts": {
+    "build": "rm -rf dist && tsc"
+  },
   "dependencies": {
     "csv-stringify": "^3.1.1",
     "debug": "^3.1.0",
@@ -15,6 +18,7 @@
   "devDependencies": {
     "@types/csv-stringify": "^1.4.2",
     "@types/debug": "0.0.30",
-    "@types/lodash": "^4.14.109"
+    "@types/lodash": "^4.14.109",
+    "typescript": "~4.0.2"
   }
 }

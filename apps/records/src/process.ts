@@ -3,7 +3,7 @@ import * as db from './db';
 import * as bb from 'bluebird';
 import * as debug_factory from 'debug';
 import { ITrade, IPosition, IOptionLeg, TradeAndPosition, IStrategies, PositionChange, UnderlyingWithTrade, TradeMatches, DbData } from './types';
-import { PositionSimulator, Change, MatchingPositionScore, match_positions, optionInfoFromSymbol } from 'options-analysis';
+import { PositionSimulator, Change, MatchingPositionScore, matchPositions, optionInfoFromSymbol } from 'options-analysis';
 import { position_for_unmatched_trade, print_trade_description } from './ui';
 import { recalculate } from './position';
 
@@ -31,7 +31,7 @@ export async function match_trades(trades : UnderlyingWithTrade[], db_data : DbD
 
     let trade = t.trade;
     debug("Matching", trade, symbol_positions);
-    let matches = match_positions(trade, symbol_positions);
+    let matches = matchPositions(trade, symbol_positions);
 
     let position = await position_for_unmatched_trade({ matches, ...t }, symbol_positions, db_data);
     if(!position) {
