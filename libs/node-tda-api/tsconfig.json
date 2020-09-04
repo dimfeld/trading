@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "outDir": "./lib",
+        "target": "es2017",
+        "sourceMap": true,
+        "alwaysStrict": true,
+        "module": "commonjs",
+        "declaration": true
+    },
+    "include": [
+        "./src/**/*.ts"
+    ],
+    "exclude": [
+        "./src/**/*.spec.ts"
+    ]
+}

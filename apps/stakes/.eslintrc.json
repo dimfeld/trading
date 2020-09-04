@@ -1,0 +1,37 @@
+{
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 8,
+    "sourceType": "module",
+    "ecmaFeatures": {
+        "experimentalObjectRestSpread": true
+    }
+  },
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "rules": {
+    "no-undef": "error",
+    "semi": "warn",
+    "no-unused-vars": ["warn", {"args": "none"}],
+    "strict": "error",
+    "eqeqeq": "warn",
+    "curly": ["warn", "multi-line"],
+    "no-const-assign": "error",
+    "no-global-assign": "error",
+    "no-unsafe-negation": "error",
+    "block-scoped-var": "warn",
+    "dot-notation": "warn",
+    "dot-location": ["warn", "property"],
+    "no-return-await": "warn",
+    "yoda": "warn",
+    "no-use-before-define": ["error", {"functions": false, "classes": false}],
+    "comma-spacing": ["warn", {"before": false, "after": true}],
+    "indent": ["warn", 2],
+    "no-mixed-spaces-and-tabs": "error",
+    "no-trailing-spaces": "warn"
+  },
+  "globals": {
+  }
+}

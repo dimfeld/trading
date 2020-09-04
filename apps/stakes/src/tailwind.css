@@ -1,0 +1,11 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.flex-right {
+  margin-left: auto !important;
+}
+
+.flex-bottom {
+  margin-bottom: auto !important;
+}

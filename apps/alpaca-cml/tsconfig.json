@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "ES2019",
+    "sourceMap": true,
+    "module": "commonjs",
+    "alwaysStrict": true,
+    "allowJs": true,
+    "incremental": true
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/__tests__",
+    "src/mappings/*"
+  ]
+}

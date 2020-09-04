@@ -1,0 +1,27 @@
+{
+  "name": "alpaca-cml",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "open": "node dist/opening.js",
+    "close": "node dist/closing.js"
+  },
+  "dependencies": {
+    "@alpacahq/alpaca-trade-api": "^1.4.1",
+    "chalk": "^4.1.0",
+    "date-fns": "^2.16.1",
+    "got": "^11.5.2",
+    "hyperid": "^2.0.5",
+    "just-unique": "^3.2.0",
+    "pg-promise": "^10.6.1",
+    "sorters": "^0.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^14.6.2",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2"
+  }
+}
