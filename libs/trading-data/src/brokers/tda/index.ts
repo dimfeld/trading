@@ -5,6 +5,7 @@ import * as debugMod from 'debug';
 
 import { OptionChain, ExpirationDateMap } from './option_chain';
 import { Quote } from './quote';
+import { Broker, Account } from '../broker_interface';
 
 export * from './quote';
 export * from './option_chain';
@@ -13,13 +14,13 @@ const debug = debugMod('tda_api');
 
 const HOST = 'https://api.tdameritrade.com';
 
-const indexes = ['SPX', 'RUT', 'NDX']
+const indexes = ['SPX', 'RUT', 'NDX'];
 
-const symbolToTda : _.Dictionary<string> = {};
-const tdaToSymbol : _.Dictionary<string> = {};
-for(let sym of indexes) {
+const symbolToTda: _.Dictionary<string> = {};
+const tdaToSymbol: _.Dictionary<string> = {};
+for (let sym of indexes) {
   let tda = `$${sym}.X`;
-  symbolToTda[sym]  = tda;
+  symbolToTda[sym] = tda;
   tdaToSymbol[tda] = sym;
 }
 
@@ -68,7 +69,7 @@ export function occToTdaSymbol(occ: string) {
 
 export function tdaToOccSymbol(tda: string) {
   let occ = tdaToSymbol[tda];
-  if(occ) {
+  if (occ) {
     return occ;
   }
 
@@ -122,7 +123,7 @@ export interface AuthData {
   refresh_token: string;
 }
 
-export class Api {
+export class Api implements Broker {
   auth: AuthData;
   access_token: string;
   accountId: string;
@@ -133,7 +134,7 @@ export class Api {
     this.autorefresh = autorefresh;
   }
 
-  async refresh() {
+  async refreshAuth() {
     // Refresh the access token.
     try {
       let body = await got(`${HOST}/v1/oauth2/token`, {
@@ -150,12 +151,12 @@ export class Api {
       this.access_token = result.access_token;
 
       if (this.autorefresh) {
-        setTimeout(() => this.refresh(), (result.expires_in / 2) * 1000);
+        setTimeout(() => this.refreshAuth(), (result.expires_in / 2) * 1000);
       }
     } catch (e) {
       console.error(e);
       if (this.autorefresh) {
-        setTimeout(() => this.refresh(), 60000);
+        setTimeout(() => this.refreshAuth(), 60000);
       } else {
         throw e;
       }
@@ -163,10 +164,10 @@ export class Api {
   }
 
   async init() {
-    await this.refresh();
+    await this.refreshAuth();
 
-    let accountData = await this.getMainAccount();
-    this.accountId = accountData.accountId;
+    let accountData = await this.getAccount();
+    this.accountId = accountData.id;
   }
 
   private request(url: string, qs?) {
@@ -204,10 +205,14 @@ export class Api {
       qs.fromDate = options.from_date.toISOString();
     }
 
-    let result : OptionChain = await this.request(url, qs);
+    let result: OptionChain = await this.request(url, qs);
 
-    function convertExpDateMapSymbols(expDateMap : ExpirationDateMap|undefined) {
-      if(!expDateMap) { return; }
+    function convertExpDateMapSymbols(
+      expDateMap: ExpirationDateMap | undefined
+    ) {
+      if (!expDateMap) {
+        return;
+      }
       _.each(expDateMap || {}, (strikes) => {
         _.each(strikes, (strike) => {
           _.each(strike, (contract) => {
@@ -257,9 +262,19 @@ export class Api {
     return this.request(`${HOST}/v1/accounts`);
   }
 
-  async getMainAccount() {
+  async getAccount(): Promise<Account> {
     let accounts = await this.getAccounts();
-    return _.values(accounts[0])[0];
+    let data = Object.values(accounts[0])[0];
+    return {
+      id: data.accountId,
+      buyingPower: data.currentBalances.buyingPower,
+      cash: data.currentBalances.cashBalance,
+      dayTradeCount: data.roundTrips,
+      dayTradesRestricted: data.currentBalances.daytradingBuyingPower <= 0,
+      isDayTrader: data.isDayTrader,
+      portfolioValue: data.equity,
+      maintenanceMargin: data.currentBalances.maintenanceRequirement,
+    };
   }
 
   async getTransactionHistory(options: GetTransactionsOptions = {}) {
