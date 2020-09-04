@@ -32,6 +32,7 @@
     "options-analysis": "~1.6.2",
     "pg-promise": "^8.4.4",
     "tda-api": "~2.0.4",
-    "sorters": "~0.0.3"
+    "sorters": "~0.0.3",
+    "@alpacahq/alpaca-trade-api": "~1.4.1"
   }
 }
