@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 import { alpaca, pgp, db, tradeColumns, positionColumns } from './services';
-import { Position } from './alpaca_types';
+import { Position } from 'types';
 import * as uniq from 'just-unique';
 import sorter from 'sorters';
 import * as hyperidMod from 'hyperid';

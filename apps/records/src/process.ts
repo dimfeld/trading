@@ -1,11 +1,24 @@
 import * as _ from 'lodash';
-import * as db from './db';
 import * as bb from 'bluebird';
 import * as debug_factory from 'debug';
-import { ITrade, IPosition, IOptionLeg, TradeAndPosition, IStrategies, PositionChange, UnderlyingWithTrade, TradeMatches, DbData } from './types';
-import { PositionSimulator, Change, MatchingPositionScore, matchPositions, optionInfoFromSymbol } from 'options-analysis';
-import { position_for_unmatched_trade, print_trade_description } from './ui';
+import { DbTrade, DbPosition, DbOptionLeg, DbStrategies, DbData } from 'types';
+
+import {
+  PositionSimulator,
+  Change,
+  MatchingPositionScore,
+  matchPositions,
+  optionInfoFromSymbol,
+} from 'options-analysis';
+import {
+  PositionChange,
+  TradeAndPosition,
+  UnderlyingWithTrade,
+  position_for_unmatched_trade,
+  print_trade_description,
+} from './ui';
 import { recalculate } from './position';
+import { writePositions } from 'trading-data';
 
 const debug = debug_factory('process');
 
@@ -15,7 +28,10 @@ const underlyingEquivalents = {
   NDXW: 'NDX',
 };
 
-export async function match_trades(trades : UnderlyingWithTrade[], db_data : DbData) {
+export async function match_trades(
+  trades: UnderlyingWithTrade[],
+  db_data: DbData
+) {
   let open_positions = db_data.positions;
   debug(trades);
 
@@ -25,29 +41,36 @@ export async function match_trades(trades : UnderlyingWithTrade[], db_data : DbD
     t.underlying = symbol;
 
     let symbol_positions = open_positions[symbol];
-    if(!symbol_positions) {
-       symbol_positions = open_positions[symbol] = [];
+    if (!symbol_positions) {
+      symbol_positions = open_positions[symbol] = [];
     }
 
     let trade = t.trade;
-    debug("Matching", trade, symbol_positions);
+    debug('Matching', trade, symbol_positions);
     let matches = matchPositions(trade, symbol_positions);
 
-    let position = await position_for_unmatched_trade({ matches, ...t }, symbol_positions, db_data);
-    if(!position) {
+    let position = await position_for_unmatched_trade(
+      { matches, ...t },
+      symbol_positions,
+      db_data
+    );
+    if (!position) {
       return;
     }
-    let change = apply_trade_to_position({position, trade: t.trade});
+    let change = apply_trade_to_position({ position, trade: t.trade });
 
     // Update the current position state with the new position.
-    let existing = _.findIndex(symbol_positions, (p) => p.id === change.position.id);
-    if(existing < 0) {
+    let existing = _.findIndex(
+      symbol_positions,
+      (p) => p.id === change.position.id
+    );
+    if (existing < 0) {
       symbol_positions.push(change.position);
     } else {
       symbol_positions[existing] = change.position;
     }
 
-    debug("Matched trade to position", t.trade, position);
+    debug('Matched trade to position', t.trade, position);
 
     return change;
   });
@@ -58,19 +81,22 @@ export async function match_trades(trades : UnderlyingWithTrade[], db_data : DbD
   };
 }
 
-function apply_trade_to_position({position, trade} : TradeAndPosition) : PositionChange {
+function apply_trade_to_position({
+  position,
+  trade,
+}: TradeAndPosition): PositionChange {
   let simulator = new PositionSimulator(position.legs);
   let result = simulator.addLegs(trade.legs);
 
-  debug("Applied", trade, position, result);
+  debug('Applied', trade, position, result);
 
-  let trade_type : Change;
+  let trade_type: Change;
   let all_same = _.every(result, (r) => r.change === result[0].change);
-  if(all_same) {
+  if (all_same) {
     trade_type = result[0].change;
   }
 
-  debug("sim legs", simulator.legs);
+  debug('sim legs', simulator.legs);
   let new_legs = simulator.getFlattenedList();
 
   let new_trades = position.trades.concat(trade);
@@ -81,7 +107,7 @@ function apply_trade_to_position({position, trade} : TradeAndPosition) : Positio
     ...recalculate(new_trades),
   };
 
-  if(!new_legs.length) {
+  if (!new_legs.length) {
     new_position.close_date = new Date(trade.traded);
   } else {
     // This happens sometimes when rolling legs through separate trades.
@@ -95,8 +121,11 @@ function apply_trade_to_position({position, trade} : TradeAndPosition) : Positio
   };
 }
 
-export async function process_trades(db_data : DbData, trades: UnderlyingWithTrade[]) {
-  trades = _.sortBy(trades, (t) => (new Date(t.trade.traded).getTime()));
+export async function process_trades(
+  db_data: DbData,
+  trades: UnderlyingWithTrade[]
+) {
+  trades = _.sortBy(trades, (t) => new Date(t.trade.traded).getTime());
   let matched = await match_trades(trades, db_data);
 
   let outputTrades = matched.changes.map((m) => {
@@ -117,5 +146,5 @@ export async function process_trades(db_data : DbData, trades: UnderlyingWithTra
     })
     .value();
 
-  return db.write_positions(updated_positions, outputTrades);
+  return writePositions(updated_positions, outputTrades);
 }

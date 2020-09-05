@@ -1,22 +1,25 @@
 import sorter from 'sorters';
-import { alpaca } from './services';
+import { GetTrades } from './broker_interface';
+import { TradeStatus } from 'types';
 
-export interface GetPendingOrdersOptions {
+export interface WaitForOrdersOptions {
   orderIds: string[] | Set<string>;
   after?: Date;
   progress?: (data) => any;
 }
 
 // This assumes one order
-export async function waitForOrders(options: GetPendingOrdersOptions) {
+export async function waitForOrders(
+  api: GetTrades,
+  options: WaitForOrdersOptions
+) {
   let ids = new Set(options.orderIds);
   let doneOrders = new Map();
 
   async function getPendingOrders() {
     // Now look at the filled orders.
-    let orders = await alpaca.getOrders({
-      status: 'all',
-      after: options.after,
+    let orders = await api.getTrades({
+      startDate: options.after,
     });
 
     let ordersByStatus = {};
@@ -34,10 +37,14 @@ export async function waitForOrders(options: GetPendingOrdersOptions) {
       }
 
       if (
-        ['filled', 'canceled', 'expired', 'replaced'].includes(order.status)
+        [
+          TradeStatus.canceled,
+          TradeStatus.filled,
+          TradeStatus.rejected,
+        ].includes(order.status)
       ) {
-        console.log(
-          `Finished order for ${order.symbol}: ${order.filled_qty} shares at ${order.filled_avg_price} each (status ${order.status})`
+        options.progress?.(
+          `Finished order for ${order.legs[0].symbol}: ${order.legs[0].filled} shares at ${order.legs[0].price} each (status ${order.status})`
         );
         doneOrders.set(order.id, order);
       }
@@ -48,12 +55,10 @@ export async function waitForOrders(options: GetPendingOrdersOptions) {
       .map(([key, val]) => `${key}: ${val}`)
       .join(', ');
 
-    if (options.progress) {
-      options.progress({
-        orders: doneOrders,
-        statusCounts: statuses,
-      });
-    }
+    options.progress?.({
+      orders: doneOrders,
+      statusCounts: statuses,
+    });
   }
 
   let index = 0;

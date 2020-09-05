@@ -1,7 +1,6 @@
-import { OptionChain } from './option_chain';
-import { Quote } from './quote';
-export * from './quote';
-export * from './option_chain';
+import { Broker, GetTradeOptions } from '../broker_interface';
+import { Account, Position } from 'types';
+import { Trade, Quote, OptionChain } from 'types';
 export declare function optionInfoFromSymbol(symbol: string): {
     underlying: string;
     expiration: string;
@@ -23,21 +22,17 @@ export interface GetTransactionsOptions {
     startDate?: string;
     endDate?: string;
 }
-export interface GetTradeOptions {
-    startDate?: string;
-    endDate?: string;
-}
 export interface AuthData {
     client_id: string;
     refresh_token: string;
 }
-export declare class Api {
+export declare class Api implements Broker {
     auth: AuthData;
     access_token: string;
     accountId: string;
     autorefresh: boolean;
     constructor(auth: AuthData, autorefresh?: boolean);
-    refresh(): Promise<void>;
+    refreshAuth(): Promise<void>;
     init(): Promise<void>;
     private request;
     getOptionChain(options: GetOptionChainOptions): Promise<OptionChain>;
@@ -45,17 +40,8 @@ export declare class Api {
         [symbol: string]: Quote;
     }>;
     getAccounts(): Promise<any>;
-    getMainAccount(): Promise<any>;
+    getAccount(): Promise<Account>;
+    getPositions(): Promise<Position[]>;
     getTransactionHistory(options?: GetTransactionsOptions): Promise<any>;
-    getTrades(options?: GetTradeOptions): Promise<{
-        id: any;
-        traded: any;
-        price: any;
-        commissions: any;
-        legs: {
-            symbol: string;
-            price: number;
-            size: number;
-        }[];
-    }[]>;
+    getTrades(options?: GetTradeOptions): Promise<Trade[]>;
 }

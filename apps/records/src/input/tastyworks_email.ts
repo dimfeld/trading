@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import * as analysis from 'options-analysis';
 import * as hyperid_factory from 'hyperid';
-import * as debug_factory from 'debug'
-import { ITrade, IOptionLeg } from '../types';
+import * as debug_factory from 'debug';
+import { DbTrade, DbOptionTradeLeg } from 'types';
 import { gcd } from './gcd';
 import * as cheerio from 'cheerio';
 
@@ -11,12 +11,11 @@ const hyperid = hyperid_factory({ urlSafe: true });
 
 const trade_re = /(Bought|Sold) (\d+) (\S+) (?:(\S+) (\S+) ([\d.]+) )?@ ([\d.]+)/;
 
-
-export function parse_email(s : string) {
+export function parse_email(s: string) {
   debug(s.slice(0, 100));
   let html_start = s.indexOf('<div');
 
-  if(html_start < 0) {
+  if (html_start < 0) {
     return null;
   }
 
@@ -24,19 +23,34 @@ export function parse_email(s : string) {
   debug(s.slice(0, 100));
 
   let $ = cheerio.load(s);
-  let trade_date = $('div > table > tbody > tr:nth-child(1) > td:nth-child(2)').text();
-  let trade_symbol = $('div > table > tbody > tr:nth-child(2) > td:nth-child(2)').text();
+  let trade_date = $(
+    'div > table > tbody > tr:nth-child(1) > td:nth-child(2)'
+  ).text();
+  let trade_symbol = $(
+    'div > table > tbody > tr:nth-child(2) > td:nth-child(2)'
+  ).text();
 
-  let leg_html = $('div > ul > li').map((i, el) => $(el).text()).get();
-  debug("leg html", leg_html);
+  let leg_html = $('div > ul > li')
+    .map((i, el) => $(el).text())
+    .get();
+  debug('leg html', leg_html);
 
   let legs = _.map(leg_html, (leg_text) => {
     let m = trade_re.exec(leg_text);
-    if(!m) {
-      throw new Error("Failed to parse " + leg_text);
+    if (!m) {
+      throw new Error('Failed to parse ' + leg_text);
     }
 
-    let [, transaction_type, quantity, symbol, expiration, option_type, strike, price] = m;
+    let [
+      ,
+      transaction_type,
+      quantity,
+      symbol,
+      expiration,
+      option_type,
+      strike,
+      price,
+    ] = m;
     return {
       bought: transaction_type === 'Bought',
       quantity: +quantity,
@@ -55,7 +69,7 @@ export function parse_email(s : string) {
   };
 }
 
-export function get_trades(input : string) {
+export function get_trades(input: string) {
   return _.chain(input)
     .split(/From:/)
     .map(parse_email)
@@ -69,11 +83,11 @@ export function get_trades(input : string) {
 
       let gross = 0;
       let options_trade = false;
-      let legs : IOptionLeg[] = _.map(parsed.legs, (p) => {
+      let legs: DbOptionTradeLeg[] = _.map(parsed.legs, (p) => {
         let multiplier = p.bought ? 1 : -1;
         gross += p.price * p.quantity * -multiplier;
         let symbol;
-        if(p.option_type) {
+        if (p.option_type) {
           options_trade = true;
           let expiration = analysis.occExpirationFromDate(p.expiration);
           symbol = analysis.fullSymbol({
@@ -89,19 +103,22 @@ export function get_trades(input : string) {
         return {
           symbol,
           size: p.quantity * multiplier,
+          price: p.price,
         };
       });
 
-      if(options_trade) {
+      let price_each = gross / trade_size;
+      if (options_trade) {
         gross *= 100;
       }
 
-      let trade : ITrade = {
+      let trade: DbTrade = {
         id: hyperid(),
         note: null,
         tags: [],
         gross,
         commissions: null,
+        price_each,
         traded: parsed.date.toISOString(),
         legs,
       };

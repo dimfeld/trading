@@ -7,7 +7,7 @@ import pick from 'lodash/pick';
 import sortedIndexBy from 'lodash/sortedIndexBy';
 import { Dictionary } from 'lodash';
 import debugMod from 'debug';
-import { ContractInfo } from 'tda-api';
+import { ContractInfo } from 'types';
 
 const debug = debugMod('option_finder');
 

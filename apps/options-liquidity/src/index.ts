@@ -4,7 +4,7 @@ import * as syncthrough from 'syncthrough';
 import * as makeDebug from 'debug';
 
 import { get_config } from './config';
-import { GetOptionChainOptions, Api } from 'tda-api';
+import { GetOptionChainOptions, Brokers } from 'trading-data';
 import { analyzeLiquidity } from 'options-analysis';
 import { format_json, format_text } from './analyze';
 
@@ -23,16 +23,20 @@ process.on('unhandledRejection', (e) => {
 async function main() {
   let { config, auth, pipeline } = get_config();
 
-  let api = new Api(auth);
+  let api = new Brokers({
+    tda: {
+      auth: auth,
+    },
+  });
   await api.init();
 
-  let options : Partial<GetOptionChainOptions> = {
+  let options: Partial<GetOptionChainOptions> = {
     include_nonstandard: config.nonstandard,
   };
 
-  if(config.calls && !config.puts) {
+  if (config.calls && !config.puts) {
     options.contract_type = 'CALL';
-  } else if(config.puts && !config.calls) {
+  } else if (config.puts && !config.calls) {
     options.contract_type = 'PUT';
   }
 
@@ -40,7 +44,7 @@ async function main() {
     return delta < 0.3 || delta > 0.7;
   });
 
-  if(!far_delta) {
+  if (!far_delta) {
     options.near_the_money = true;
   }
 
@@ -50,19 +54,19 @@ async function main() {
   options.from_date = new Date();
   options.from_date.setDate(options.from_date.getDate() + min_dte);
 
-  if(max_dte <= 60) {
+  if (max_dte <= 60) {
     options.to_date = new Date();
     options.to_date.setDate(options.to_date.getDate() + max_dte + 60);
   }
 
-  debug("Query options", options);
+  debug('Query options', options);
 
-  var handle_err = function(e) {
+  var handle_err = function (e) {
     console.error('Error', e);
     process.exit(1);
   };
 
-  let formatter =  config.output_format === 'json' ? format_json : format_text;
+  let formatter = config.output_format === 'json' ? format_json : format_text;
 
   pipeline.push(
     new Transform({
@@ -74,20 +78,21 @@ async function main() {
           symbol: symbol,
         };
 
-        debug("Retrieving option chain for %s", symbol);
+        debug('Retrieving option chain for %s', symbol);
         try {
-        api.getOptionChain(this_options)
-          .then((result) => cb(null, { line: item.line, symbol, result }))
-          .catch((err) => {
-            debug("error", err);
-            if(err.statusCode === 404) {
-              cb();
-            } else {
-              cb(err);
-            }
-          });
-        } catch(e) {
-          debug("error", e);
+          api
+            .getOptionChain(this_options)
+            .then((result) => cb(null, { line: item.line, symbol, result }))
+            .catch((err) => {
+              debug('error', err);
+              if (err.statusCode === 404) {
+                cb();
+              } else {
+                cb(err);
+              }
+            });
+        } catch (e) {
+          debug('error', e);
           cb(e);
         }
       },
@@ -97,11 +102,17 @@ async function main() {
       return {
         line: item.line,
         symbol: item.symbol,
-        underlying: _.pick(item.result.underlying, ['last', 'change', 'highPrice', 'lowPrice', 'percentChange']),
+        underlying: _.pick(item.result.underlying, [
+          'last',
+          'change',
+          'highPrice',
+          'lowPrice',
+          'percentChange',
+        ]),
         ...liquidity,
       };
     }),
-    syncthrough(formatter),
+    syncthrough(formatter)
   );
 
   let pipes = _.reduce(pipeline, (acc, stream) => {
@@ -109,13 +120,13 @@ async function main() {
   });
 
   pipes.on('end', () => {
-    debug("DONE");
+    debug('DONE');
   });
   pipes.pipe(process.stdout, { end: false }).on('error', handle_err);
 }
 
-if(require.main === module) {
-  main().catch(e => {
+if (require.main === module) {
+  main().catch((e) => {
     console.error('Error', e);
     process.exit(1);
   });

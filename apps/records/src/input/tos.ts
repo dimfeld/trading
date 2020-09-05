@@ -1,16 +1,17 @@
 import * as _ from 'lodash';
 import * as debugMod from 'debug';
-import { UnderlyingWithTrade, ITrade } from "../types";
+import { DbTrade } from 'types';
+import { UnderlyingWithTrade } from '../ui';
 
 const debug = debugMod('tos');
 
 // The format returned by tda_api.getTrades
 interface TosTrade {
-  id : string;
+  id: string;
   traded: string;
-  price : number;
-  commissions : number;
-  legs : TosLeg[];
+  price: number;
+  commissions: number;
+  legs: TosLeg[];
 }
 
 interface TosLeg {
@@ -21,10 +22,11 @@ interface TosLeg {
 
 function parseTrade(trade: TosTrade): UnderlyingWithTrade {
   debug(trade);
-  let result: ITrade = {
+  let result: DbTrade = {
     id: trade.id.toString(),
     commissions: trade.commissions,
     gross: 0,
+    price_each: trade.price,
     legs: trade.legs,
     tags: [],
     traded: new Date(trade.traded).toISOString(),
@@ -45,6 +47,6 @@ function parseTrade(trade: TosTrade): UnderlyingWithTrade {
   };
 }
 
-export function get_trades(trades : TosTrade[])  {
+export function get_trades(trades: TosTrade[]) {
   return _.map(trades, parseTrade);
 }

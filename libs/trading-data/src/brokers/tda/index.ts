@@ -3,18 +3,40 @@ import got = require('got');
 import * as querystring from 'querystring';
 import * as debugMod from 'debug';
 
-import { OptionChain, ExpirationDateMap } from './option_chain';
-import { Quote } from './quote';
-import { Broker, Account } from '../broker_interface';
+import { Broker, GetTradeOptions } from '../broker_interface';
+import { Account, BrokerChoice, Position } from 'types';
 
-export * from './quote';
-export * from './option_chain';
+import {
+  Trade,
+  TradeStatus,
+  Quote,
+  OptionChain,
+  ExpirationDateMap,
+} from 'types';
 
 const debug = debugMod('tda_api');
 
 const HOST = 'https://api.tdameritrade.com';
 
 const indexes = ['SPX', 'RUT', 'NDX'];
+
+const statusMap = {
+  AWAITING_PARENT_ORDER: TradeStatus.pending,
+  AWAITING_CONDITION: TradeStatus.pending,
+  AWAITING_MANUAL_REVIEW: TradeStatus.pending,
+  ACCEPTED: TradeStatus.pending,
+  AWAITING_UR_OUT: TradeStatus.active,
+  PENDING_ACTIVATION: TradeStatus.pending,
+  QUEUED: TradeStatus.pending,
+  WORKING: TradeStatus.active,
+  REJECTED: TradeStatus.rejected,
+  PENDING_CANCEL: TradeStatus.active,
+  CANCELED: TradeStatus.canceled,
+  PENDING_REPLACE: TradeStatus.active,
+  REPLACED: TradeStatus.canceled,
+  FILLED: TradeStatus.filled,
+  EXPIRED: TradeStatus.canceled,
+};
 
 const symbolToTda: _.Dictionary<string> = {};
 const tdaToSymbol: _.Dictionary<string> = {};
@@ -109,11 +131,6 @@ export interface GetOptionChainOptions {
 
 export interface GetTransactionsOptions {
   symbol?: string;
-  startDate?: string;
-  endDate?: string;
-}
-
-export interface GetTradeOptions {
   startDate?: string;
   endDate?: string;
 }
@@ -264,7 +281,7 @@ export class Api implements Broker {
 
   async getAccount(): Promise<Account> {
     let accounts = await this.getAccounts();
-    let data = Object.values(accounts[0])[0];
+    let data: any = Object.values(accounts[0])[0];
     return {
       id: data.accountId,
       buyingPower: data.currentBalances.buyingPower,
@@ -277,6 +294,19 @@ export class Api implements Broker {
     };
   }
 
+  async getPositions(): Promise<Position[]> {
+    let accounts = await this.getAccounts();
+    let account: any = Object.values(accounts[0])[0];
+    return account.positions.map((pos) => {
+      return {
+        broker: BrokerChoice.tda,
+        symbol: tdaToOccSymbol(pos.instrument.symbol),
+        size: pos.longQuantity || -pos.shortQuantity,
+        price: pos.averagePrice,
+      };
+    });
+  }
+
   async getTransactionHistory(options: GetTransactionsOptions = {}) {
     let url = `${HOST}/v1/accounts/${this.accountId}/transactions`;
     let qs = {
@@ -287,7 +317,7 @@ export class Api implements Broker {
     return this.request(url, qs);
   }
 
-  async getTrades(options: GetTradeOptions = {}) {
+  async getTrades(options: GetTradeOptions = {}): Promise<Trade[]> {
     let url = `${HOST}/v1/accounts/${this.accountId}/orders`;
     let qs = {
       fromEnteredTime: options.startDate,
@@ -301,15 +331,23 @@ export class Api implements Broker {
       let orders = [];
       let children = result.childOrderStrategies;
       if (children && children.length) {
-        orders.push(
-          ..._.filter(
-            children,
-            (child) => child.status === 'FILLED' || child.filledQuantity > 0
-          )
-        );
+        if (options.filled) {
+          orders.push(
+            ..._.filter(
+              children,
+              (child) => child.status === 'FILLED' || child.filledQuantity > 0
+            )
+          );
+        } else {
+          orders.push(...children);
+        }
       }
 
-      if (result.status === 'FILLED' || result.filledQuantity > 0) {
+      if (
+        !options.filled ||
+        result.status === 'FILLED' ||
+        result.filledQuantity > 0
+      ) {
         orders.push(result);
       }
 
@@ -343,12 +381,14 @@ export class Api implements Broker {
         return {
           symbol,
           price: priceEach,
-          size: legPrices.size * multiplier,
+          filled: legPrices.size * multiplier,
+          size: leg.quantity * multiplier,
         };
       });
 
       return {
         id: trade.orderId,
+        status: statusMap[trade.status],
         traded: trade.closeTime || latestExecution,
         price: trade.price,
         commissions: null,

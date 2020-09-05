@@ -2,16 +2,7 @@
 // depending on the position or trade. For most functions the generic broker interface just
 // decides (quotes always from Alpaca for example)
 
-export interface Account {
-  id: string;
-  buyingPower: number;
-  cash: number;
-  dayTradeCount: number;
-  dayTradesRestricted: boolean;
-  isDayTrader: boolean;
-  portfolioValue: number;
-  maintenanceMargin: number;
-}
+import { Account, BarTimeframe, Trade } from 'types';
 
 /** Functions that need to be implemented by all brokers */
 export interface Broker {
@@ -20,20 +11,7 @@ export interface Broker {
   getAccount(): Promise<Account>;
 }
 
-/** Functions that need to be implemented by a broker that supports reading trades */
-export interface ReadableTradeActivity {}
-
-/** Functions that need to be implemented by a broker that supports making trades */
-export interface TradeableBroker {}
-
-export enum BarTimeframe {
-  minute = 'minute',
-  fiveminute = '5Min',
-  fifteenminute = '15Min',
-  day = 'day',
-}
-
-export interface BarOptions {
+export interface GetBarsOptions {
   symbols: string[];
   timeframe: BarTimeframe;
 
@@ -44,4 +22,14 @@ export interface BarOptions {
   start?: Date;
   /** Get bars on or before this date. Must be used with `start` to get the proper results */
   end?: Date;
+}
+
+export interface GetTradeOptions {
+  startDate?: Date;
+  endDate?: Date;
+  filled?: boolean;
+}
+
+export interface GetTrades {
+  getTrades(options: GetTradeOptions): Promise<Trade[]>;
 }

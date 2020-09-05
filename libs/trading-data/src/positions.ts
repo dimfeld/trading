@@ -2,15 +2,21 @@ import * as debug_factory from 'debug';
 import * as _ from 'lodash';
 import * as config from './config';
 import { pgp, db } from './services';
-import { DbData, IPosition } from './types';
+import { DbData, DbPosition, DbTrade } from 'types';
 
 const debug = debug_factory('positions');
 
-export async function load() : Promise<DbData> {
+export async function loadDb(): Promise<DbData> {
   let [tags, strategies, positions] = await db.multi(`
     SELECT * FROM tags ORDER BY name;
     SELECT * FROM strategies ORDER BY sort desc, name;
-    SELECT * FROM ${config.postgres.tables.positions} WHERE close_date IS NULL ORDER BY open_date;
+
+    SELECT positions.*, jsonb_agg(row_to_json(trades)) trades
+    FROM ${config.postgres.tables.positions} positions
+    JOIN ${config.postgres.tables.trades} trades ON trades.position=positions.id
+    WHERE close_date IS NULL
+    GROUP BY positions.id
+    ORDER BY open_date;
   `);
 
   let grouped_positions = _.groupBy(positions, 'symbol');
@@ -24,38 +30,51 @@ export async function load() : Promise<DbData> {
   };
 }
 
-const positionColumns = new pgp.helpers.ColumnSet([
-    'id',
-    { name: 'tags', cast: 'int[]'},
-    'symbol',
-    'strategy',
-    'open_date',
-    'close_date',
-    'profit_target_pct',
-    'stop_loss_pct',
-    'cost_basis',
-    'buying_power',
-    'profit',
-    { name: 'trades', mod: ':json' },
-    { name: 'legs', mod: ':json' },
-    'note',
-    'broker',
-    { name: 'algorithm', mod: ':json' },
-  ],
-);
+export const positionColumns = new pgp.helpers.ColumnSet([
+  'id',
+  { name: 'tags', cast: 'int[]' },
+  'symbol',
+  'strategy',
+  'open_date',
+  'close_date',
+  'cost_basis',
+  'buying_power',
+  'profit',
+  // { name: 'trades', mod: ':json' },
+  { name: 'legs', mod: ':json' },
+  'note',
+  'broker',
+  { name: 'structure', mod: ':json' },
+]);
 
-let update_position_fields = positionColumns.columns.map((x) => x.name).filter((x) => x !== 'id')
+let updatePositionFields = positionColumns.columns
+  .map((x) => x.name)
+  .filter((x) => x !== 'id');
 
-export function write_positions(positions : IPosition[]) {
-  let insert = pgp.helpers.insert(positions, positionColumns, config.postgres.tables.positions);
-  let update = _.map(update_position_fields, (f) => `${pgp.as.name(f)}=EXCLUDED.${pgp.as.name(f)}`).join(', ');
-  let query = `${insert}
-    ON CONFLICT (id) DO UPDATE SET ${update}`;
+export function writePositions(positions: DbPosition[], trades: DbTrade[]) {
+  let insertPositions = pgp.helpers.insert(
+    positions,
+    positionColumns,
+    config.postgres.tables.positions
+  );
+  let updatePositions = _.map(
+    updatePositionFields,
+    (f) => `${pgp.as.name(f)}=EXCLUDED.${pgp.as.name(f)}`
+  ).join(', ');
+
+  let insertTrades = pgp.helpers.insert(
+    trades,
+    tradeColumns,
+    config.postgres.tables.trades
+  );
+
+  let query = `${insertPositions}
+    ON CONFLICT (id) DO UPDATE SET ${updatePositions};
+    ${insertTrades};`;
 
   debug(query);
   return db.query(query);
 }
-
 
 export const tradeColumns = new pgp.helpers.ColumnSet([
   { name: 'id', cnd: true },

@@ -33,10 +33,11 @@
     "polka": "^0.5.2",
     "shortid": "^2.2.15",
     "sirv": "^0.4.2",
-    "tda-api": "~2.0.4",
     "uuid": "^3.3.3",
     "whatwg-fetch": "^3.0.0",
-    "xstate": "^4.7.0-rc6"
+    "xstate": "^4.7.0-rc6",
+    "types": "~1.0.0",
+    "trading-data": "~1.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.7.0",

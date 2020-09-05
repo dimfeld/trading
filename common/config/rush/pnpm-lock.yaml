@@ -1,5 +1,4 @@
 dependencies:
-  '@alpacahq/alpaca-trade-api': 1.4.1
   '@babel/cli': 7.11.6
   '@babel/plugin-proposal-class-properties': 7.10.4
   '@babel/plugin-proposal-nullish-coalescing-operator': 7.10.4
@@ -20,9 +19,9 @@ dependencies:
   '@rush-temp/options-liquidity': 'file:projects/options-liquidity.tgz'
   '@rush-temp/records': 'file:projects/records.tgz'
   '@rush-temp/stakes': 'file:projects/stakes.tgz'
-  '@rush-temp/tda-api': 'file:projects/tda-api.tgz'
   '@rush-temp/tm-automation': 'file:projects/tm-automation.tgz'
   '@rush-temp/trading-data': 'file:projects/trading-data.tgz'
+  '@rush-temp/types': 'file:projects/types.tgz'
   '@tailwindcss/ui': 0.1.4_tailwindcss@1.7.6
   '@types/bluebird': 3.5.32
   '@types/chai': 4.2.12
@@ -54,7 +53,7 @@ dependencies:
   eventsourcemock: 2.0.0
   fastify: 2.15.3
   fastify-helmet: 3.0.2
-  find-up: 3.0.0
+  find-up: 5.0.0
   fuzzy: 0.1.3
   immer: 5.3.6
   inquirer: 5.2.0
@@ -65,6 +64,7 @@ dependencies:
   just-unique: 3.2.0
   ky: 0.15.0
   ky-universal: 0.3.0_ky@0.15.0
+  mocha: 5.2.0
   moment: 2.27.0
   npm-run-all: 4.1.5
   polka: 0.5.2
@@ -94,10 +94,9 @@ dependencies:
   syncthrough: 0.5.0
   tailwindcss: 1.7.6
   through2: 2.0.5
-  ts-node: 9.0.0_typescript@4.0.2
+  ts-node: 9.0.0
   tslib: 1.13.0
-  tslint: 5.20.1_typescript@4.0.2
-  typescript: 4.0.2
+  tslint: 5.20.1
   uuid: 3.4.0
   whatwg-fetch: 3.4.0
   xstate: 4.13.0
@@ -4145,6 +4144,15 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw==
+  /find-up/5.0.0:
+    dependencies:
+      locate-path: 6.0.0
+      path-exists: 4.0.0
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-78/PXT1wlLLDgTzDs7sjq9hzz0vXD+zn+7wypEe4fXQxCmdmqfGsEPQxmiCSQI3ajFV91bVSsvNtrJRiW6nGng==
   /flat-cache/2.0.1:
     dependencies:
       flatted: 2.0.2
@@ -5964,6 +5972,14 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==
+  /locate-path/6.0.0:
+    dependencies:
+      p-locate: 5.0.0
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==
   /lodash.camelcase/4.3.0:
     dev: false
     resolution:
@@ -6693,6 +6709,14 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==
+  /p-limit/3.0.2:
+    dependencies:
+      p-try: 2.2.0
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-iwqZSOoWIW+Ew4kAGUlN16J4M7OB3ysMLSZtnhmqx7njIHFPlxWBX8xo3lVTyFVq6mI/lL9qt2IsN1sHwaxJkg==
   /p-locate/3.0.0:
     dependencies:
       p-limit: 2.3.0
@@ -6709,6 +6733,14 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-R79ZZ/0wAxKGu3oYMlz8jy/kbhsNrS7SKZ7PxEHBgJ5+F2mtFW2fK2cOtBh1cHYkQsbzFV7I+EoRKe6Yt0oK7A==
+  /p-locate/5.0.0:
+    dependencies:
+      p-limit: 3.0.2
+    dev: false
+    engines:
+      node: '>=10'
+    resolution:
+      integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==
   /p-queue/6.6.1:
     dependencies:
       eventemitter3: 4.0.7
@@ -9200,6 +9232,21 @@ packages:
     dev: false
     resolution:
       integrity: sha512-1qrhAlavbm36wtW+7NtKOgxpzl+70NTF8xlz9mEhiA5zHMlMxjj3sEVKWm3pGZhHXE0Q3ykjrj+OSRVaYw+Dqg==
+  /ts-node/9.0.0:
+    dependencies:
+      arg: 4.1.3
+      diff: 4.0.2
+      make-error: 1.3.6
+      source-map-support: 0.5.19
+      yn: 3.1.1
+    dev: false
+    engines:
+      node: '>=10.0.0'
+    hasBin: true
+    peerDependencies:
+      typescript: '>=2.7'
+    resolution:
+      integrity: sha512-/TqB4SnererCDR/vb4S/QvSZvzQMJN8daAslg7MeaiHvD8rDZsSfXmNeNumyZZzMned72Xoq/isQljYSt8Ynfg==
   /ts-node/9.0.0_typescript@4.0.2:
     dependencies:
       arg: 4.1.3
@@ -9220,6 +9267,29 @@ packages:
     dev: false
     resolution:
       integrity: sha512-i/6DQjL8Xf3be4K/E6Wgpekn5Qasl1usyw++dAA35Ue5orEn65VIxOA+YvNNl9HV3qv70T7CNwjODHZrLwvd1Q==
+  /tslint/5.20.1:
+    dependencies:
+      '@babel/code-frame': 7.10.4
+      builtin-modules: 1.1.1
+      chalk: 2.4.2
+      commander: 2.20.3
+      diff: 4.0.2
+      glob: 7.1.6
+      js-yaml: 3.14.0
+      minimatch: 3.0.4
+      mkdirp: 0.5.5
+      resolve: 1.17.0
+      semver: 5.7.1
+      tslib: 1.13.0
+      tsutils: 2.29.0
+    dev: false
+    engines:
+      node: '>=4.8.0'
+    hasBin: true
+    peerDependencies:
+      typescript: '>=2.3.0-dev || >=2.4.0-dev || >=2.5.0-dev || >=2.6.0-dev || >=2.7.0-dev || >=2.8.0-dev || >=2.9.0-dev || >=3.0.0-dev || >= 3.1.0-dev || >= 3.2.0-dev'
+    resolution:
+      integrity: sha512-EcMxhzCFt8k+/UP5r8waCf/lzmeSyVlqxqMEDQE7rWYiQky8KpIBz1JAoYXfROHrPZ1XXd43q8yQnULOLiBRQg==
   /tslint/5.20.1_typescript@4.0.2:
     dependencies:
       '@babel/code-frame': 7.10.4
@@ -9244,6 +9314,14 @@ packages:
       typescript: '>=2.3.0-dev || >=2.4.0-dev || >=2.5.0-dev || >=2.6.0-dev || >=2.7.0-dev || >=2.8.0-dev || >=2.9.0-dev || >=3.0.0-dev || >= 3.1.0-dev || >= 3.2.0-dev'
     resolution:
       integrity: sha512-EcMxhzCFt8k+/UP5r8waCf/lzmeSyVlqxqMEDQE7rWYiQky8KpIBz1JAoYXfROHrPZ1XXd43q8yQnULOLiBRQg==
+  /tsutils/2.29.0:
+    dependencies:
+      tslib: 1.13.0
+    dev: false
+    peerDependencies:
+      typescript: '>=2.1.0 || >=2.1.0-dev || >=2.2.0-dev || >=2.3.0-dev || >=2.4.0-dev || >=2.5.0-dev || >=2.6.0-dev || >=2.7.0-dev || >=2.8.0-dev || >=2.9.0-dev || >= 3.0.0-dev || >= 3.1.0-dev'
+    resolution:
+      integrity: sha512-g5JVHCIJwzfISaXpXE1qvNalca5Jwob6FjI4AoPlqMusJ6ftFE7IkkFoMhVLRgK+4Kx3gkzb8UZK5t5yTTvEmA==
   /tsutils/2.29.0_typescript@4.0.2:
     dependencies:
       tslib: 1.13.0
@@ -9758,7 +9836,7 @@ packages:
     dev: false
     name: '@rush-temp/options-analysis'
     resolution:
-      integrity: sha512-Ie1FTRW5RuK9Rcyq7moShggjIrzDWJF24dN8zT6fOf7Q5zWG0VCrX9cMfGTR3R1NMhX9orNJrQ64iZOEWsrLQA==
+      integrity: sha512-3f5inNXKXeB+Cs+fJGe27cnkF/b7VNT6Piex2f/TObgB/lo20R2PkHyyE0Bp/LtHfrQAcjTPOix3tpy+xK92DQ==
       tarball: 'file:projects/options-analysis.tgz'
     version: 0.0.0
   'file:projects/options-liquidity.tgz':
@@ -9778,7 +9856,7 @@ packages:
     dev: false
     name: '@rush-temp/options-liquidity'
     resolution:
-      integrity: sha512-hVZpMUNi+UDKRnKfFm/9T3iq+ZLL6OE2lx2rJt7C117RdTkzTFqa69tg9I1Vb/JvV8CGqWzTmz1YDB2zfIzyng==
+      integrity: sha512-3NJ1kHOzG0MrPfFbhy38ZS8UA4HudzRHtj0rLEF2E/KbuW2jS2hT4AuCB7CjJ7uE0haWAME5Tc0fBGyUFFVvPw==
       tarball: 'file:projects/options-liquidity.tgz'
     version: 0.0.0
   'file:projects/records.tgz':
@@ -9820,7 +9898,7 @@ packages:
     dev: false
     name: '@rush-temp/records'
     resolution:
-      integrity: sha512-nYQ9iY15DdZXi9IfF4T6M22f7RiN3qTk4S+JfCVnxJVxkxpAYQnv9hE/rQ07L1Und0WWc4BBHggoTdDvHxag4g==
+      integrity: sha512-g7DQUfPaK0/yhGyATLx+7kOoexlGo1SlKXNnkrMPFlTI6aWzPxu56nV2HcHvXoVQKrBM6GUacDqY8Fjb2627EQ==
       tarball: 'file:projects/records.tgz'
     version: 0.0.0
   'file:projects/stakes.tgz':
@@ -9897,28 +9975,8 @@ packages:
     dev: false
     name: '@rush-temp/stakes'
     resolution:
-      integrity: sha512-zM4Cl6UzVTKMIH9oi2xtSgSPcHTrQ9S76rA98xnPhH2pZH58Di35yIDMtpqDXB+56xOqJQlvWWXEmMn+KtNj+w==
+      integrity: sha512-feeOmcReg2GYcwB0b1rD9s9I+DBhZjBsc68cJmcIp4WuBVcgHQXmkOpVJ+EysdNpmT4RU6uJw8IVl3wySB0ljg==
       tarball: 'file:projects/stakes.tgz'
-    version: 0.0.0
-  'file:projects/tda-api.tgz':
-    dependencies:
-      '@types/chai': 4.2.12
-      '@types/debug': 0.0.30
-      '@types/got': 9.6.11
-      '@types/lodash': 4.14.161
-      '@types/mocha': 5.2.7
-      chai: 4.2.0
-      debug: 3.2.6
-      got: 9.6.0
-      lodash: 4.17.20
-      mocha: 5.2.0
-      ts-node: 9.0.0_typescript@4.0.2
-      typescript: 4.0.2
-    dev: false
-    name: '@rush-temp/tda-api'
-    resolution:
-      integrity: sha512-HQ7FuDj0g7fXkke6ZuInXuo5DSwb38ekmbY1Ppq3svETjPg1UvQJ39iybo9I7YzeLTPEGWg9KCRsYnFRt+hbrg==
-      tarball: 'file:projects/tda-api.tgz'
     version: 0.0.0
   'file:projects/tm-automation.tgz':
     dependencies:
@@ -9930,14 +9988,16 @@ packages:
       debug: 3.2.6
       lodash: 4.17.20
       puppeteer: 5.2.1
+      typescript: 4.0.2
     dev: false
     name: '@rush-temp/tm-automation'
     resolution:
-      integrity: sha512-+9wSklcydPByxG/guQBqu+hvopS0SR1HcfyREn0cLelKNPTMIce3RuIULxqUY6hIY/FJ60oMSa3sX7rStsfE7Q==
+      integrity: sha512-S8jPR1MtQR+N4TatlZR93JtLtIcg3ClMc8wJsW8wxLFbOJRyyKyK8StyGsZ/W3KxG7bCGBkFiN6ycdPE8O1fgg==
       tarball: 'file:projects/tm-automation.tgz'
     version: 0.0.0
   'file:projects/trading-data.tgz':
     dependencies:
+      '@alpacahq/alpaca-trade-api': 1.4.1
       '@types/debug': 0.0.30
       '@types/find-up': 2.1.1
       '@types/got': 9.6.11
@@ -9945,7 +10005,7 @@ packages:
       '@types/node': 11.15.21
       date-fns: 1.30.1
       debug: 3.2.6
-      find-up: 3.0.0
+      find-up: 5.0.0
       got: 9.6.0
       hyperid: 1.4.1
       lodash: 4.17.20
@@ -9958,8 +10018,17 @@ packages:
     dev: false
     name: '@rush-temp/trading-data'
     resolution:
-      integrity: sha512-j7Q21GASU1RfJFLafycKME0wxVglJhKGK+9a52kXd1ILBG4mUmt0ykXvGVEGxYy+FHW1/RPWO05jne5T5aAxtg==
+      integrity: sha512-lXM+neQS3G6sRkKOI6dgYvCbGZpQQ3j1zpL0/8QX1SPCg76oJF89ZO2Mv3JoSOmj0E/N2sEDoqLXGyuIa7eBtg==
       tarball: 'file:projects/trading-data.tgz'
+    version: 0.0.0
+  'file:projects/types.tgz':
+    dependencies:
+      typescript: 4.0.2
+    dev: false
+    name: '@rush-temp/types'
+    resolution:
+      integrity: sha512-O/cROYNg2IbnCpleqGutOJZyavr7S1ahRwztBXlMrkr9kUrVJCpsA9ko70Bd2Rx1726O7PU3KlpZJQLtf8DiAQ==
+      tarball: 'file:projects/types.tgz'
     version: 0.0.0
   github.com/dimfeld/node-tda-api/b7ed9757aed44d52295c55b3772423b2c271e58f:
     dependencies:
@@ -10005,7 +10074,6 @@ packages:
     version: 1.6.2
 registry: ''
 specifiers:
-  '@alpacahq/alpaca-trade-api': ^1.4.1
   '@babel/cli': ^7.7.4
   '@babel/plugin-proposal-class-properties': ^7.7.0
   '@babel/plugin-proposal-nullish-coalescing-operator': ^7.4.4
@@ -10026,9 +10094,9 @@ specifiers:
   '@rush-temp/options-liquidity': 'file:./projects/options-liquidity.tgz'
   '@rush-temp/records': 'file:./projects/records.tgz'
   '@rush-temp/stakes': 'file:./projects/stakes.tgz'
-  '@rush-temp/tda-api': 'file:./projects/tda-api.tgz'
   '@rush-temp/tm-automation': 'file:./projects/tm-automation.tgz'
   '@rush-temp/trading-data': 'file:./projects/trading-data.tgz'
+  '@rush-temp/types': 'file:./projects/types.tgz'
   '@tailwindcss/ui': ^0.1.2
   '@types/bluebird': ^3.5.20
   '@types/chai': ^4.1.3
@@ -10060,7 +10128,7 @@ specifiers:
   eventsourcemock: ^2.0.0
   fastify: ^2.10.0
   fastify-helmet: ^3.0.2
-  find-up: ^3.0.0
+  find-up: ~5.0.0
   fuzzy: ^0.1.3
   immer: ^5.0.0
   inquirer: ^5.2.0
@@ -10071,6 +10139,7 @@ specifiers:
   just-unique: ^3.2.0
   ky: ^0.15.0
   ky-universal: ^0.3.0
+  mocha: ^5.1.1
   moment: ^2.22.2
   npm-run-all: ^4.1.5
   polka: ^0.5.2
@@ -10103,7 +10172,6 @@ specifiers:
   ts-node: ^9
   tslib: ^1.10.0
   tslint: ^5.20.0
-  typescript: ^4
   uuid: ^3.3.3
   whatwg-fetch: ^3.0.0
   xstate: ^4.7.0-rc6

@@ -16,5 +16,5 @@ exports.config = config;
 __exportStar(require("./historical"), exports);
 __exportStar(require("./positions"), exports);
 __exportStar(require("./services"), exports);
-__exportStar(require("./types"), exports);
+__exportStar(require("./brokers"), exports);
 //# sourceMappingURL=index.js.map

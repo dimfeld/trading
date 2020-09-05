@@ -32,8 +32,8 @@ export interface Quote {
     shortable: boolean;
     volatility: number;
     digits: number;
-    "52WkHigh": number;
-    "52WkLow": number;
+    '52WkHigh': number;
+    '52WkLow': number;
     nAV: number;
     peRatio: number;
     divAmount: number;
@@ -45,4 +45,12 @@ export interface Quote {
     regularMarketNetChange: number;
     regularMarketTradeTimeInLong: number;
     delayed: boolean;
+}
+export interface Bar {
+    time: Date;
+    open: number;
+    close: number;
+    high: number;
+    low: number;
+    volume: number;
 }

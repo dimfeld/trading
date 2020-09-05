@@ -1,17 +1,18 @@
 import * as inquirer from 'inquirer';
 import * as hyperidMod from 'hyperid';
 import * as moment from 'moment';
-import { ITrade, UnderlyingWithTrade } from '../types';
+import { DbTrade } from 'types';
+import { UnderlyingWithTrade } from '../ui';
 
 const hyperid = hyperidMod({ urlSafe: true });
 
 export async function get_trades() {
-  let trades : UnderlyingWithTrade[] = [];
+  let trades: UnderlyingWithTrade[] = [];
 
   let today = moment().format('YYYY-MM-DD');
 
-  console.log("Equities only for now!");
-  while(true) {
+  console.log('Equities only for now!');
+  while (true) {
     interface Data {
       symbol: string;
       size: string;
@@ -33,18 +34,19 @@ export async function get_trades() {
 
     let bought = size > 0;
 
-    let t : ITrade = {
+    let t: DbTrade = {
       id: hyperid(),
       commissions: 0,
       gross: -size * price,
-      traded: (new Date(data.date)).toISOString(),
+      traded: new Date(data.date).toISOString(),
       tags: [],
-      legs: [ { symbol: data.symbol, size, price }],
+      price_each: price,
+      legs: [{ symbol: data.symbol, size, price }],
     };
 
     trades.push({ underlying: data.symbol, trade: t });
 
-    if(!data.another) {
+    if (!data.another) {
       break;
     }
   }

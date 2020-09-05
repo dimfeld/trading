@@ -5,19 +5,19 @@ import * as debugMod from 'debug';
 
 import { parse_input } from './input';
 import { Readable, Writable } from 'stream';
-import { AuthData } from 'tda-api';
+import { TdaAuthData } from 'trading-data';
 
 const debug = debugMod('config');
 
 export interface Config {
   calls: boolean;
   puts: boolean;
-  input_format?: 'symbols'|'trigger'|'scheduler';
-  output_format? : 'json'|'text';
+  input_format?: 'symbols' | 'trigger' | 'scheduler';
+  output_format?: 'json' | 'text';
   scheduler: boolean;
   delta: number[];
   dte: string[];
-  nonstandard? : boolean;
+  nonstandard?: boolean;
 
   max_spread_percent: number;
   min_open_interest: number;
@@ -26,7 +26,11 @@ export interface Config {
   auth?: string;
 }
 
-export function get_config() : { config: Config, auth: AuthData, pipeline: Writable[] } {
+export function get_config(): {
+  config: Config;
+  auth: TdaAuthData;
+  pipeline: Writable[];
+} {
   let cmd_options = [
     {
       names: ['input-format', 'i'],
@@ -39,7 +43,8 @@ scheduler: earnings-trade-scheduler output`,
     {
       names: ['file', 'f'],
       type: 'string',
-      help: 'Read input from a file. Otherwise reads from command line arguments or stdin',
+      help:
+        'Read input from a file. Otherwise reads from command line arguments or stdin',
     },
     {
       names: ['calls'],
@@ -69,7 +74,8 @@ scheduler: earnings-trade-scheduler output`,
     {
       names: ['dte', 'e'],
       type: 'arrayOfString',
-      help: 'DTE to examine. Append M to limit to monthly expirations (e.g. 7M)',
+      help:
+        'DTE to examine. Append M to limit to monthly expirations (e.g. 7M)',
     },
     {
       names: ['auth'],
@@ -100,7 +106,7 @@ scheduler: earnings-trade-scheduler output`,
 
   let args = dashdash.parse({ options: cmd_options });
 
-  if(args.config) {
+  if (args.config) {
     let config_file = JSON.parse(fs.readFileSync(args.config).toString());
     args = {
       ...config_file,
@@ -108,19 +114,19 @@ scheduler: earnings-trade-scheduler output`,
     };
   }
 
-  if(!args.delta || !args.delta.length) {
-    args.delta = [0.40];
+  if (!args.delta || !args.delta.length) {
+    args.delta = [0.4];
   }
 
   args.delta = _.map(args.delta, (delta) => {
     delta = Math.abs(delta);
-    if(delta > 1) {
+    if (delta > 1) {
       delta /= 100;
     }
     return delta;
   });
 
-  if(!args.dte || !args.dte.length) {
+  if (!args.dte || !args.dte.length) {
     args.dte = [28];
   }
 
@@ -128,29 +134,32 @@ scheduler: earnings-trade-scheduler output`,
   let auth = JSON.parse(fs.readFileSync(auth_filename).toString());
 
   let pipeline;
-  if(args._args.length) {
-    debug("Symbols", args._args);
+  if (args._args.length) {
+    debug('Symbols', args._args);
     let items = args._args;
-    pipeline = [new Readable({
-      objectMode: true,
-      read: function() {
-        while(items.length) {
-          if(!this.push(items.shift())) {
-            return;
+    pipeline = [
+      new Readable({
+        objectMode: true,
+        read: function () {
+          while (items.length) {
+            if (!this.push(items.shift())) {
+              return;
+            }
           }
-        }
 
-        if(!items.length) {
-          this.push(null);
-        }
-      },
-    })];
+          if (!items.length) {
+            this.push(null);
+          }
+        },
+      }),
+    ];
   } else {
-    let input_stream = args.file ? fs.createReadStream(args.file) : process.stdin;
+    let input_stream = args.file
+      ? fs.createReadStream(args.file)
+      : process.stdin;
     pipeline = [input_stream, ...parse_input(args.input_format)];
   }
 
-  debug("Config", args);
+  debug('Config', args);
   return { config: args, auth, pipeline };
 }
-

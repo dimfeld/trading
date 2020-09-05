@@ -8,6 +8,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc",
+    "watch": "tsc -w",
     "test": "mocha --opts mocha.opts",
     "start": "node dist/index.js",
     "version": "tsc && git add lib",
@@ -25,14 +26,14 @@
   "dependencies": {
     "date-fns": "^1.30.1",
     "debug": "^3.1.0",
-    "find-up": "^3.0.0",
+    "find-up": "~5.0.0",
     "got": "^9.6.0",
     "hyperid": "^1.4.1",
     "lodash": "^4.17.10",
     "options-analysis": "~1.6.2",
     "pg-promise": "^8.4.4",
-    "tda-api": "~2.0.4",
     "sorters": "~0.0.3",
-    "@alpacahq/alpaca-trade-api": "~1.4.1"
+    "@alpacahq/alpaca-trade-api": "~1.4.1",
+    "types": "~1.0.0"
   }
 }

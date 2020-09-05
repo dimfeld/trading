@@ -2,10 +2,10 @@ import { Dictionary } from 'lodash';
 import { FastifyInstance } from 'fastify';
 import { tdaApi } from './services';
 import got from 'got';
-import { GetOptionChainOptions } from 'tda-api';
+import { GetOptionChainOptions } from 'trading-data';
 import addDays from 'date-fns/addDays';
 
-export default function(server: FastifyInstance, opts: any, next: () => void) {
+export default function (server: FastifyInstance, opts: any, next: () => void) {
   server.route({
     url: '/quotes',
     method: 'POST',

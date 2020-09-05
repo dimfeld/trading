@@ -1,25 +1,32 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __exportStar = (this && this.__exportStar) || function(m, exports) {
-    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Api = exports.tdaToOccSymbol = exports.occToTdaSymbol = exports.optionInfoFromSymbol = void 0;
 const _ = require("lodash");
 const got = require("got");
 const querystring = require("querystring");
 const debugMod = require("debug");
-__exportStar(require("./quote"), exports);
-__exportStar(require("./option_chain"), exports);
+const types_1 = require("types");
+const types_2 = require("types");
 const debug = debugMod('tda_api');
 const HOST = 'https://api.tdameritrade.com';
 const indexes = ['SPX', 'RUT', 'NDX'];
+const statusMap = {
+    AWAITING_PARENT_ORDER: types_2.TradeStatus.pending,
+    AWAITING_CONDITION: types_2.TradeStatus.pending,
+    AWAITING_MANUAL_REVIEW: types_2.TradeStatus.pending,
+    ACCEPTED: types_2.TradeStatus.pending,
+    AWAITING_UR_OUT: types_2.TradeStatus.active,
+    PENDING_ACTIVATION: types_2.TradeStatus.pending,
+    QUEUED: types_2.TradeStatus.pending,
+    WORKING: types_2.TradeStatus.active,
+    REJECTED: types_2.TradeStatus.rejected,
+    PENDING_CANCEL: types_2.TradeStatus.active,
+    CANCELED: types_2.TradeStatus.canceled,
+    PENDING_REPLACE: types_2.TradeStatus.active,
+    REPLACED: types_2.TradeStatus.canceled,
+    FILLED: types_2.TradeStatus.filled,
+    EXPIRED: types_2.TradeStatus.canceled,
+};
 const symbolToTda = {};
 const tdaToSymbol = {};
 for (let sym of indexes) {
@@ -90,7 +97,7 @@ class Api {
         this.auth = auth;
         this.autorefresh = autorefresh;
     }
-    async refresh() {
+    async refreshAuth() {
         // Refresh the access token.
         try {
             let body = await got(`${HOST}/v1/oauth2/token`, {
@@ -105,13 +112,13 @@ class Api {
             let result = JSON.parse(body.body);
             this.access_token = result.access_token;
             if (this.autorefresh) {
-                setTimeout(() => this.refresh(), (result.expires_in / 2) * 1000);
+                setTimeout(() => this.refreshAuth(), (result.expires_in / 2) * 1000);
             }
         }
         catch (e) {
             console.error(e);
             if (this.autorefresh) {
-                setTimeout(() => this.refresh(), 60000);
+                setTimeout(() => this.refreshAuth(), 60000);
             }
             else {
                 throw e;
@@ -119,9 +126,9 @@ class Api {
         }
     }
     async init() {
-        await this.refresh();
-        let accountData = await this.getMainAccount();
-        this.accountId = accountData.accountId;
+        await this.refreshAuth();
+        let accountData = await this.getAccount();
+        this.accountId = accountData.id;
     }
     request(url, qs) {
         let qsStr = qs ? '?' + querystring.stringify(qs) : '';
@@ -188,13 +195,38 @@ class Api {
     async getAccounts() {
         return this.request(`${HOST}/v1/accounts`);
     }
-    async getMainAccount() {
+    async getAccount() {
         let accounts = await this.getAccounts();
-        return _.values(accounts[0])[0];
+        let data = Object.values(accounts[0])[0];
+        return {
+            id: data.accountId,
+            buyingPower: data.currentBalances.buyingPower,
+            cash: data.currentBalances.cashBalance,
+            dayTradeCount: data.roundTrips,
+            dayTradesRestricted: data.currentBalances.daytradingBuyingPower <= 0,
+            isDayTrader: data.isDayTrader,
+            portfolioValue: data.equity,
+            maintenanceMargin: data.currentBalances.maintenanceRequirement,
+        };
+    }
+    async getPositions() {
+        let accounts = await this.getAccounts();
+        let account = Object.values(accounts[0])[0];
+        return account.positions.map((pos) => {
+            return {
+                broker: types_1.BrokerChoice.tda,
+                symbol: tdaToOccSymbol(pos.instrument.symbol),
+                size: pos.longQuantity || -pos.shortQuantity,
+                price: pos.averagePrice,
+            };
+        });
     }
     async getTransactionHistory(options = {}) {
         let url = `${HOST}/v1/accounts/${this.accountId}/transactions`;
-        let qs = Object.assign({ type: 'ALL' }, _.pick(options, ['symbol', 'startDate', 'endDate']));
+        let qs = {
+            type: 'ALL',
+            ..._.pick(options, ['symbol', 'startDate', 'endDate']),
+        };
         return this.request(url, qs);
     }
     async getTrades(options = {}) {
@@ -209,9 +241,16 @@ class Api {
             let orders = [];
             let children = result.childOrderStrategies;
             if (children && children.length) {
-                orders.push(..._.filter(children, (child) => child.status === 'FILLED' || child.filledQuantity > 0));
+                if (options.filled) {
+                    orders.push(..._.filter(children, (child) => child.status === 'FILLED' || child.filledQuantity > 0));
+                }
+                else {
+                    orders.push(...children);
+                }
             }
-            if (result.status === 'FILLED' || result.filledQuantity > 0) {
+            if (!options.filled ||
+                result.status === 'FILLED' ||
+                result.filledQuantity > 0) {
                 orders.push(result);
             }
             return orders;
@@ -239,11 +278,13 @@ class Api {
                 return {
                     symbol,
                     price: priceEach,
-                    size: legPrices.size * multiplier,
+                    filled: legPrices.size * multiplier,
+                    size: leg.quantity * multiplier,
                 };
             });
             return {
                 id: trade.orderId,
+                status: statusMap[trade.status],
                 traded: trade.closeTime || latestExecution,
                 price: trade.price,
                 commissions: null,

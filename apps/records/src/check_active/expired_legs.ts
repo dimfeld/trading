@@ -1,11 +1,12 @@
 import * as _ from 'lodash';
-import * as hyperid_factory from 'hyperid'
-import { IPosition, IOptionLeg, PositionChange } from "../types";
+import * as hyperid_factory from 'hyperid';
+import { DbPosition, DbOptionLeg } from 'types';
+import { PositionChange } from '../ui';
 import * as analyze from 'options-analysis';
 
 const hyperid = hyperid_factory({ urlSafe: true });
 
-export function check_expired_legs(positions : IPosition[]) {
+export function check_expired_legs(positions: DbPosition[]) {
   let updated_positions: PositionChange[] = [];
 
   let today = analyze.occExpirationFromDate(new Date());
@@ -15,16 +16,17 @@ export function check_expired_legs(positions : IPosition[]) {
       return !info.expiration || today < info.expiration;
     });
 
-    if(expired_legs.length) {
+    if (expired_legs.length) {
       let max_expiration = '000000';
-      for(let leg of expired_legs) {
+      for (let leg of expired_legs) {
         let info = analyze.optionInfoFromLeg(leg);
-        max_expiration = info.expiration > max_expiration ? info.expiration : max_expiration;
+        max_expiration =
+          info.expiration > max_expiration ? info.expiration : max_expiration;
       }
 
       let expiration_date = analyze.dateFromOccExpiration(max_expiration);
 
-      if(valid_legs.length === 0) {
+      if (valid_legs.length === 0) {
         position.close_date = expiration_date;
       }
       position.legs = valid_legs;
@@ -39,6 +41,7 @@ export function check_expired_legs(positions : IPosition[]) {
             price: 0,
           };
         }),
+        price_each: 0,
         note: 'Options Expired',
         traded: expiration_date.toISOString(),
         tags: null,
@@ -47,7 +50,7 @@ export function check_expired_legs(positions : IPosition[]) {
 
       position.trades.push(trade);
 
-      let tp : PositionChange = {
+      let tp: PositionChange = {
         position,
         trade,
         change: analyze.Change.Closed,
