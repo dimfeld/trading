@@ -142,7 +142,7 @@ async function run() {
 
   for (let order of doneOrders.values()) {
     let position = positions[order.symbol];
-    let gross = order.filled_qty * order.filled_avg_price;
+    let gross = +order.filled_qty * +order.filled_avg_price;
     let tradeDate = new Date(order.filled_at);
     orderDb.push({
       id: order.id,
@@ -163,7 +163,7 @@ async function run() {
     positionDb.push({
       id: position.db.id,
       close_date: tradeDate,
-      gross: position.db.gross + gross,
+      profit: position.db.profit + gross,
       legs: [],
     });
   }
@@ -172,9 +172,14 @@ async function run() {
   let posUpdate =
     pgp.helpers.update(
       positionDb,
-      ['id?', 'close_date', 'gross', { name: 'legs', mod: ':json' }],
+      [
+        '?id',
+        { name: 'close_date', cast: 'date' },
+        'profit',
+        { name: 'legs', mod: ':json', cast: 'jsonb' },
+      ],
       'positions'
-    ) + 'where t.id=v.id';
+    ) + ' where t.id=v.id';
 
   await db.tx(async (tx) => {
     await tx.query(orderQuery);
