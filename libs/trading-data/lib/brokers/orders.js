@@ -10,7 +10,7 @@ async function waitForOrders(api, options) {
     async function getPendingOrders() {
         var _a, _b;
         // Now look at the filled orders.
-        let orders = await api.getTrades({
+        let orders = await api.getOrders({
             startDate: options.after,
         });
         let ordersByStatus = {};
@@ -25,9 +25,9 @@ async function waitForOrders(api, options) {
                 continue;
             }
             if ([
-                types_1.TradeStatus.canceled,
-                types_1.TradeStatus.filled,
-                types_1.TradeStatus.rejected,
+                types_1.OrderStatus.canceled,
+                types_1.OrderStatus.filled,
+                types_1.OrderStatus.rejected,
             ].includes(order.status)) {
                 (_a = options.progress) === null || _a === void 0 ? void 0 : _a.call(options, `Finished order for ${order.legs[0].symbol}: ${order.legs[0].filled} shares at ${order.legs[0].price} each (status ${order.status})`);
                 doneOrders.set(order.id, order);

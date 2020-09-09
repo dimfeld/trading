@@ -1,6 +1,40 @@
 import sorter from 'sorters';
-import { GetTrades } from './broker_interface';
-import { TradeStatus } from 'types';
+import { GetOrders } from './broker_interface';
+import { OrderDuration, OrderStatus, OrderType } from 'types';
+
+export interface CreateOrderLeg {
+  symbol: string;
+  size: number;
+}
+
+export interface CreateOrderOptions {
+  type: OrderType;
+
+  /** Price, for limit orders */
+  price?: number;
+
+  /** Stop price, for stop orders. A stop limit order will use this and `price` */
+  stopPrice?: number;
+
+  legs: CreateOrderLeg[];
+
+  /** To create a linked profit-taking order */
+  linkedTakeProfit?: {
+    limitPrice: number;
+  };
+
+  /** To create a linked stop loss order. */
+  linkedStopLoss?: {
+    stopPrice: number;
+    /** If omitted, the stop loss will execute as a limit order. */
+    limitPrice?: number;
+  };
+
+  /** Defaults to false */
+  extendedHours?: boolean;
+  /** day or GTC. Defaults to day */
+  duration?: OrderDuration;
+}
 
 export interface WaitForOrdersOptions {
   orderIds: string[] | Set<string>;
@@ -10,7 +44,7 @@ export interface WaitForOrdersOptions {
 
 // This assumes one order
 export async function waitForOrders(
-  api: GetTrades,
+  api: GetOrders,
   options: WaitForOrdersOptions
 ) {
   let ids = new Set(options.orderIds);
@@ -18,7 +52,7 @@ export async function waitForOrders(
 
   async function getPendingOrders() {
     // Now look at the filled orders.
-    let orders = await api.getTrades({
+    let orders = await api.getOrders({
       startDate: options.after,
     });
 
@@ -38,9 +72,9 @@ export async function waitForOrders(
 
       if (
         [
-          TradeStatus.canceled,
-          TradeStatus.filled,
-          TradeStatus.rejected,
+          OrderStatus.canceled,
+          OrderStatus.filled,
+          OrderStatus.rejected,
         ].includes(order.status)
       ) {
         options.progress?.(

@@ -1,11 +1,11 @@
 #!/usr/bin/env ts-node
-import { alpaca, pgp, db, tradeColumns, positionColumns } from './services';
-import { Position } from 'types';
+import { pgp, db, tradeColumns, positionColumns } from './services';
+import { Position, BarTimeframe, Quote, BrokerChoice, OrderType } from 'types';
 import * as uniq from 'just-unique';
 import sorter from 'sorters';
 import * as hyperidMod from 'hyperid';
 import got from 'got';
-import { waitForOrders } from './orders';
+import { createBrokers, defaultAlpacaAuth } from 'trading-data';
 const hyperid = hyperidMod();
 
 interface OpeningTrade {
@@ -71,20 +71,26 @@ async function run() {
   let trades: OpeningTrade[] = require('./trades.json');
   let symbols: string[] = uniq(trades.map((t) => t.symbol));
 
+  const api = await createBrokers({
+    alpaca: defaultAlpacaAuth(),
+  });
+
   let [account, positions, dayBars, data, maData]: [
     any,
     Position[],
     any,
-    any[],
+    { [symbol: string]: Quote },
     any
   ] = await Promise.all([
-    alpaca.getAccount(),
-    alpaca.getPositions(),
-    alpaca.getBars('day', symbols.join(','), {
+    api.getAccount(),
+    api.getPositions(),
+    api.getBars({
+      symbols,
+      timeframe: BarTimeframe.day,
       start: new Date(),
       end: new Date(),
     }),
-    Promise.all(symbols.map((s) => alpaca.lastQuote(s))),
+    api.getQuotes(symbols),
     got({
       url: 'https://webservice.cmlviz.com/GetLiveTechnicals',
       timeout: 15000,
@@ -105,11 +111,11 @@ async function run() {
   let openSymbols = new Set(positions.map((p) => p.symbol));
 
   let quotes = {};
-  for (let quote of data) {
-    quotes[quote.symbol] = {
-      ...maDataBySymbol[quote.symbol],
-      ...quote.last,
-      price: (quote.last.askprice + quote.last.bidprice) / 2,
+  for (let [symbol, quote] of Object.entries(data)) {
+    quotes[symbol] = {
+      ...maDataBySymbol[symbol],
+      ...quote,
+      price: quote.mark,
     };
   }
 
@@ -192,14 +198,16 @@ async function run() {
     );
 
     // todo replace market orders with a more intellligent price adjustmeng algorithm.
-    let order = await alpaca.createOrder({
-      symbol: trade.symbol,
-      qty: numShares,
-      side: 'buy',
-      type: 'market',
-      // type: 'limit',
-      // limit_price: trade.price,
-      time_in_force: 'day',
+    let order = await api.createOrder(BrokerChoice.alpaca, {
+      type: OrderType.market,
+      legs: [
+        {
+          symbol: trade.symbol,
+          size: numShares,
+        },
+      ],
+      // type: OrderType.limit,
+      // price: trade.price,
     });
 
     orderIds.add(order.id);
@@ -212,7 +220,7 @@ async function run() {
     }
   }
 
-  let doneOrders = await waitForOrders({
+  let doneOrders = await api.waitForOrders(BrokerChoice.alpaca, {
     orderIds,
     after: currDate,
     progress: ({ statusCounts }) => {

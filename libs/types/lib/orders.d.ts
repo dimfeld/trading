@@ -8,34 +8,34 @@ export interface Position {
     size: number;
     broker: BrokerChoice;
 }
-export interface TradeLeg {
+export interface OrderLeg {
     symbol: string;
     price?: number;
     size: number;
     filled: number;
 }
-export declare enum TradeStatus {
+export declare enum OrderStatus {
     pending = "pending",
     active = "active",
     canceled = "canceled",
     filled = "filled",
     rejected = "rejected"
 }
-export declare enum TradeType {
+export declare enum OrderType {
     market = "market",
     limit = "limit",
     stop = "stop",
     stopLimit = "stop-limit"
 }
-export declare enum TradeDuration {
+export declare enum OrderDuration {
     day = "day",
     gtc = "gtc"
 }
-export interface Trade {
+export interface Order {
     id: string;
-    status: TradeStatus;
+    status: OrderStatus;
     traded: Date;
     price: number;
     commissions: number | null;
-    legs: TradeLeg[];
+    legs: OrderLeg[];
 }

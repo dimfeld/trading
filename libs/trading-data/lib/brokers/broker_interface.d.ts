@@ -1,4 +1,4 @@
-import { Account, BarTimeframe, Trade } from 'types';
+import { Account, BarTimeframe, Order } from 'types';
 /** Functions that need to be implemented by all brokers */
 export interface Broker {
     refreshAuth(): Promise<any>;
@@ -15,11 +15,11 @@ export interface GetBarsOptions {
     /** Get bars on or before this date. Must be used with `start` to get the proper results */
     end?: Date;
 }
-export interface GetTradeOptions {
+export interface GetOrderOptions {
     startDate?: Date;
     endDate?: Date;
     filled?: boolean;
 }
-export interface GetTrades {
-    getTrades(options: GetTradeOptions): Promise<Trade[]>;
+export interface GetOrders {
+    getOrders(options: GetOrderOptions): Promise<Order[]>;
 }

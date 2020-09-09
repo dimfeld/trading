@@ -11,21 +11,21 @@ const debug = debugMod('tda_api');
 const HOST = 'https://api.tdameritrade.com';
 const indexes = ['SPX', 'RUT', 'NDX'];
 const statusMap = {
-    AWAITING_PARENT_ORDER: types_2.TradeStatus.pending,
-    AWAITING_CONDITION: types_2.TradeStatus.pending,
-    AWAITING_MANUAL_REVIEW: types_2.TradeStatus.pending,
-    ACCEPTED: types_2.TradeStatus.pending,
-    AWAITING_UR_OUT: types_2.TradeStatus.active,
-    PENDING_ACTIVATION: types_2.TradeStatus.pending,
-    QUEUED: types_2.TradeStatus.pending,
-    WORKING: types_2.TradeStatus.active,
-    REJECTED: types_2.TradeStatus.rejected,
-    PENDING_CANCEL: types_2.TradeStatus.active,
-    CANCELED: types_2.TradeStatus.canceled,
-    PENDING_REPLACE: types_2.TradeStatus.active,
-    REPLACED: types_2.TradeStatus.canceled,
-    FILLED: types_2.TradeStatus.filled,
-    EXPIRED: types_2.TradeStatus.canceled,
+    AWAITING_PARENT_ORDER: types_2.OrderStatus.pending,
+    AWAITING_CONDITION: types_2.OrderStatus.pending,
+    AWAITING_MANUAL_REVIEW: types_2.OrderStatus.pending,
+    ACCEPTED: types_2.OrderStatus.pending,
+    AWAITING_UR_OUT: types_2.OrderStatus.active,
+    PENDING_ACTIVATION: types_2.OrderStatus.pending,
+    QUEUED: types_2.OrderStatus.pending,
+    WORKING: types_2.OrderStatus.active,
+    REJECTED: types_2.OrderStatus.rejected,
+    PENDING_CANCEL: types_2.OrderStatus.active,
+    CANCELED: types_2.OrderStatus.canceled,
+    PENDING_REPLACE: types_2.OrderStatus.active,
+    REPLACED: types_2.OrderStatus.canceled,
+    FILLED: types_2.OrderStatus.filled,
+    EXPIRED: types_2.OrderStatus.canceled,
 };
 const symbolToTda = {};
 const tdaToSymbol = {};
@@ -229,7 +229,7 @@ class Api {
         };
         return this.request(url, qs);
     }
-    async getTrades(options = {}) {
+    async getOrders(options = {}) {
         let url = `${HOST}/v1/accounts/${this.accountId}/orders`;
         let qs = {
             fromEnteredTime: options.startDate,
@@ -291,6 +291,19 @@ class Api {
                 legs,
             };
         });
+    }
+    async createOrder(order) {
+        throw new Error('not yet supported');
+        return {
+            id: null,
+            commissions: 0,
+            legs: [],
+            price: null,
+            status: types_2.OrderStatus.rejected,
+            traded: new Date(),
+        };
+        // See https://developer.tdameritrade.com/content/place-order-samples
+        // and https://developer.tdameritrade.com/account-access/apis/post/accounts/%7BaccountId%7D/orders-0
     }
 }
 exports.Api = Api;

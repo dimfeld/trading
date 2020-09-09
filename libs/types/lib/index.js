@@ -13,7 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BarTimeframe = void 0;
 __exportStar(require("./option_chain"), exports);
 __exportStar(require("./quote"), exports);
-__exportStar(require("./trades"), exports);
+__exportStar(require("./orders"), exports);
 __exportStar(require("./db"), exports);
 var BarTimeframe;
 (function (BarTimeframe) {

@@ -3,16 +3,17 @@ import got = require('got');
 import * as querystring from 'querystring';
 import * as debugMod from 'debug';
 
-import { Broker, GetTradeOptions } from '../broker_interface';
+import { Broker, GetOrderOptions } from '../broker_interface';
 import { Account, BrokerChoice, Position } from 'types';
 
 import {
-  Trade,
-  TradeStatus,
+  Order,
+  OrderStatus,
   Quote,
   OptionChain,
   ExpirationDateMap,
 } from 'types';
+import { CreateOrderOptions } from '../orders';
 
 const debug = debugMod('tda_api');
 
@@ -21,21 +22,21 @@ const HOST = 'https://api.tdameritrade.com';
 const indexes = ['SPX', 'RUT', 'NDX'];
 
 const statusMap = {
-  AWAITING_PARENT_ORDER: TradeStatus.pending,
-  AWAITING_CONDITION: TradeStatus.pending,
-  AWAITING_MANUAL_REVIEW: TradeStatus.pending,
-  ACCEPTED: TradeStatus.pending,
-  AWAITING_UR_OUT: TradeStatus.active,
-  PENDING_ACTIVATION: TradeStatus.pending,
-  QUEUED: TradeStatus.pending,
-  WORKING: TradeStatus.active,
-  REJECTED: TradeStatus.rejected,
-  PENDING_CANCEL: TradeStatus.active,
-  CANCELED: TradeStatus.canceled,
-  PENDING_REPLACE: TradeStatus.active,
-  REPLACED: TradeStatus.canceled,
-  FILLED: TradeStatus.filled,
-  EXPIRED: TradeStatus.canceled,
+  AWAITING_PARENT_ORDER: OrderStatus.pending,
+  AWAITING_CONDITION: OrderStatus.pending,
+  AWAITING_MANUAL_REVIEW: OrderStatus.pending,
+  ACCEPTED: OrderStatus.pending,
+  AWAITING_UR_OUT: OrderStatus.active,
+  PENDING_ACTIVATION: OrderStatus.pending,
+  QUEUED: OrderStatus.pending,
+  WORKING: OrderStatus.active,
+  REJECTED: OrderStatus.rejected,
+  PENDING_CANCEL: OrderStatus.active,
+  CANCELED: OrderStatus.canceled,
+  PENDING_REPLACE: OrderStatus.active,
+  REPLACED: OrderStatus.canceled,
+  FILLED: OrderStatus.filled,
+  EXPIRED: OrderStatus.canceled,
 };
 
 const symbolToTda: _.Dictionary<string> = {};
@@ -317,7 +318,7 @@ export class Api implements Broker {
     return this.request(url, qs);
   }
 
-  async getTrades(options: GetTradeOptions = {}): Promise<Trade[]> {
+  async getOrders(options: GetOrderOptions = {}): Promise<Order[]> {
     let url = `${HOST}/v1/accounts/${this.accountId}/orders`;
     let qs = {
       fromEnteredTime: options.startDate,
@@ -395,5 +396,19 @@ export class Api implements Broker {
         legs,
       };
     });
+  }
+
+  async createOrder(order: CreateOrderOptions): Promise<Order> {
+    throw new Error('not yet supported');
+    return {
+      id: null,
+      commissions: 0,
+      legs: [],
+      price: null,
+      status: OrderStatus.rejected,
+      traded: new Date(),
+    };
+    // See https://developer.tdameritrade.com/content/place-order-samples
+    // and https://developer.tdameritrade.com/account-access/apis/post/accounts/%7BaccountId%7D/orders-0
   }
 }

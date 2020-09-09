@@ -1,13 +1,16 @@
 import * as Alpaca from '@alpacahq/alpaca-trade-api';
-import { Broker, GetBarsOptions, GetTradeOptions } from '../broker_interface';
+import { Broker, GetBarsOptions, GetOrderOptions } from '../broker_interface';
 import {
   Account,
   BrokerChoice,
   Bar,
-  Trade,
-  TradeStatus,
+  Order,
+  OrderStatus,
   Position,
+  OrderDuration,
+  OrderType,
 } from 'types';
+import { CreateOrderOptions } from '../orders';
 
 export interface AlpacaBrokerOptions {
   key: string;
@@ -15,23 +18,35 @@ export interface AlpacaBrokerOptions {
   paper?: boolean;
 }
 
+const tradeTypeMap = {
+  [OrderType.limit]: 'limit',
+  [OrderType.market]: 'market',
+  [OrderType.stop]: 'stop',
+  [OrderType.stopLimit]: 'stop_limit',
+};
+
+const tradeDurationMap = {
+  [OrderDuration.day]: 'day',
+  [OrderDuration.gtc]: 'gtc',
+};
+
 const statusMap = {
-  new: TradeStatus.pending,
-  accepted: TradeStatus.pending,
-  pending_new: TradeStatus.pending,
-  accepted_for_bidding: TradeStatus.pending,
-  stopped: TradeStatus.active,
-  rejected: TradeStatus.rejected,
-  suspended: TradeStatus.pending,
-  calculated: TradeStatus.active,
-  partially_filled: TradeStatus.active,
-  filled: TradeStatus.filled,
-  done_for_day: TradeStatus.active,
-  canceled: TradeStatus.canceled,
-  expired: TradeStatus.canceled,
-  replaced: TradeStatus.canceled,
-  pending_cancel: TradeStatus.active,
-  pending_replace: TradeStatus.active,
+  new: OrderStatus.pending,
+  accepted: OrderStatus.pending,
+  pending_new: OrderStatus.pending,
+  accepted_for_bidding: OrderStatus.pending,
+  stopped: OrderStatus.active,
+  rejected: OrderStatus.rejected,
+  suspended: OrderStatus.pending,
+  calculated: OrderStatus.active,
+  partially_filled: OrderStatus.active,
+  filled: OrderStatus.filled,
+  done_for_day: OrderStatus.active,
+  canceled: OrderStatus.canceled,
+  expired: OrderStatus.canceled,
+  replaced: OrderStatus.canceled,
+  pending_cancel: OrderStatus.active,
+  pending_replace: OrderStatus.active,
 };
 
 function request<T = any>(fn: () => Promise<T>): Promise<T> {
@@ -51,6 +66,35 @@ function request<T = any>(fn: () => Promise<T>): Promise<T> {
 
     tryIt();
   });
+}
+
+function convertAlpacaOrder(trade) {
+  let price = Number(
+    trade.filled_avg_price || trade.limit_price || trade.stop_price
+  );
+
+  return {
+    id: trade.id,
+    status: statusMap[trade.status],
+    traded: new Date(
+      trade.filled_at ||
+        trade.canceled_at ||
+        trade.filled_at ||
+        trade.replaced_at ||
+        trade.submitted_at ||
+        trade.created_at
+    ),
+    commissions: 0,
+    price,
+    legs: [
+      {
+        symbol: trade.symbol,
+        price,
+        size: +trade.qty,
+        filled: +trade.filled_qty,
+      },
+    ],
+  };
 }
 
 export class Api implements Broker {
@@ -120,7 +164,7 @@ export class Api implements Broker {
     };
   }
 
-  async getTrades(options: GetTradeOptions = {}): Promise<Trade[]> {
+  async getOrders(options: GetOrderOptions = {}): Promise<Order[]> {
     let reqOptions = {
       status: options.filled ? 'closed' : 'all',
       after: options.startDate,
@@ -131,36 +175,11 @@ export class Api implements Broker {
 
     return data
       .map((trade) => {
-        let price = Number(
-          trade.filled_avg_price || trade.limit_price || trade.stop_price
-        );
-
         if (options.filled && trade.status !== 'filled') {
           return null;
         }
 
-        return {
-          id: trade.id,
-          status: statusMap[trade.status],
-          traded: new Date(
-            trade.filled_at ||
-              trade.canceled_at ||
-              trade.filled_at ||
-              trade.replaced_at ||
-              trade.submitted_at ||
-              trade.created_at
-          ),
-          commissions: 0,
-          price,
-          legs: [
-            {
-              symbol: trade.symbol,
-              price,
-              size: +trade.qty,
-              filled: +trade.filled_qty,
-            },
-          ],
-        };
+        return convertAlpacaOrder(trade);
       })
       .filter(Boolean);
   }
@@ -175,5 +194,66 @@ export class Api implements Broker {
         size: p.size === 'long' ? +p.qty : -p.qty,
       };
     });
+  }
+
+  async createOrder(order: CreateOrderOptions): Promise<Order> {
+    if (order.legs.length !== 1) {
+      // May be able to relax this at some point?
+      throw new Error('Alpaca orders must have only one leg');
+    }
+
+    let orderClass: string;
+    if (order.linkedStopLoss && order.linkedTakeProfit) {
+      orderClass = 'bracket';
+    } else if (order.linkedStopLoss || order.linkedTakeProfit) {
+      orderClass = 'oto';
+    }
+
+    let orderType = tradeTypeMap[order.type];
+    if (!orderType) {
+      throw new Error(`Unsupported order type ${order.type}`);
+    }
+
+    let tif = tradeDurationMap[order.duration || OrderDuration.day];
+    if (!tif) {
+      throw new Error(`Unsupported order duration ${order.duration}`);
+    }
+
+    let linkedTakeProfit;
+    if (order.linkedTakeProfit) {
+      linkedTakeProfit = {
+        limit_price: order.linkedTakeProfit.limitPrice?.toFixed(2),
+      };
+    }
+
+    let linkedStopLoss;
+    if (order.linkedStopLoss) {
+      linkedStopLoss = {
+        stop_price: order.linkedStopLoss.stopPrice?.toFixed(2),
+        limit_price: order.linkedStopLoss.limitPrice?.toFixed(2),
+      };
+    }
+
+    let size = order.legs[0].size;
+    let result = await this.api.createOrder({
+      symbol: order.legs[0].symbol,
+      side: size > 0 ? 'buy' : 'sell',
+      qty: Math.abs(size).toString(),
+      time_in_force: tif,
+      type: orderType,
+      extended_hours: order.extendedHours ?? false,
+      limit_price:
+        order.type === OrderType.limit || order.type === OrderType.stopLimit
+          ? order.price?.toFixed(2)
+          : undefined,
+      stop_price:
+        order.type === OrderType.stop || order.type === OrderType.stopLimit
+          ? order.stopPrice?.toFixed(2)
+          : undefined,
+      take_profit: linkedTakeProfit,
+      stopLoss: linkedStopLoss,
+    });
+
+    return convertAlpacaOrder(result);
   }
 }

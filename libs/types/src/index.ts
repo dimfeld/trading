@@ -1,6 +1,6 @@
 export * from './option_chain';
 export * from './quote';
-export * from './trades';
+export * from './orders';
 export * from './db';
 
 export interface MarketStatus {

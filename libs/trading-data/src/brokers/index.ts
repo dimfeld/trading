@@ -2,10 +2,16 @@ import * as tda from './tda';
 import * as alpaca from './alpaca';
 import { GetBarsOptions } from './broker_interface';
 import { Account, Bar, MarketStatus, Position, BrokerChoice } from 'types';
-import { waitForOrders, WaitForOrdersOptions } from './orders';
+import {
+  waitForOrders,
+  WaitForOrdersOptions,
+  CreateOrderOptions,
+} from './orders';
 
-export { GetBarsOptions, GetTradeOptions } from './broker_interface';
+export { GetBarsOptions, GetOrderOptions } from './broker_interface';
 export { GetOptionChainOptions, AuthData as TdaAuthData } from './tda';
+
+export * from './default_auth';
 
 export interface BrokerOptions {
   tda?: {
@@ -84,8 +90,19 @@ export class Brokers {
       : [this.tda, this.alpaca].filter(Boolean);
   }
 
+  createOrder(broker: BrokerChoice, options: CreateOrderOptions) {
+    let api = this.resolveBrokerChoice(broker);
+    return api.createOrder(options);
+  }
+
   waitForOrders(broker: BrokerChoice, options: WaitForOrdersOptions) {
     let api = this.resolveBrokerChoice(broker);
     return waitForOrders(api, options);
   }
+}
+
+export async function createBrokers(options: BrokerOptions) {
+  let api = new Brokers(options);
+  await api.init();
+  return api;
 }

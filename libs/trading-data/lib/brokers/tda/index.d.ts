@@ -1,6 +1,7 @@
-import { Broker, GetTradeOptions } from '../broker_interface';
+import { Broker, GetOrderOptions } from '../broker_interface';
 import { Account, Position } from 'types';
-import { Trade, Quote, OptionChain } from 'types';
+import { Order, Quote, OptionChain } from 'types';
+import { CreateOrderOptions } from '../orders';
 export declare function optionInfoFromSymbol(symbol: string): {
     underlying: string;
     expiration: string;
@@ -43,5 +44,6 @@ export declare class Api implements Broker {
     getAccount(): Promise<Account>;
     getPositions(): Promise<Position[]>;
     getTransactionHistory(options?: GetTransactionsOptions): Promise<any>;
-    getTrades(options?: GetTradeOptions): Promise<Trade[]>;
+    getOrders(options?: GetOrderOptions): Promise<Order[]>;
+    createOrder(order: CreateOrderOptions): Promise<Order>;
 }

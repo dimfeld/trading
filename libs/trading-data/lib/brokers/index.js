@@ -1,10 +1,21 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Brokers = void 0;
+exports.createBrokers = exports.Brokers = void 0;
 const tda = require("./tda");
 const alpaca = require("./alpaca");
 const types_1 = require("types");
 const orders_1 = require("./orders");
+__exportStar(require("./default_auth"), exports);
 /** A class that arbitrates requests through multiple brokers */
 class Brokers {
     constructor(options) {
@@ -55,10 +66,20 @@ class Brokers {
             ? [this.resolveBrokerChoice(choice)]
             : [this.tda, this.alpaca].filter(Boolean);
     }
+    createOrder(broker, options) {
+        let api = this.resolveBrokerChoice(broker);
+        return api.createOrder(options);
+    }
     waitForOrders(broker, options) {
         let api = this.resolveBrokerChoice(broker);
         return orders_1.waitForOrders(api, options);
     }
 }
 exports.Brokers = Brokers;
+async function createBrokers(options) {
+    let api = new Brokers(options);
+    await api.init();
+    return api;
+}
+exports.createBrokers = createBrokers;
 //# sourceMappingURL=index.js.map

@@ -2,9 +2,10 @@ import * as tda from './tda';
 import * as alpaca from './alpaca';
 import { GetBarsOptions } from './broker_interface';
 import { Account, Bar, MarketStatus, Position, BrokerChoice } from 'types';
-import { WaitForOrdersOptions } from './orders';
-export { GetBarsOptions, GetTradeOptions } from './broker_interface';
+import { WaitForOrdersOptions, CreateOrderOptions } from './orders';
+export { GetBarsOptions, GetOrderOptions } from './broker_interface';
 export { GetOptionChainOptions, AuthData as TdaAuthData } from './tda';
+export * from './default_auth';
 export interface BrokerOptions {
     tda?: {
         auth: tda.AuthData;
@@ -29,5 +30,7 @@ export declare class Brokers {
     marketStatus(): Promise<MarketStatus>;
     private resolveBrokerChoice;
     private resolveMaybeBrokerChoice;
+    createOrder(broker: BrokerChoice, options: CreateOrderOptions): Promise<import("types").Order>;
     waitForOrders(broker: BrokerChoice, options: WaitForOrdersOptions): Promise<Map<any, any>>;
 }
+export declare function createBrokers(options: BrokerOptions): Promise<Brokers>;

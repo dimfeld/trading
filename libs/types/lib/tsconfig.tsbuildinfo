@@ -136,14 +136,14 @@
         "signature": "b3dc0f6fdbc0de7e83cc17860df865f497ab207e5167b1906a757d0ad6c44acd",
         "affectsGlobalScope": false
       },
-      "../src/trades.ts": {
-        "version": "0044ed49611a0b9eb4160b67f5caa926ad32e5caa8f8243fb93fb518060b367a",
-        "signature": "9b45deccb226436ec9993b2a02fd871d14ddceeee112852fbfb7256e11030ee6",
+      "../src/orders.ts": {
+        "version": "13ecb40acf7238a858424a8b74753892ec297e37b6f241ae63716accbaae9def",
+        "signature": "0794ad8a00dd919dfb464ee8ffeb0526ba93936d9587a8e7d0bcbf425fb810f9",
         "affectsGlobalScope": false
       },
       "../src/index.ts": {
-        "version": "39223c5c3305a7d04d0493b9a983d2e9b2f3e29943f870c7acf25479770d7abe",
-        "signature": "7b4a36da3a2a8b124a7ecd61f04ac9a0484c10364c64b383c25d27a3ab38ffd2",
+        "version": "07bf5c30a7d700e42eec5a2508729bd3a22b7d9925d68f8da847fd74c7f824b5",
+        "signature": "81be86bf8640ab6805f888388d053821ecc3e5f42c3d24a7259aaf082c6cd62a",
         "affectsGlobalScope": false
       }
     },
@@ -162,16 +162,16 @@
       "../src/index.ts": [
         "../src/db.ts",
         "../src/option_chain.ts",
-        "../src/quote.ts",
-        "../src/trades.ts"
+        "../src/orders.ts",
+        "../src/quote.ts"
       ]
     },
     "exportedModulesMap": {
       "../src/index.ts": [
         "../src/db.ts",
         "../src/option_chain.ts",
-        "../src/quote.ts",
-        "../src/trades.ts"
+        "../src/orders.ts",
+        "../src/quote.ts"
       ]
     },
     "semanticDiagnosticsPerFile": [
@@ -202,8 +202,8 @@
       "../src/db.ts",
       "../src/index.ts",
       "../src/option_chain.ts",
-      "../src/quote.ts",
-      "../src/trades.ts"
+      "../src/orders.ts",
+      "../src/quote.ts"
     ]
   },
   "version": "4.0.2"

@@ -1,23 +1,27 @@
 #!/usr/bin/env ts-node
-import { alpaca, pgp, db, tradeColumns, positionColumns } from './services';
-import { Position } from './alpaca_types';
+import { pgp, db, tradeColumns, positionColumns } from './services';
 import * as date from 'date-fns';
 import sorter from 'sorters';
 import * as chalk from 'chalk';
-import { waitForOrders } from './orders';
+import { createBrokers, defaultAlpacaAuth } from 'trading-data';
+import { Position, BrokerChoice, OrderType } from 'types';
 
 function format(x, digits = 2) {
   return Number(x).toFixed(digits);
 }
 
 async function run() {
+  let api = await createBrokers({
+    alpaca: defaultAlpacaAuth(),
+  });
+
   let [account, aPositions, dbPositions]: [
     any,
     Position[],
     any[]
   ] = await Promise.all([
-    alpaca.getAccount(),
-    alpaca.getPositions(),
+    api.getAccount(),
+    api.getPositions(),
     db.query(
       `SELECT * FROM positions WHERE close_date IS NULL AND broker='alpaca'`
     ),
@@ -38,6 +42,9 @@ async function run() {
       broker: null,
     };
   }
+
+  let symbols = Object.keys(positions);
+  let quotes = await api.getQuotes(symbols);
 
   for (let pos of aPositions) {
     let existing = positions[pos.symbol];
@@ -74,10 +81,19 @@ async function run() {
       continue;
     }
 
-    totalCostBasis += +pos.broker.cost_basis;
-    totalValue += +pos.broker.market_value;
-    totalPL += +pos.broker.unrealized_pl;
-    totalPLToday += +pos.broker.unrealized_intraday_pl;
+    let price = quotes[pos.broker.symbol].lastPrice;
+    let costBasis = pos.broker.price * pos.broker.size;
+    let marketValue = pos.broker.size * price;
+    let unrealizedPl = marketValue - costBasis;
+    let unrealizedPlPct = (unrealizedPl / costBasis) * 100;
+
+    let todayPl = pos.broker.size * quotes[pos.broker.symbol].netChange;
+    let todayPlPct = (todayPl / (marketValue - todayPl)) * 100;
+
+    totalCostBasis += costBasis;
+    totalValue += marketValue;
+    totalPL += unrealizedPl;
+    totalPLToday += todayPl;
 
     let closeDate = date.addDays(new Date(pos.db.open_date), closeAfter);
     let closeDateText = date.isToday(closeDate)
@@ -85,36 +101,36 @@ async function run() {
       : `in ${date.formatDistanceToNow(closeDate)}`;
     console.log(
       `${pos.broker.symbol.padEnd(5, ' ')} -- P/L $${format(
-        pos.broker.unrealized_pl
-      )} (${format(+pos.broker.unrealized_plpc * 100, 1)}%), Today $${format(
-        pos.broker.unrealized_intraday_pl
-      )} (${format(
-        +pos.broker.unrealized_intraday_plpc * 100,
+        unrealizedPl
+      )} (${format(unrealizedPlPct, 1)}%), Today $${format(todayPl)} (${format(
+        todayPlPct,
         1
-      )}%), Value $${format(pos.broker.market_value)} from $${format(
-        pos.broker.cost_basis
+      )}%), Value $${format(marketValue)} from $${format(
+        costBasis
       )}. Close ${closeDateText}`
     );
 
     if (date.isToday(closeDate) || date.isPast(closeDate)) {
       console.log(
         `${chalk.green('Closing position')} ${pos.db.id}: ${
-          pos.broker.qty
+          pos.broker.size
         } shares of ${pos.broker.symbol}`
       );
 
-      let order = await alpaca.createOrder({
-        symbol: pos.broker.symbol,
-        qty: pos.broker.qty,
-        side: 'sell',
-        type: 'market',
-        time_in_force: 'day',
+      let order = await api.createOrder(BrokerChoice.alpaca, {
+        type: OrderType.market,
+        legs: [
+          {
+            symbol: pos.broker.symbol,
+            size: -pos.broker.size,
+          },
+        ],
       });
       orderIds.push(order.id);
     }
   }
 
-  let doneOrders = await waitForOrders({
+  let doneOrders = await api.waitForOrders(BrokerChoice.alpaca, {
     orderIds,
     after: currDate,
     progress: ({ statusCounts }) => console.log(statusCounts),
