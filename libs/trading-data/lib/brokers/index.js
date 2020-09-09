@@ -15,21 +15,24 @@ const tda = require("./tda");
 const alpaca = require("./alpaca");
 const types_1 = require("types");
 const orders_1 = require("./orders");
+const default_auth_1 = require("./default_auth");
 __exportStar(require("./default_auth"), exports);
 /** A class that arbitrates requests through multiple brokers */
 class Brokers {
-    constructor(options) {
+    constructor({ tda: tdaOptions, alpaca: alpacaOptions }) {
         var _a;
-        if (options.tda) {
-            this.tda = new tda.Api(options.tda.auth, (_a = options.tda.autorefresh) !== null && _a !== void 0 ? _a : true);
-        }
-        if (options.alpaca) {
-            this.alpaca = new alpaca.Api(options.alpaca);
-        }
+        tdaOptions = tdaOptions !== null && tdaOptions !== void 0 ? tdaOptions : { auth: default_auth_1.defaultTdaAuth(), autorefresh: true };
+        alpacaOptions = alpacaOptions !== null && alpacaOptions !== void 0 ? alpacaOptions : default_auth_1.defaultAlpacaAuth();
+        this.tda = new tda.Api(tdaOptions.auth, (_a = tdaOptions.autorefresh) !== null && _a !== void 0 ? _a : true);
+        this.alpaca = new alpaca.Api(alpacaOptions);
     }
     init() {
         var _a, _b;
         return Promise.all([(_a = this.alpaca) === null || _a === void 0 ? void 0 : _a.init(), (_b = this.tda) === null || _b === void 0 ? void 0 : _b.init()]);
+    }
+    end() {
+        var _a, _b;
+        return Promise.all([(_a = this.alpaca) === null || _a === void 0 ? void 0 : _a.end(), (_b = this.tda) === null || _b === void 0 ? void 0 : _b.end()]);
     }
     getAccount(broker) {
         return Promise.all(this.resolveMaybeBrokerChoice(broker).map((api) => api.getAccount()));
@@ -69,6 +72,10 @@ class Brokers {
     createOrder(broker, options) {
         let api = this.resolveBrokerChoice(broker);
         return api.createOrder(options);
+    }
+    getOrders(broker, options) {
+        let api = this.resolveBrokerChoice(broker);
+        return api.getOrders(options);
     }
     waitForOrders(broker, options) {
         let api = this.resolveBrokerChoice(broker);

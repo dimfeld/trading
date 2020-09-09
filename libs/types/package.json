@@ -3,16 +3,16 @@
   "version": "1.0.0",
   "description": "Common types",
   "main": "lib/index.js",
-  "repository": "git@github.com:dimfeld/trading_data.git",
   "author": "Daniel Imfeld <dimfeld>",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "rm -rf dist && tsc",
-    "watch": "tsc -w",
-    "start": "node dist/index.js"
+    "clean": "rimraf lib",
+    "build": "run-s clean && tsc",
+    "dev": "run-s clean && tsc -w"
   },
   "devDependencies": {
-    "typescript": "^4"
-  },
-  "dependencies": {}
+    "typescript": "^4",
+    "rimraf": "~3.0.2",
+    "npm-run-all": "~4.1.5"
+  }
 }

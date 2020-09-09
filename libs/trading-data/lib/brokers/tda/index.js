@@ -112,13 +112,13 @@ class Api {
             let result = JSON.parse(body.body);
             this.access_token = result.access_token;
             if (this.autorefresh) {
-                setTimeout(() => this.refreshAuth(), (result.expires_in / 2) * 1000);
+                this.refreshTimer = setTimeout(() => this.refreshAuth(), (result.expires_in / 2) * 1000);
             }
         }
         catch (e) {
             console.error(e);
             if (this.autorefresh) {
-                setTimeout(() => this.refreshAuth(), 60000);
+                this.refreshTimer = setTimeout(() => this.refreshAuth(), 60000);
             }
             else {
                 throw e;
@@ -129,6 +129,11 @@ class Api {
         await this.refreshAuth();
         let accountData = await this.getAccount();
         this.accountId = accountData.id;
+    }
+    end() {
+        if (this.refreshTimer) {
+            clearTimeout(this.refreshTimer);
+        }
     }
     request(url, qs) {
         let qsStr = qs ? '?' + querystring.stringify(qs) : '';
@@ -192,8 +197,9 @@ class Api {
             acc[occ_symbol] = result;
         }, {});
     }
-    async getAccounts() {
-        return this.request(`${HOST}/v1/accounts`);
+    async getAccounts(extraFields) {
+        let q = extraFields ? '?fields=' + extraFields.join(',') : '';
+        return this.request(`${HOST}/v1/accounts${q}`);
     }
     async getAccount() {
         let accounts = await this.getAccounts();
@@ -210,7 +216,7 @@ class Api {
         };
     }
     async getPositions() {
-        let accounts = await this.getAccounts();
+        let accounts = await this.getAccounts(['positions']);
         let account = Object.values(accounts[0])[0];
         return account.positions.map((pos) => {
             return {

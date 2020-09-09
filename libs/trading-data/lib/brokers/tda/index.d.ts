@@ -32,15 +32,17 @@ export declare class Api implements Broker {
     access_token: string;
     accountId: string;
     autorefresh: boolean;
+    refreshTimer: any;
     constructor(auth: AuthData, autorefresh?: boolean);
     refreshAuth(): Promise<void>;
     init(): Promise<void>;
+    end(): void;
     private request;
     getOptionChain(options: GetOptionChainOptions): Promise<OptionChain>;
     getQuotes(symbols: string | string[]): Promise<{
         [symbol: string]: Quote;
     }>;
-    getAccounts(): Promise<any>;
+    getAccounts(extraFields?: string[]): Promise<any>;
     getAccount(): Promise<Account>;
     getPositions(): Promise<Position[]>;
     getTransactionHistory(options?: GetTransactionsOptions): Promise<any>;

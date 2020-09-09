@@ -55,7 +55,7 @@ export const tradeColumns = new pgp.helpers.ColumnSet(
     { name: 'id', cnd: true },
     'position',
     { name: 'legs', mod: ':json', cast: 'jsonb' },
-    { name: 'tags', mod: ':json', cast: 'int[]' },
+    { name: 'tags', mod: ':json', cast: 'jsonb' },
     'gross',
     'traded',
     'commissions',
@@ -119,8 +119,8 @@ export function updateMultiplePositions(
   positions: PositionUpdateOptions[],
   tx?: ITask<any>
 ) {
-  let presentColumns = positionColumns.columns.filter((c) =>
-    keys.includes(c.name)
+  let presentColumns = positionColumns.columns.filter(
+    (c) => keys.includes(c.name) || c.name === 'id'
   );
 
   let query =

@@ -35,7 +35,7 @@ export interface DbTrade {
     price_each: number;
     gross: number;
     commissions: number;
-    traded: string;
+    traded: string | Date;
     legs: DbOptionTradeLeg[];
 }
 export declare enum Momentum {

@@ -7,6 +7,8 @@ import {
   WaitForOrdersOptions,
   CreateOrderOptions,
 } from './orders';
+import { defaultTdaAuth, defaultAlpacaAuth } from './default_auth';
+import { GetOrderOptions } from '..';
 
 export { GetBarsOptions, GetOrderOptions } from './broker_interface';
 export { GetOptionChainOptions, AuthData as TdaAuthData } from './tda';
@@ -27,18 +29,19 @@ export class Brokers {
   tda?: tda.Api;
   alpaca?: alpaca.Api;
 
-  constructor(options: BrokerOptions) {
-    if (options.tda) {
-      this.tda = new tda.Api(options.tda.auth, options.tda.autorefresh ?? true);
-    }
-
-    if (options.alpaca) {
-      this.alpaca = new alpaca.Api(options.alpaca);
-    }
+  constructor({ tda: tdaOptions, alpaca: alpacaOptions }: BrokerOptions) {
+    tdaOptions = tdaOptions ?? { auth: defaultTdaAuth(), autorefresh: true };
+    alpacaOptions = alpacaOptions ?? defaultAlpacaAuth();
+    this.tda = new tda.Api(tdaOptions.auth, tdaOptions.autorefresh ?? true);
+    this.alpaca = new alpaca.Api(alpacaOptions);
   }
 
   init() {
     return Promise.all([this.alpaca?.init(), this.tda?.init()]);
+  }
+
+  end() {
+    return Promise.all([this.alpaca?.end(), this.tda?.end()]);
   }
 
   getAccount(broker?: BrokerChoice): Promise<Account[]> {
@@ -93,6 +96,11 @@ export class Brokers {
   createOrder(broker: BrokerChoice, options: CreateOrderOptions) {
     let api = this.resolveBrokerChoice(broker);
     return api.createOrder(options);
+  }
+
+  getOrders(broker: BrokerChoice, options?: GetOrderOptions) {
+    let api = this.resolveBrokerChoice(broker);
+    return api.getOrders(options);
   }
 
   waitForOrders(broker: BrokerChoice, options: WaitForOrdersOptions) {

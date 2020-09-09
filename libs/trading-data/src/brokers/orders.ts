@@ -1,6 +1,6 @@
 import sorter from 'sorters';
 import { GetOrders } from './broker_interface';
-import { OrderDuration, OrderStatus, OrderType } from 'types';
+import { OrderDuration, OrderStatus, OrderType, Order } from 'types';
 
 export interface CreateOrderLeg {
   symbol: string;
@@ -46,7 +46,7 @@ export interface WaitForOrdersOptions {
 export async function waitForOrders(
   api: GetOrders,
   options: WaitForOrdersOptions
-) {
+): Promise<Map<string, Order>> {
   let ids = new Set(options.orderIds);
   let doneOrders = new Map();
 
@@ -77,9 +77,9 @@ export async function waitForOrders(
           OrderStatus.rejected,
         ].includes(order.status)
       ) {
-        options.progress?.(
-          `Finished order for ${order.legs[0].symbol}: ${order.legs[0].filled} shares at ${order.legs[0].price} each (status ${order.status})`
-        );
+        options.progress?.({
+          message: `Finished order for ${order.legs[0].symbol}: ${order.legs[0].filled} shares at ${order.legs[0].price} each (status ${order.status})`,
+        });
         doneOrders.set(order.id, order);
       }
     }
@@ -91,7 +91,7 @@ export async function waitForOrders(
 
     options.progress?.({
       orders: doneOrders,
-      statusCounts: statuses,
+      message: statuses,
     });
   }
 

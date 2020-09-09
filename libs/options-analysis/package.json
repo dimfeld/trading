@@ -7,7 +7,7 @@
   "typings": "types/index.d.ts",
   "scripts": {
     "test": "BABEL_ENV=node jest",
-    "clean": "rm -rf types && rm -rf lib && rm -rf lib-browser",
+    "clean": "rimraf types lib lib-browser",
     "build-types": "tsc --emitDeclarationOnly",
     "build-babel-base": "babel src/**/*.ts --extensions .ts --source-maps --ignore '**/*.spec.ts' --source-maps",
     "build-node": "BABEL_ENV=node rushx build-babel-base -d lib  ",
@@ -15,12 +15,9 @@
     "watch-node": "yarn run build-node -w",
     "watch-browser": "yarn run build-browser -w",
     "watch-types": "yarn run build-types -w",
-    "watch": "run-p watch-node watch-browser watch-types",
-    "build": "run-s clean build-types build-node build-browser",
-    "add-lib": "git add lib; git add lib-browser; git add types",
-    "preversion": "yarn test",
-    "version": "yarn run build && yarn run add-lib",
-    "postversion": "git push && git push --tags"
+    "dev": "run-p watch-**",
+    "build": "run-s clean && run-p build-node build-browser build-types",
+    "add-lib": "git add lib; git add lib-browser; git add types"
   },
   "author": "Daniel Imfeld",
   "license": "Apache-2.0",
@@ -37,7 +34,9 @@
     "jest": "^24.9.0",
     "jest-extended": "^0.11.2",
     "ts-node": "^9",
-    "typescript": "^4"
+    "typescript": "^4",
+    "rimraf": "~3.0.2",
+    "npm-run-all": "~4.1.5"
   },
   "dependencies": {
     "debug": "^3.1.0",

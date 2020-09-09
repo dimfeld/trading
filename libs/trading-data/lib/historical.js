@@ -1,101 +1,81 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPriceHistory = void 0;
-const _ = require("lodash");
-const config = require("./config");
-const services_1 = require("./services");
-const path = require("path");
-const qs = require("querystring");
-const dateFns = require("date-fns");
-const findUp = require("find-up");
-const got = require("got");
-const util_1 = require("util");
 const sorters_1 = require("sorters");
 const debugMod = require("debug");
+const types_1 = require("types");
 const debug = debugMod('historical');
-var alphavantageKey = process.env.ALPHAVANTAGE_KEY;
-async function downloadPrices(symbol, full = false) {
-    var _a;
-    debug("Downloading history for %s full=%s", symbol, full);
-    if (!alphavantageKey) {
-        try {
-            let dirName = require.main ? path.dirname(require.main.filename) : process.cwd();
-            if (dirName.indexOf('ts-node') >= 0) {
-                dirName = process.cwd();
-            }
-            let configPath = await findUp('alphavantage.json', { cwd: dirName });
-            if (!configPath) {
-                throw new Error(`Could not find alphavantage.json config file`);
-            }
-            let alphavantageConfig = require(configPath);
-            alphavantageKey = alphavantageConfig.key;
-        }
-        catch (e) {
-            e.message = `Loading Alphavantage key: ${e.message}`;
-            throw e;
-        }
-    }
-    let args = qs.stringify({
-        apikey: alphavantageKey,
-        symbol,
-        function: 'TIME_SERIES_DAILY',
-        outputsize: full ? 'full' : 'compact',
-    });
-    let data = await got(`https://www.alphavantage.co/query?${args}`, { json: true });
-    let earliestYear = ((new Date()).getFullYear() - 1);
-    let results = Object.entries(((_a = data.body) === null || _a === void 0 ? void 0 : _a['Time Series (Daily)']) || {})
-        .map(([date, prices]) => {
-        let closing = prices['4. close'];
-        if (!closing) {
-            throw new Error(`Data format changed in ${util_1.inspect(prices)}`);
-        }
-        return { date: new Date(date), price: Math.round(closing * 100) };
-    })
-        .filter(({ date }) => date.getUTCFullYear() >= earliestYear)
-        .sort(sorters_1.default({ value: (d) => d.date.valueOf(), descending: true }));
+async function downloadPrices(brokers, symbols, size) {
+    debug('Downloading history for %s', symbols);
     let now = new Date();
-    // Market is still open, so omit any data from today.
-    if (now.getUTCHours() < 16 && dateFns.isSameDay(now, results[0].date)) {
-        results.shift();
+    let data = await brokers.getBars({
+        symbols,
+        timeframe: types_1.BarTimeframe.day,
+        end: now,
+        limit: size,
+    });
+    let output = new Map();
+    for (let [symbol, bars] of data.entries()) {
+        let priceList = bars
+            .sort(sorters_1.default({ value: (b) => b.time.valueOf(), descending: true }))
+            .map((b) => {
+            return {
+                symbol,
+                date: b.time,
+                price: Math.round(b.close * 100),
+                volume: b.volume,
+            };
+        });
+        output.set(symbol, priceList);
     }
-    let insertValues = results.map((result) => `('${symbol}',${services_1.pgp.as.text(result.date)},${services_1.pgp.as.number(result.price)})`).join(',');
-    let insertQuery = `INSERT INTO ${config.postgres.tables.historical_equity_prices} (symbol,date,price) VALUES
-    ${insertValues}
-    ON CONFLICT (symbol,date) DO UPDATE SET price=EXCLUDED.price`;
-    debug(insertQuery);
-    await services_1.db.none(insertQuery);
-    return results;
+    // Skip the local cache for now.
+    // let allRecords = Array.from(output.values()).flat();
+    // let insertQuery =
+    //   pgp.helpers.insert(
+    //     allRecords,
+    //     ['symbol', 'date', 'price', 'volume'],
+    //     config.postgres.tables.historical_equity_prices
+    //   ) +
+    //   ` ON CONFLICT (symbol,date) DO UPDATE SET price=EXCLUDED.price, volume=EXCLUDED.volume`;
+    // debug(insertQuery);
+    // await db.none(insertQuery);
+    return output;
 }
-async function getPriceHistory(symbol, history = 200) {
-    var _a;
-    let rows = await services_1.db.query(`SELECT date, price FROM ${config.postgres.tables.historical_equity_prices}
-    WHERE symbol=$[symbol]
-    ORDER BY date DESC
-    LIMIT $[history]`, { symbol, history });
-    // Find the latest date that we expect to see trading. This doesn't account for holidays.
-    let latestDate = dateFns.subDays(new Date(), 1);
-    while (dateFns.isWeekend(latestDate)) {
-        latestDate = dateFns.subDays(latestDate, 1);
-    }
-    let latestFoundDate = (_a = rows[0]) === null || _a === void 0 ? void 0 : _a.date;
-    debug('latestDate', latestDate);
-    debug('latestFoundDate', latestFoundDate);
-    if (!latestFoundDate) {
-        // No data. Get a couple years worth.
-        let data = await downloadPrices(symbol, true);
-        rows = data.slice(0, history);
-    }
-    else if (dateFns.getDayOfYear(latestFoundDate) < dateFns.getDayOfYear(latestDate)) {
-        // Refresh to get the current data.
-        // Only get the full data if we need it. The compact form is the last 100 trading days.
-        let needsFull = history - rows.length >= 99;
-        let data = await downloadPrices(symbol, needsFull);
-        let latestDateLocation = _.findIndex(data, (d) => dateFns.isSameDay(d.date, latestFoundDate));
-        if (latestDateLocation !== -1) {
-            rows = data.slice(0, latestDateLocation).concat(rows);
-        }
-    }
-    return rows;
+async function getPriceHistory(brokers, symbols, history = 200) {
+    return downloadPrices(brokers, symbols, history);
+    // For simplicity we don't currently read from the cache.
+    // let rows = await db.query<HistoricalPrice[]>(
+    //   `SELECT symbol, date, price FROM ${config.postgres.tables.historical_equity_prices}
+    //   WHERE symbol=ANY($[symbols]) AND date >= $[minDate]
+    //   ORDER BY date DESC`,
+    //   { symbols, minDate: dateFns.subDays(new Date(), history + 1) }
+    // );
+    // // Find the latest date that we expect to see trading. This doesn't account for holidays.
+    // let latestDate = dateFns.subDays(new Date(), 1);
+    // while (dateFns.isWeekend(latestDate)) {
+    //   latestDate = dateFns.subDays(latestDate, 1);
+    // }
+    // let latestFoundDate: Date = rows[0]?.date;
+    // debug('latestDate', latestDate);
+    // debug('latestFoundDate', latestFoundDate);
+    // if (!latestFoundDate) {
+    //   // No data. Get 200 days worth which is the longest we currently use.
+    //   let data = await downloadPrices(brokers, symbols, 200);
+    // } else if (
+    //   dateFns.getDayOfYear(latestFoundDate) < dateFns.getDayOfYear(latestDate)
+    // ) {
+    //   // Refresh to get the current data.
+    //   // Only get the full data if we need it. The compact form is the last 100 trading days.
+    //   let needsFull = history - rows.length >= 99;
+    //   let data = await downloadPrices(symbol, needsFull);
+    //   let latestDateLocation = _.findIndex(data, (d) =>
+    //     dateFns.isSameDay(d.date, latestFoundDate)
+    //   );
+    //   if (latestDateLocation !== -1) {
+    //     rows = data.slice(0, latestDateLocation).concat(rows);
+    //   }
+    // }
+    // return rows;
 }
 exports.getPriceHistory = getPriceHistory;
 //# sourceMappingURL=historical.js.map

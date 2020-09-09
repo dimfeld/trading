@@ -145,14 +145,10 @@ async function run() {
     }
   }
 
-  let doneOrders: Map<string, Order> = await api.waitForOrders(
-    BrokerChoice.alpaca,
-    {
-      orderIds,
-      after: currDate,
-      progress: ({ message }) => console.log(message),
-    }
-  );
+  let doneOrders = await api.getOrders(BrokerChoice.alpaca, {
+    filled: true,
+    startDate: date.setHours(new Date(), 0),
+  });
 
   let totalPLPercent = (totalValue / totalCostBasis - 1) * 100;
   let totalPLPercentToday = (totalPLToday / (totalValue - totalPLToday)) * 100;
@@ -166,7 +162,7 @@ async function run() {
 
   console.log();
 
-  if (!doneOrders.size) {
+  if (!doneOrders.length) {
     console.log('No actions to take...');
     return;
   }
@@ -174,7 +170,8 @@ async function run() {
   let orderDb = [];
   let positionDb = [];
 
-  for (let order of doneOrders.values()) {
+  for (let order of doneOrders) {
+    console.dir(order);
     // We know there's only one leg for these trades.
     let leg = order.legs[0];
     let position = positions[leg.symbol];
@@ -203,6 +200,9 @@ async function run() {
       legs: [],
     });
   }
+
+  console.dir(orderDb, { depth: null });
+  console.dir(positionDb);
 
   if (orderDb.length) {
     await db.tx(async (tx) => {

@@ -7,7 +7,9 @@
   "author": "Daniel Imfeld",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "rm -rf dist && tsc"
+    "clean": "rimraf dist",
+    "build": "run-s clean && tsc",
+    "dev": "run-s clean && tsc -w"
   },
   "dependencies": {
     "csv-stringify": "^3.1.1",
@@ -19,6 +21,8 @@
     "@types/csv-stringify": "^1.4.2",
     "@types/debug": "0.0.30",
     "@types/lodash": "^4.14.109",
-    "typescript": "~4.0.2"
+    "typescript": "~4.0.2",
+    "rimraf": "~3.0.2",
+    "npm-run-all": "~4.1.5"
   }
 }

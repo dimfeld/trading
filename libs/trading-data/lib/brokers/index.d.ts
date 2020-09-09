@@ -3,6 +3,7 @@ import * as alpaca from './alpaca';
 import { GetBarsOptions } from './broker_interface';
 import { Account, Bar, MarketStatus, Position, BrokerChoice } from 'types';
 import { WaitForOrdersOptions, CreateOrderOptions } from './orders';
+import { GetOrderOptions } from '..';
 export { GetBarsOptions, GetOrderOptions } from './broker_interface';
 export { GetOptionChainOptions, AuthData as TdaAuthData } from './tda';
 export * from './default_auth';
@@ -18,8 +19,9 @@ export interface BrokerOptions {
 export declare class Brokers {
     tda?: tda.Api;
     alpaca?: alpaca.Api;
-    constructor(options: BrokerOptions);
+    constructor({ tda: tdaOptions, alpaca: alpacaOptions }: BrokerOptions);
     init(): Promise<[void, void]>;
+    end(): Promise<[void, void]>;
     getAccount(broker?: BrokerChoice): Promise<Account[]>;
     getBars(options: GetBarsOptions): Promise<Map<string, Bar[]>>;
     getPositions(broker?: BrokerChoice): Promise<Position[]>;
@@ -31,6 +33,7 @@ export declare class Brokers {
     private resolveBrokerChoice;
     private resolveMaybeBrokerChoice;
     createOrder(broker: BrokerChoice, options: CreateOrderOptions): Promise<import("types").Order>;
-    waitForOrders(broker: BrokerChoice, options: WaitForOrdersOptions): Promise<Map<any, any>>;
+    getOrders(broker: BrokerChoice, options?: GetOrderOptions): Promise<import("types").Order[]>;
+    waitForOrders(broker: BrokerChoice, options: WaitForOrdersOptions): Promise<Map<string, import("types").Order>>;
 }
 export declare function createBrokers(options: BrokerOptions): Promise<Brokers>;

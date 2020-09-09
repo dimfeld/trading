@@ -11,6 +11,7 @@ export declare class Api implements Broker {
     api: Alpaca;
     constructor(options: AlpacaBrokerOptions);
     init(): void;
+    end(): void;
     refreshAuth(): Promise<void>;
     getAccount(): Promise<Account>;
     getBars(options: GetBarsOptions): Promise<Map<string, Bar[]>>;

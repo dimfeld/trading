@@ -147,6 +147,8 @@ export class Api implements Broker {
   accountId: string;
   autorefresh: boolean;
 
+  refreshTimer: any;
+
   constructor(auth: AuthData, autorefresh = true) {
     this.auth = auth;
     this.autorefresh = autorefresh;
@@ -169,12 +171,15 @@ export class Api implements Broker {
       this.access_token = result.access_token;
 
       if (this.autorefresh) {
-        setTimeout(() => this.refreshAuth(), (result.expires_in / 2) * 1000);
+        this.refreshTimer = setTimeout(
+          () => this.refreshAuth(),
+          (result.expires_in / 2) * 1000
+        );
       }
     } catch (e) {
       console.error(e);
       if (this.autorefresh) {
-        setTimeout(() => this.refreshAuth(), 60000);
+        this.refreshTimer = setTimeout(() => this.refreshAuth(), 60000);
       } else {
         throw e;
       }
@@ -186,6 +191,12 @@ export class Api implements Broker {
 
     let accountData = await this.getAccount();
     this.accountId = accountData.id;
+  }
+
+  end() {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+    }
   }
 
   private request(url: string, qs?) {
@@ -276,8 +287,9 @@ export class Api implements Broker {
     );
   }
 
-  async getAccounts() {
-    return this.request(`${HOST}/v1/accounts`);
+  async getAccounts(extraFields?: string[]) {
+    let q = extraFields ? '?fields=' + extraFields.join(',') : '';
+    return this.request(`${HOST}/v1/accounts${q}`);
   }
 
   async getAccount(): Promise<Account> {
@@ -296,7 +308,7 @@ export class Api implements Broker {
   }
 
   async getPositions(): Promise<Position[]> {
-    let accounts = await this.getAccounts();
+    let accounts = await this.getAccounts(['positions']);
     let account: any = Object.values(accounts[0])[0];
     return account.positions.map((pos) => {
       return {

@@ -111,6 +111,7 @@ export class Api implements Broker {
 
   // Nothing to do here.
   init() {}
+  end() {}
   async refreshAuth() {}
 
   async getAccount(): Promise<Account> {
@@ -137,7 +138,7 @@ export class Api implements Broker {
     );
 
     let output = new Map<string, Bar[]>();
-    for (let key of data) {
+    for (let key in data) {
       output.set(
         key,
         data[key].map((aBar) => {
@@ -146,6 +147,7 @@ export class Api implements Broker {
             close: +aBar.closePrice,
             high: +aBar.highPrice,
             low: +aBar.lowPrice,
+            volume: +aBar.volume,
             time: new Date(aBar.startEpochTime),
           };
         })
@@ -191,7 +193,7 @@ export class Api implements Broker {
         symbol: p.symbol,
         price: +p.avg_entry_price,
         broker: BrokerChoice.alpaca,
-        size: p.size === 'long' ? +p.qty : -p.qty,
+        size: p.side === 'long' ? +p.qty : -p.qty,
       };
     });
   }

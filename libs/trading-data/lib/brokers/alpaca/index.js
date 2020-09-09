@@ -85,6 +85,7 @@ class Api {
     }
     // Nothing to do here.
     init() { }
+    end() { }
     async refreshAuth() { }
     async getAccount() {
         let data = await request(() => this.api.getAccount());
@@ -106,13 +107,14 @@ class Api {
             limit: options.limit,
         }));
         let output = new Map();
-        for (let key of data) {
+        for (let key in data) {
             output.set(key, data[key].map((aBar) => {
                 return {
                     open: +aBar.openPrice,
                     close: +aBar.closePrice,
                     high: +aBar.highPrice,
                     low: +aBar.lowPrice,
+                    volume: +aBar.volume,
                     time: new Date(aBar.startEpochTime),
                 };
             }));
@@ -150,7 +152,7 @@ class Api {
                 symbol: p.symbol,
                 price: +p.avg_entry_price,
                 broker: types_1.BrokerChoice.alpaca,
-                size: p.size === 'long' ? +p.qty : -p.qty,
+                size: p.side === 'long' ? +p.qty : -p.qty,
             };
         });
     }

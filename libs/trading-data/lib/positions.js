@@ -47,7 +47,7 @@ exports.tradeColumns = new services_1.pgp.helpers.ColumnSet([
     { name: 'id', cnd: true },
     'position',
     { name: 'legs', mod: ':json', cast: 'jsonb' },
-    { name: 'tags', mod: ':json', cast: 'int[]' },
+    { name: 'tags', mod: ':json', cast: 'jsonb' },
     'gross',
     'traded',
     'commissions',
@@ -74,7 +74,7 @@ function updatePosition(options, tx) {
 }
 exports.updatePosition = updatePosition;
 function updateMultiplePositions(keys, positions, tx) {
-    let presentColumns = exports.positionColumns.columns.filter((c) => keys.includes(c.name));
+    let presentColumns = exports.positionColumns.columns.filter((c) => keys.includes(c.name) || c.name === 'id');
     let query = services_1.pgp.helpers.update(positions, presentColumns, exports.positionColumns.table) +
         ` WHERE t.id=v.id`;
     return (tx || services_1.db).query(query);

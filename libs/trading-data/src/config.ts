@@ -1,5 +1,5 @@
 export var postgres = {
-  url: process.env.TRADING_PG || 'postgres://trading@diserver/trading',
+  url: process.env.TRADING_PG || 'postgres://trading@localhost/trading',
   tables: {
     positions: 'positions',
     trades: 'trades',

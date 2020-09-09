@@ -29,7 +29,9 @@ async function waitForOrders(api, options) {
                 types_1.OrderStatus.filled,
                 types_1.OrderStatus.rejected,
             ].includes(order.status)) {
-                (_a = options.progress) === null || _a === void 0 ? void 0 : _a.call(options, `Finished order for ${order.legs[0].symbol}: ${order.legs[0].filled} shares at ${order.legs[0].price} each (status ${order.status})`);
+                (_a = options.progress) === null || _a === void 0 ? void 0 : _a.call(options, {
+                    message: `Finished order for ${order.legs[0].symbol}: ${order.legs[0].filled} shares at ${order.legs[0].price} each (status ${order.status})`,
+                });
                 doneOrders.set(order.id, order);
             }
         }
@@ -39,7 +41,7 @@ async function waitForOrders(api, options) {
             .join(', ');
         (_b = options.progress) === null || _b === void 0 ? void 0 : _b.call(options, {
             orders: doneOrders,
-            statusCounts: statuses,
+            message: statuses,
         });
     }
     let index = 0;

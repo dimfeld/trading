@@ -8,6 +8,7 @@ import { Account, BarTimeframe, Order } from 'types';
 export interface Broker {
   refreshAuth(): Promise<any>;
   init(): void | Promise<any>;
+  end(): void | Promise<any>;
   getAccount(): Promise<Account>;
 }
 

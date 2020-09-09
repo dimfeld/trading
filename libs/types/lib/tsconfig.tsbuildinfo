@@ -122,8 +122,8 @@
         "affectsGlobalScope": false
       },
       "../src/db.ts": {
-        "version": "d1b072b35ac00baaf8377837d494242c587560d6e0d75c5c7f3a54d3422b6076",
-        "signature": "aaa9e3f880bad3d5eb87eba08405754efba2827b8ec87659e7df81f58f349639",
+        "version": "63948eccd931f3a001105ede91bb602afaa5d97790691a53a72e99a42e418884",
+        "signature": "f858ed0cc660ef23587048451f3257ae769d6e076792a5ff14eb6beba37374b9",
         "affectsGlobalScope": false
       },
       "../src/option_chain.ts": {

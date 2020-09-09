@@ -1,4 +1,5 @@
 #!/usr/bin/env ts-node
+import 'source-map-support/register';
 import {
   Position,
   BarTimeframe,
@@ -7,6 +8,9 @@ import {
   OrderType,
   DbTrade,
   DbPosition,
+  OrderStatus,
+  Account,
+  Bar,
 } from 'types';
 import * as uniq from 'just-unique';
 import sorter from 'sorters';
@@ -18,6 +22,7 @@ import {
   writePositions,
   pgp,
   db,
+  Brokers,
 } from 'trading-data';
 const hyperid = hyperidMod();
 
@@ -27,6 +32,8 @@ interface OpeningTrade {
   closeAfter: number;
   efficiencyScore: number;
 }
+
+const dryRun = Boolean(process.env.DRY_RUN);
 
 // These need to be updated for the real values.
 const filters = {
@@ -80,30 +87,8 @@ const filters = {
   },
 };
 
-async function run() {
-  let trades: OpeningTrade[] = require('./trades.json');
-  let symbols: string[] = uniq(trades.map((t) => t.symbol));
-
-  const api = await createBrokers({
-    alpaca: defaultAlpacaAuth(),
-  });
-
-  let [account, positions, dayBars, data, maData]: [
-    any,
-    Position[],
-    any,
-    { [symbol: string]: Quote },
-    any
-  ] = await Promise.all([
-    api.getAccount(),
-    api.getPositions(),
-    api.getBars({
-      symbols,
-      timeframe: BarTimeframe.day,
-      start: new Date(),
-      end: new Date(),
-    }),
-    api.getQuotes(symbols),
+async function getTechnicals(symbols: string[]) {
+  let getIt = () =>
     got({
       url: 'https://webservice.cmlviz.com/GetLiveTechnicals',
       timeout: 15000,
@@ -111,10 +96,54 @@ async function run() {
         auth: 'DEV1_nr82759gjRJ9Qm59FJbnqpeotr',
         tickers: symbols.join(','),
       },
-    }).json(),
-  ]);
+      headers: {
+        accept: 'application/json, text/javascript, */*; q=0.01',
+        'accept-language': 'en-US,en;q=0.9',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-site',
+        origin: 'https://www.cmlviz.com',
+        referer: 'https://www.cmlviz.com/',
+        'user-agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36',
+      },
+    }).json<any[]>();
 
-  console.dir(maData);
+  console.log('fetching technicals');
+  let data = await getIt();
+  console.log('done');
+
+  if (data.some((d) => d.statusMessage)) {
+    // Need to fetch again
+    console.log('refetching technicals');
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    data = await getIt();
+  }
+
+  return data;
+}
+
+let api: Brokers;
+async function run() {
+  let trades: OpeningTrade[] = require('./trades.json');
+  let symbols: string[] = uniq(trades.map((t) => t.symbol));
+
+  api = await createBrokers({
+    alpaca: defaultAlpacaAuth(),
+  });
+
+  let [[account], positions, dayBars, data, maData] = await Promise.all([
+    api.getAccount(BrokerChoice.alpaca),
+    api.getPositions(BrokerChoice.alpaca),
+    api.getBars({
+      symbols,
+      timeframe: BarTimeframe.day,
+      start: new Date(),
+      end: new Date(),
+    }),
+    api.getQuotes(symbols),
+    getTechnicals(symbols),
+  ]);
 
   let maDataBySymbol = {};
   for (let data of maData) {
@@ -132,10 +161,13 @@ async function run() {
     };
   }
 
+  console.dir(dayBars);
+
   let results = trades
     .map((trade) => {
-      let data = dayBars[trade.symbol]?.[0];
+      let data = dayBars.get(trade.symbol)?.[0];
       if (!data) {
+        console.log(`No day bar for ${trade.symbol}`);
         return null;
       }
 
@@ -163,8 +195,8 @@ async function run() {
       }
 
       let quote = quotes[trade.symbol];
-      // Rough dollar-weighted volume. Better would be to get broken-out bars but this is ok for now just to see if a symbol is liquid or not.
-      let dwVol = ((data.highPrice + data.lowPrice) / 2) * data.volume;
+      // Rough dollar-weighted volume from yesterday. Better would be to get broken-out bars but this is ok for now just to see if a symbol is liquid or not.
+      let dwVol = ((data.high + data.low) / 2) * data.volume;
       return {
         ...trade,
         price: quote.price,
@@ -175,12 +207,15 @@ async function run() {
     .sort(sorter({ value: 'efficiencyScore', descending: true }));
 
   const MAX_TRADES = 5;
+
+  console.dir(account);
   let riskPerTrade = Math.min(
-    account.portfolio_value * 0.02,
+    account.portfolioValue * 0.02,
     (account.cash / Math.min(results.length, MAX_TRADES)) * 0.95
   );
 
   console.log(`Max risk ${riskPerTrade.toFixed(2)}`);
+  // console.dir(results);
 
   let orderIds = new Set<string>();
   let currDate = new Date();
@@ -188,8 +223,10 @@ async function run() {
   let openedTrades = 0;
   let seenSymbols = new Map<string, OpeningTrade>();
   for (let trade of results) {
+    // console.log(`looking at ${trade.symbol}`);
     if (seenSymbols.has(trade.symbol)) {
       // Already looked at this symbol.
+      // console.log('already seen');
       continue;
     } else if (openSymbols.has(trade.symbol)) {
       console.log(`Skipping ${trade.symbol} because it is already open`);
@@ -210,20 +247,22 @@ async function run() {
       } -- close after ${trade.closeAfter} days`
     );
 
-    // todo replace market orders with a more intellligent price adjustmeng algorithm.
-    let order = await api.createOrder(BrokerChoice.alpaca, {
-      type: OrderType.market,
-      legs: [
-        {
-          symbol: trade.symbol,
-          size: numShares,
-        },
-      ],
-      // type: OrderType.limit,
-      // price: trade.price,
-    });
+    if (!dryRun) {
+      // todo replace market orders with a more intellligent price adjustmeng algorithm.
+      let order = await api.createOrder(BrokerChoice.alpaca, {
+        type: OrderType.market,
+        legs: [
+          {
+            symbol: trade.symbol,
+            size: numShares,
+          },
+        ],
+        // type: OrderType.limit,
+        // price: trade.price,
+      });
 
-    orderIds.add(order.id);
+      orderIds.add(order.id);
+    }
     seenSymbols.set(trade.symbol, trade);
 
     openedTrades++;
@@ -244,44 +283,45 @@ async function run() {
   let orderDb: DbTrade[] = [];
   let positionDb: DbPosition[] = [];
   for (let order of doneOrders.values()) {
-    if (!+order.filled_qty) {
+    if (order.status !== OrderStatus.filled) {
       continue;
     }
 
+    let leg = order.legs[0];
     let posId = hyperid();
-    let gross = -order.filled_qty * order.filled_avg_price;
+    let gross = -leg.size * order.price;
     orderDb.push({
       id: order.id,
       position: posId,
       legs: [
         {
-          size: order.filled_qty,
-          price: order.filled_avg_price,
-          symbol: order.symbol,
+          size: leg.size,
+          price: leg.price,
+          symbol: leg.symbol,
         },
       ],
       tags: [],
       gross,
-      traded: order.filled_at,
-      price_each: order.filled_avg_price,
+      traded: order.traded,
+      price_each: order.price,
       commissions: 0,
     });
 
-    let tradeStructure = seenSymbols.get(order.symbol);
+    let tradeStructure = seenSymbols.get(leg.symbol);
     positionDb.push({
       id: posId,
       tags: [],
-      symbol: order.symbol,
+      symbol: leg.symbol,
       strategy: 46, // hardcoded alpaca strategy for now
-      open_date: order.filled_at,
+      open_date: order.traded,
       close_date: null,
       cost_basis: gross,
       buying_power: null,
       profit: gross,
       legs: [
         {
-          size: order.filled_qty,
-          symbol: order.symbol,
+          size: leg.filled,
+          symbol: leg.symbol,
         },
       ],
       broker: BrokerChoice.alpaca,
@@ -306,6 +346,7 @@ async function run() {
 run()
   .then(() => {
     pgp.end();
+    return api?.end();
   })
   .catch((e) => {
     console.error(e);

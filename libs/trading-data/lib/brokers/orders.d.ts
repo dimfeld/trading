@@ -1,5 +1,5 @@
 import { GetOrders } from './broker_interface';
-import { OrderDuration, OrderType } from 'types';
+import { OrderDuration, OrderType, Order } from 'types';
 export interface CreateOrderLeg {
     symbol: string;
     size: number;
@@ -31,4 +31,4 @@ export interface WaitForOrdersOptions {
     after?: Date;
     progress?: (data: any) => any;
 }
-export declare function waitForOrders(api: GetOrders, options: WaitForOrdersOptions): Promise<Map<any, any>>;
+export declare function waitForOrders(api: GetOrders, options: WaitForOrdersOptions): Promise<Map<string, Order>>;
