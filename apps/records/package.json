@@ -46,7 +46,7 @@
     "lodash": "^4.17.11",
     "moment": "^2.22.2",
     "options-analysis": "~1.6.2",
-    "pg-promise": "^10.5.6",
+    "pg-promise": "~10.6.1",
     "request": "^2.85.0",
     "request-promise-native": "^1.0.5",
     "split2": "^2.2.0",

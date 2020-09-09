@@ -27,6 +27,8 @@ export interface DbOptionTradeLeg extends DbOptionLeg {
 }
 export interface DbTrade {
     id: string;
+    /** position may be empty for newly-imported trades not yet linked to a position */
+    position?: string;
     name?: string;
     note?: string;
     tags: number[];

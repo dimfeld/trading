@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.tradeColumns = exports.writePositions = exports.positionColumns = exports.loadDb = void 0;
+exports.addTrades = exports.updateMultiplePositions = exports.updatePosition = exports.addNewPositions = exports.tradeColumns = exports.positionColumns = exports.loadDb = void 0;
 const debug_factory = require("debug");
 const _ = require("lodash");
 const config = require("./config");
@@ -29,25 +29,33 @@ async function loadDb() {
 }
 exports.loadDb = loadDb;
 exports.positionColumns = new services_1.pgp.helpers.ColumnSet([
-    'id',
+    { name: 'id', cnd: true },
     { name: 'tags', cast: 'int[]' },
     'symbol',
     'strategy',
-    'open_date',
-    'close_date',
+    { name: 'open_date', cast: 'date' },
+    { name: 'close_date', cast: 'date' },
     'cost_basis',
     'buying_power',
     'profit',
-    // { name: 'trades', mod: ':json' },
-    { name: 'legs', mod: ':json' },
+    { name: 'legs', mod: ':json', cast: 'jsonb' },
     'note',
     'broker',
-    { name: 'structure', mod: ':json' },
-]);
-let updatePositionFields = exports.positionColumns.columns
+    { name: 'structure', mod: ':json', cast: 'jsonb' },
+], { table: 'positions' });
+exports.tradeColumns = new services_1.pgp.helpers.ColumnSet([
+    { name: 'id', cnd: true },
+    'position',
+    { name: 'legs', mod: ':json', cast: 'jsonb' },
+    { name: 'tags', mod: ':json', cast: 'int[]' },
+    'gross',
+    'traded',
+    'commissions',
+], { table: 'trades' });
+const updatePositionFields = exports.positionColumns.columns
     .map((x) => x.name)
     .filter((x) => x !== 'id');
-function writePositions(positions, trades) {
+function addNewPositions(positions, trades, tx) {
     let insertPositions = services_1.pgp.helpers.insert(positions, exports.positionColumns, config.postgres.tables.positions);
     let updatePositions = _.map(updatePositionFields, (f) => `${services_1.pgp.as.name(f)}=EXCLUDED.${services_1.pgp.as.name(f)}`).join(', ');
     let insertTrades = services_1.pgp.helpers.insert(trades, exports.tradeColumns, config.postgres.tables.trades);
@@ -55,16 +63,26 @@ function writePositions(positions, trades) {
     ON CONFLICT (id) DO UPDATE SET ${updatePositions};
     ${insertTrades};`;
     debug(query);
-    return services_1.db.query(query);
+    return (tx || services_1.db).query(query);
 }
-exports.writePositions = writePositions;
-exports.tradeColumns = new services_1.pgp.helpers.ColumnSet([
-    { name: 'id', cnd: true },
-    'position',
-    { name: 'legs', mod: ':json' },
-    { name: 'tags', mod: ':json' },
-    'gross',
-    'traded',
-    'commissions',
-]);
+exports.addNewPositions = addNewPositions;
+function updatePosition(options, tx) {
+    let presentColumns = exports.positionColumns.columns.filter((c) => options[c.name] !== undefined);
+    let query = services_1.pgp.helpers.update(options, presentColumns, exports.positionColumns.table) +
+        ` WHERE id=$[id]`;
+    return (tx || services_1.db).query(query, { id: options.id });
+}
+exports.updatePosition = updatePosition;
+function updateMultiplePositions(keys, positions, tx) {
+    let presentColumns = exports.positionColumns.columns.filter((c) => keys.includes(c.name));
+    let query = services_1.pgp.helpers.update(positions, presentColumns, exports.positionColumns.table) +
+        ` WHERE t.id=v.id`;
+    return (tx || services_1.db).query(query);
+}
+exports.updateMultiplePositions = updateMultiplePositions;
+function addTrades(trades, tx) {
+    let query = services_1.pgp.helpers.insert(trades, exports.tradeColumns);
+    return (tx || services_1.db).query(query);
+}
+exports.addTrades = addTrades;
 //# sourceMappingURL=positions.js.map

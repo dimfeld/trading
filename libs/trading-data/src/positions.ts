@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import * as config from './config';
 import { pgp, db } from './services';
 import { DbData, DbPosition, DbTrade } from 'types';
+import { ITask } from 'pg-promise';
 
 const debug = debug_factory('positions');
 
@@ -30,28 +31,47 @@ export async function loadDb(): Promise<DbData> {
   };
 }
 
-export const positionColumns = new pgp.helpers.ColumnSet([
-  'id',
-  { name: 'tags', cast: 'int[]' },
-  'symbol',
-  'strategy',
-  'open_date',
-  'close_date',
-  'cost_basis',
-  'buying_power',
-  'profit',
-  // { name: 'trades', mod: ':json' },
-  { name: 'legs', mod: ':json' },
-  'note',
-  'broker',
-  { name: 'structure', mod: ':json' },
-]);
+export const positionColumns = new pgp.helpers.ColumnSet(
+  [
+    { name: 'id', cnd: true },
+    { name: 'tags', cast: 'int[]' },
+    'symbol',
+    'strategy',
+    { name: 'open_date', cast: 'date' },
+    { name: 'close_date', cast: 'date' },
+    'cost_basis',
+    'buying_power',
+    'profit',
+    { name: 'legs', mod: ':json', cast: 'jsonb' },
+    'note',
+    'broker',
+    { name: 'structure', mod: ':json', cast: 'jsonb' },
+  ],
+  { table: 'positions' }
+);
 
-let updatePositionFields = positionColumns.columns
+export const tradeColumns = new pgp.helpers.ColumnSet(
+  [
+    { name: 'id', cnd: true },
+    'position',
+    { name: 'legs', mod: ':json', cast: 'jsonb' },
+    { name: 'tags', mod: ':json', cast: 'int[]' },
+    'gross',
+    'traded',
+    'commissions',
+  ],
+  { table: 'trades' }
+);
+
+const updatePositionFields = positionColumns.columns
   .map((x) => x.name)
   .filter((x) => x !== 'id');
 
-export function writePositions(positions: DbPosition[], trades: DbTrade[]) {
+export function addNewPositions(
+  positions: DbPosition[],
+  trades: DbTrade[],
+  tx?: ITask<any>
+) {
   let insertPositions = pgp.helpers.insert(
     positions,
     positionColumns,
@@ -73,15 +93,43 @@ export function writePositions(positions: DbPosition[], trades: DbTrade[]) {
     ${insertTrades};`;
 
   debug(query);
-  return db.query(query);
+  return (tx || db).query(query);
 }
 
-export const tradeColumns = new pgp.helpers.ColumnSet([
-  { name: 'id', cnd: true },
-  'position',
-  { name: 'legs', mod: ':json' },
-  { name: 'tags', mod: ':json' },
-  'gross',
-  'traded',
-  'commissions',
-]);
+export type PositionUpdateOptions = Partial<
+  Omit<DbPosition, 'symbol' | 'open_date'>
+>;
+
+export function updatePosition(
+  options: PositionUpdateOptions,
+  tx?: ITask<any>
+) {
+  let presentColumns = positionColumns.columns.filter(
+    (c) => options[c.name] !== undefined
+  );
+
+  let query =
+    pgp.helpers.update(options, presentColumns, positionColumns.table) +
+    ` WHERE id=$[id]`;
+  return (tx || db).query(query, { id: options.id });
+}
+
+export function updateMultiplePositions(
+  keys: string[],
+  positions: PositionUpdateOptions[],
+  tx?: ITask<any>
+) {
+  let presentColumns = positionColumns.columns.filter((c) =>
+    keys.includes(c.name)
+  );
+
+  let query =
+    pgp.helpers.update(positions, presentColumns, positionColumns.table) +
+    ` WHERE t.id=v.id`;
+  return (tx || db).query(query);
+}
+
+export function addTrades(trades: DbTrade[], tx?: ITask<any>) {
+  let query = pgp.helpers.insert(trades, tradeColumns);
+  return (tx || db).query(query);
+}

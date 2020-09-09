@@ -16,7 +16,7 @@
     "got": "^11.5.2",
     "hyperid": "^2.0.5",
     "just-unique": "^3.2.0",
-    "pg-promise": "^10.6.1",
+    "pg-promise": "~10.6.1",
     "sorters": "^0.0.3",
     "types": "~1.0.0",
     "trading-data": "~1.0.1"

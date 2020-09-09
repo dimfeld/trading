@@ -3,7 +3,12 @@ import { pgp, db, tradeColumns, positionColumns } from './services';
 import * as date from 'date-fns';
 import sorter from 'sorters';
 import * as chalk from 'chalk';
-import { createBrokers, defaultAlpacaAuth } from 'trading-data';
+import {
+  createBrokers,
+  defaultAlpacaAuth,
+  updateMultiplePositions,
+  addTrades,
+} from 'trading-data';
 import { Position, BrokerChoice, OrderType } from 'types';
 
 function format(x, digits = 2) {
@@ -184,22 +189,13 @@ async function run() {
     });
   }
 
-  let orderQuery = pgp.helpers.insert(orderDb, tradeColumns, 'trades');
-  let posUpdate =
-    pgp.helpers.update(
-      positionDb,
-      [
-        '?id',
-        { name: 'close_date', cast: 'date' },
-        'profit',
-        { name: 'legs', mod: ':json', cast: 'jsonb' },
-      ],
-      'positions'
-    ) + ' where t.id=v.id';
-
   await db.tx(async (tx) => {
-    await tx.query(orderQuery);
-    await tx.query(posUpdate);
+    await addTrades(orderDb, tx);
+    await updateMultiplePositions(
+      ['close_date', 'profit', 'legs'],
+      positionDb,
+      tx
+    );
   });
 }
 

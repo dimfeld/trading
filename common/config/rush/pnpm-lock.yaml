@@ -66,7 +66,7 @@ dependencies:
   ky-universal: 0.3.0_ky@0.15.0
   mocha: 5.2.0
   moment: 2.27.0
-  npm-run-all: 4.1.5
+  pg-promise: 10.6.1
   polka: 0.5.2
   postcss: 7.0.32
   postcss-cli: 6.1.3
@@ -88,7 +88,7 @@ dependencies:
   svelte: 3.24.1
   svelte-awesome: 2.3.0
   svelte-notifications: 0.9.9
-  svelte-preprocess: 4.2.1_postcss@7.0.32+svelte@3.24.1
+  svelte-preprocess: 4.2.1_postcss@7.0.32
   svelte-preprocess-postcss: 1.1.1_postcss@7.0.32
   svelte-select: 3.11.1
   syncthrough: 0.5.0
@@ -2187,13 +2187,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-jxwzQpLQjSmWXgwaCZE9Nz+glAG01yF1QnWgbhGwHI5A6FRIEY6IVqtHhIepHqI7/kyEyQEagBC5mBEFlIYvdg==
-  /assert-options/0.1.3:
-    dev: false
-    engines:
-      node: '>=4.0'
-      npm: '>=2.15'
-    resolution:
-      integrity: sha512-DXrZ5WkCv/igD+H8OmeUTl9k0pBhYSTdyA7DRZoSJERCzQ8Z2v85yDjkhYVnHUOeCXGfCNKaogRbLWQsIQbtpg==
   /assert-options/0.6.2:
     dev: false
     engines:
@@ -6064,13 +6057,6 @@ packages:
     dev: false
     resolution:
       integrity: sha1-4BpckQnyr3lmDk6LlYd5AYT1qWw=
-  /manakin/0.5.2:
-    dev: false
-    engines:
-      node: '>=0.12'
-      npm: '>=1.4'
-    resolution:
-      integrity: sha512-pfDSB7QYoVg0Io4KMV9hhPoXpj6p0uBscgtyUSKCOFZe8bqgbpStfgnKIbF/ulnr6U3ICu4OqdyxAqBgOhZwBQ==
   /map-age-cleaner/0.1.3:
     dependencies:
       p-defer: 1.0.0
@@ -6877,10 +6863,6 @@ packages:
     dev: false
     resolution:
       integrity: sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
-  /pg-connection-string/0.1.3:
-    dev: false
-    resolution:
-      integrity: sha1-2hhHsglA5C7hSSvq9l1J2RskXfc=
   /pg-connection-string/2.3.0:
     dev: false
     resolution:
@@ -6891,27 +6873,12 @@ packages:
       node: '>=4.0.0'
     resolution:
       integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==
-  /pg-minify/1.4.1:
-    dev: false
-    engines:
-      node: '>=4.0'
-      npm: '>=2.15'
-    resolution:
-      integrity: sha512-8aZ9xdx7Pe/ppFYVOqvU5KgmM6ttXjaBlsl9Y8yzrUH4xSNVucJKKOwm4Y4H+LCvzZGjZIm4Rkf2Ajt5ixtkBQ==
   /pg-minify/1.6.1:
     dev: false
     engines:
       node: '>=8.0'
     resolution:
       integrity: sha512-ujanxJJB9CSDUvlAOshtjdKAywOPR2vY0a7D+vvgk5rbrYcthZA7TjpN+Z+UwZsz/G/bUexYDT6huE33vYVN0g==
-  /pg-pool/2.0.10_pg@7.11.0:
-    dependencies:
-      pg: 7.11.0_pg@7.11.0
-    dev: false
-    peerDependencies:
-      pg: '>5.0'
-    resolution:
-      integrity: sha512-qdwzY92bHf3nwzIUcj+zJ0Qo5lpG/YxchahxIN8+ZVmXqkahKXsnl2aiJPHLYN9o5mB/leG+Xh6XKxtP7e0sjg==
   /pg-pool/3.2.1_pg@8.3.3:
     dependencies:
       pg: 8.3.3_pg@8.3.3
@@ -6931,36 +6898,10 @@ packages:
       node: '>=8.0'
     resolution:
       integrity: sha512-Ahde0/04RmEPwryMcDV8ya4XXjfNWD44EuckgFPFQOIX/3smZS2ygeSXPEy4DmDxoSkSF6Y6vK8Bc4fN+bYMxg==
-  /pg-promise/8.7.5:
-    dependencies:
-      assert-options: 0.1.3
-      manakin: 0.5.2
-      pg: 7.11.0_pg@7.11.0
-      pg-minify: 1.4.1
-      spex: 2.2.0
-    deprecated: This version of pg-promise is obsolete. You should update to a newer version.
-    dev: false
-    engines:
-      node: '>=4.5'
-      npm: '>=2.15'
-    resolution:
-      integrity: sha512-r/OmS1b1i0nA0KHqlbcAoMLoNo3EGUdcZxaseyXnHrzepcS8ciK516Lw6/lIb6AeWI85ZOBSNdiPlw22xoFx3A==
   /pg-protocol/1.2.5:
     dev: false
     resolution:
       integrity: sha512-1uYCckkuTfzz/FCefvavRywkowa6M5FohNMF5OjKrqo9PSR8gYc8poVmwwYQaBxhmQdBjhtP514eXy9/Us2xKg==
-  /pg-types/2.0.1:
-    dependencies:
-      pg-int8: 1.0.1
-      postgres-array: 2.0.0
-      postgres-bytea: 1.0.0
-      postgres-date: 1.0.7
-      postgres-interval: 1.2.0
-    dev: false
-    engines:
-      node: '>=4'
-    resolution:
-      integrity: sha512-b7y6QM1VF5nOeX9ukMQ0h8a9z89mojrBHXfJeSug4mhL0YpxNBm83ot2TROyoAmX/ZOX3UbwVO4EbH7i1ZZNiw==
   /pg-types/2.2.0:
     dependencies:
       pg-int8: 1.0.1
@@ -6973,22 +6914,6 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==
-  /pg/7.11.0_pg@7.11.0:
-    dependencies:
-      buffer-writer: 2.0.0
-      packet-reader: 1.0.0
-      pg-connection-string: 0.1.3
-      pg-pool: 2.0.10_pg@7.11.0
-      pg-types: 2.0.1
-      pgpass: 1.0.2
-      semver: 4.3.2
-    dev: false
-    engines:
-      node: '>= 4.5.0'
-    peerDependencies:
-      pg: '*'
-    resolution:
-      integrity: sha512-YO4V7vCmEMGoF390LJaFaohWNKaA2ayoQOEZmiHVcAUF+YsRThpf/TaKCgSvsSE7cDm37Q/Cy3Gz41xiX/XjTw==
   /pg/8.3.3_pg@8.3.3:
     dependencies:
       buffer-writer: 2.0.0
@@ -8581,13 +8506,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-J+FWzZoynJEXGphVIS+XEh3kFSjZX/1i9gFBaWQcB+/tmpe2qUsSBABpcxqxnAxFdiUFEgAX1bjYGQvIZmoz9Q==
-  /spex/2.2.0:
-    dev: false
-    engines:
-      node: '>=0.12'
-      npm: '>=1.4'
-    resolution:
-      integrity: sha512-iwBxqKe4ZKD+P/i/WdzWw5qxmerHvzVb29wQm4zwYaDPuwsTKjS7nbqt8OyBSLAi2q0ZFUN3F2b4erX0UwF0fA==
   /spex/3.0.2:
     dev: false
     engines:
@@ -8931,14 +8849,13 @@ packages:
     requiresBuild: true
     resolution:
       integrity: sha512-iagQGcKgCwlSKcKJ2GA3SznjWKwz4Q4yAkYdVMvgE8hQ+vTlvjjRcpCo/9P7u+otr5DLG16PPMwgVQZ3h51cKQ==
-  /svelte-preprocess/4.2.1_postcss@7.0.32+svelte@3.24.1:
+  /svelte-preprocess/4.2.1_postcss@7.0.32:
     dependencies:
       '@types/pug': 2.0.4
       '@types/sass': 1.16.0
       detect-indent: 6.0.0
       postcss: 7.0.32
       strip-indent: 3.0.0
-      svelte: 3.24.1
     dev: false
     engines:
       node: '>= 9.11.2'
@@ -9811,7 +9728,7 @@ packages:
     dev: false
     name: '@rush-temp/alpaca-cml'
     resolution:
-      integrity: sha512-btGr5ZW+Z/k565256I+YgMAc34hIrsc/Juu5GoBwygvwSsbADXwZu4SEmhBuJMFLXsa2YHaoBXQxc0Ym/aCSWg==
+      integrity: sha512-AaQN/TMEoY6yXDAt/Pcs2YPOC/wlcCR2a6MnuBPCSrW/GBevr8weZjjrPALJhXFUJStFnnof4Cec2kyzLFlM0g==
       tarball: 'file:projects/alpaca-cml.tgz'
     version: 0.0.0
   'file:projects/options-analysis.tgz':
@@ -9830,13 +9747,14 @@ packages:
       jest: 24.9.0
       jest-extended: 0.11.5
       lodash: 4.17.20
+      npm-run-all: 4.1.5
       tda-api: github.com/dimfeld/node-tda-api/e2bad38d38a9798b27daffb3342f57b72347530d
       ts-node: 9.0.0_typescript@4.0.2
       typescript: 4.0.2
     dev: false
     name: '@rush-temp/options-analysis'
     resolution:
-      integrity: sha512-3f5inNXKXeB+Cs+fJGe27cnkF/b7VNT6Piex2f/TObgB/lo20R2PkHyyE0Bp/LtHfrQAcjTPOix3tpy+xK92DQ==
+      integrity: sha512-PFxsLerJQJyRIAeEwftwMJgG4mk39NCG0JVYVMSj9/6Qki4TMjAw3hgRIDIzt8GGVr6Jqyrz2XiUmxUVYV4DcA==
       tarball: 'file:projects/options-analysis.tgz'
     version: 0.0.0
   'file:projects/options-liquidity.tgz':
@@ -9856,7 +9774,7 @@ packages:
     dev: false
     name: '@rush-temp/options-liquidity'
     resolution:
-      integrity: sha512-3NJ1kHOzG0MrPfFbhy38ZS8UA4HudzRHtj0rLEF2E/KbuW2jS2hT4AuCB7CjJ7uE0haWAME5Tc0fBGyUFFVvPw==
+      integrity: sha512-7vYRz6R2VZs6nsiTHZ+8I+9kpqmlFnf4GgaulLb/sk+aLLJeg1I5x8gG0mb4g927snC8QiPy0Lc5aH5Z6ByNWQ==
       tarball: 'file:projects/options-liquidity.tgz'
     version: 0.0.0
   'file:projects/records.tgz':
@@ -9898,7 +9816,7 @@ packages:
     dev: false
     name: '@rush-temp/records'
     resolution:
-      integrity: sha512-g7DQUfPaK0/yhGyATLx+7kOoexlGo1SlKXNnkrMPFlTI6aWzPxu56nV2HcHvXoVQKrBM6GUacDqY8Fjb2627EQ==
+      integrity: sha512-4WiTHBRKQiLXlbcIng41NC+BIOgWsYtgccrmK7qFBojn/KwUjYcV0LVd7+ThhLkG9MC0cp7Q6i8O846TMn6VHg==
       tarball: 'file:projects/records.tgz'
     version: 0.0.0
   'file:projects/stakes.tgz':
@@ -9975,7 +9893,7 @@ packages:
     dev: false
     name: '@rush-temp/stakes'
     resolution:
-      integrity: sha512-feeOmcReg2GYcwB0b1rD9s9I+DBhZjBsc68cJmcIp4WuBVcgHQXmkOpVJ+EysdNpmT4RU6uJw8IVl3wySB0ljg==
+      integrity: sha512-TFvwps3AtX/YLjdhVYMwq2dcMBUQ4KiJYvElHjvCeCf/YwWz1hqsvoGcThNAL2V+tpGNDOykS0JRHElN+13n0g==
       tarball: 'file:projects/stakes.tgz'
     version: 0.0.0
   'file:projects/tm-automation.tgz':
@@ -10010,7 +9928,7 @@ packages:
       hyperid: 1.4.1
       lodash: 4.17.20
       options-analysis: github.com/dimfeld/options-analysis/8e8e01d201c43e5a6662ed0ca81970c01f8e6dc9
-      pg-promise: 8.7.5
+      pg-promise: 10.6.1
       sorters: 0.0.3
       tda-api: github.com/dimfeld/node-tda-api/b7ed9757aed44d52295c55b3772423b2c271e58f
       ts-node: 9.0.0_typescript@4.0.2
@@ -10018,7 +9936,7 @@ packages:
     dev: false
     name: '@rush-temp/trading-data'
     resolution:
-      integrity: sha512-lXM+neQS3G6sRkKOI6dgYvCbGZpQQ3j1zpL0/8QX1SPCg76oJF89ZO2Mv3JoSOmj0E/N2sEDoqLXGyuIa7eBtg==
+      integrity: sha512-MZfhDZCue3dFpBpQ6OrlLjPU+MgxAH8/+D5FdorHWUm1DOEwHp8ux/6ybWqxkx6odRkPj4nz7Y3Q2fHinEzRwQ==
       tarball: 'file:projects/trading-data.tgz'
     version: 0.0.0
   'file:projects/types.tgz':
@@ -10141,7 +10059,7 @@ specifiers:
   ky-universal: ^0.3.0
   mocha: ^5.1.1
   moment: ^2.22.2
-  npm-run-all: ^4.1.5
+  pg-promise: ~10.6.1
   polka: ^0.5.2
   postcss: ^7.0.21
   postcss-cli: ^6.1.3

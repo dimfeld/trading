@@ -1,11 +1,23 @@
 #!/usr/bin/env ts-node
 import { pgp, db, tradeColumns, positionColumns } from './services';
-import { Position, BarTimeframe, Quote, BrokerChoice, OrderType } from 'types';
+import {
+  Position,
+  BarTimeframe,
+  Quote,
+  BrokerChoice,
+  OrderType,
+  DbTrade,
+  DbPosition,
+} from 'types';
 import * as uniq from 'just-unique';
 import sorter from 'sorters';
 import * as hyperidMod from 'hyperid';
 import got from 'got';
-import { createBrokers, defaultAlpacaAuth } from 'trading-data';
+import {
+  createBrokers,
+  defaultAlpacaAuth,
+  addNewPositions,
+} from 'trading-data';
 const hyperid = hyperidMod();
 
 interface OpeningTrade {
@@ -228,8 +240,8 @@ async function run() {
     },
   });
 
-  let orderDb = [];
-  let positionDb = [];
+  let orderDb: DbTrade[] = [];
+  let positionDb: DbPosition[] = [];
   for (let order of doneOrders.values()) {
     if (!+order.filled_qty) {
       continue;
@@ -250,6 +262,7 @@ async function run() {
       tags: [],
       gross,
       traded: order.filled_at,
+      price_each: order.filled_avg_price,
       commissions: 0,
     });
 
@@ -267,11 +280,10 @@ async function run() {
       legs: [
         {
           size: order.filled_qty,
-          price: order.filled_avg_price,
           symbol: order.symbol,
         },
       ],
-      broker: 'alpaca',
+      broker: BrokerChoice.alpaca,
       note: tradeStructure.type,
       structure: {
         conditions: {
@@ -283,17 +295,9 @@ async function run() {
     });
   }
 
-  let orderQuery = pgp.helpers.insert(orderDb, tradeColumns, 'trades');
-  let positionQuery = pgp.helpers.insert(
-    positionDb,
-    positionColumns,
-    'positions'
-  );
-
-  if (orderQuery.length) {
+  if (orderDb.length) {
     await db.tx(async (tx) => {
-      await tx.query(positionQuery);
-      await tx.query(orderQuery);
+      await addNewPositions(positionDb, orderDb, tx);
     });
   }
 }
