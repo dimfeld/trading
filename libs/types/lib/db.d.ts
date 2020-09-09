@@ -69,3 +69,7 @@ export interface DbData {
         [symbol: string]: DbPosition[];
     };
 }
+export interface DbTradeAndPosition {
+    position: DbPosition;
+    trade: DbTrade;
+}

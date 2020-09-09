@@ -3,7 +3,7 @@ import { ITask } from 'pg-promise';
 export declare function loadDb(): Promise<DbData>;
 export declare const positionColumns: import("pg-promise").ColumnSet<any>;
 export declare const tradeColumns: import("pg-promise").ColumnSet<any>;
-export declare function addNewPositions(positions: DbPosition[], trades: DbTrade[], tx?: ITask<any>): Promise<any>;
+export declare function writePositions(positions: DbPosition[], trades: DbTrade[], tx?: ITask<any>): Promise<any>;
 export declare type PositionUpdateOptions = Partial<Omit<DbPosition, 'symbol' | 'open_date'>>;
 export declare function updatePosition(options: PositionUpdateOptions, tx?: ITask<any>): Promise<any>;
 export declare function updateMultiplePositions(keys: string[], positions: PositionUpdateOptions[], tx?: ITask<any>): Promise<any>;

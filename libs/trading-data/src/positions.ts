@@ -67,7 +67,7 @@ const updatePositionFields = positionColumns.columns
   .map((x) => x.name)
   .filter((x) => x !== 'id');
 
-export function addNewPositions(
+export function writePositions(
   positions: DbPosition[],
   trades: DbTrade[],
   tx?: ITask<any>

@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as bb from 'bluebird';
 import * as debug_factory from 'debug';
-import { DbTrade, DbPosition, DbOptionLeg, DbStrategies, DbData } from 'types';
+import { DbData } from 'types';
 
 import {
   PositionSimulator,
@@ -9,15 +9,14 @@ import {
   MatchingPositionScore,
   matchPositions,
   optionInfoFromSymbol,
+  applyTradeToPosition,
+  PositionChange,
 } from 'options-analysis';
 import {
-  PositionChange,
-  TradeAndPosition,
   UnderlyingWithTrade,
   position_for_unmatched_trade,
   print_trade_description,
 } from './ui';
-import { recalculate } from './position';
 import { writePositions } from 'trading-data';
 
 const debug = debug_factory('process');
@@ -57,7 +56,7 @@ export async function match_trades(
     if (!position) {
       return;
     }
-    let change = apply_trade_to_position({ position, trade: t.trade });
+    let change = applyTradeToPosition(position, t.trade);
 
     // Update the current position state with the new position.
     let existing = _.findIndex(
@@ -78,46 +77,6 @@ export async function match_trades(
   return {
     open_positions,
     changes: _.compact(matched),
-  };
-}
-
-function apply_trade_to_position({
-  position,
-  trade,
-}: TradeAndPosition): PositionChange {
-  let simulator = new PositionSimulator(position.legs);
-  let result = simulator.addLegs(trade.legs);
-
-  debug('Applied', trade, position, result);
-
-  let trade_type: Change;
-  let all_same = _.every(result, (r) => r.change === result[0].change);
-  if (all_same) {
-    trade_type = result[0].change;
-  }
-
-  debug('sim legs', simulator.legs);
-  let new_legs = simulator.getFlattenedList();
-
-  let new_trades = position.trades.concat(trade);
-  let new_position = {
-    ...position,
-    trades: new_trades,
-    legs: new_legs,
-    ...recalculate(new_trades),
-  };
-
-  if (!new_legs.length) {
-    new_position.close_date = new Date(trade.traded);
-  } else {
-    // This happens sometimes when rolling legs through separate trades.
-    new_position.close_date = null;
-  }
-
-  return {
-    position: new_position,
-    change: trade_type,
-    trade,
   };
 }
 

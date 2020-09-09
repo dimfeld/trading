@@ -11,7 +11,6 @@ import {
   parse_tos,
   manual,
 } from './input';
-import { DbData } from 'types';
 import { UnderlyingWithTrade } from './ui';
 import { process_trades } from './process';
 import { check_active } from './check_active';

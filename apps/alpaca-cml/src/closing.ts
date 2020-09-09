@@ -1,5 +1,4 @@
 #!/usr/bin/env ts-node
-import { pgp, db, tradeColumns, positionColumns } from './services';
 import * as date from 'date-fns';
 import sorter from 'sorters';
 import * as chalk from 'chalk';
@@ -8,6 +7,8 @@ import {
   defaultAlpacaAuth,
   updateMultiplePositions,
   addTrades,
+  pgp,
+  db,
 } from 'trading-data';
 import { Position, BrokerChoice, OrderType } from 'types';
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env ts-node
-import { pgp, db, tradeColumns, positionColumns } from './services';
 import {
   Position,
   BarTimeframe,
@@ -16,7 +15,9 @@ import got from 'got';
 import {
   createBrokers,
   defaultAlpacaAuth,
-  addNewPositions,
+  writePositions,
+  pgp,
+  db,
 } from 'trading-data';
 const hyperid = hyperidMod();
 
@@ -297,7 +298,7 @@ async function run() {
 
   if (orderDb.length) {
     await db.tx(async (tx) => {
-      await addNewPositions(positionDb, orderDb, tx);
+      await writePositions(positionDb, orderDb, tx);
     });
   }
 }

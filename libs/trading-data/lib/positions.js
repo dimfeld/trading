@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addTrades = exports.updateMultiplePositions = exports.updatePosition = exports.addNewPositions = exports.tradeColumns = exports.positionColumns = exports.loadDb = void 0;
+exports.addTrades = exports.updateMultiplePositions = exports.updatePosition = exports.writePositions = exports.tradeColumns = exports.positionColumns = exports.loadDb = void 0;
 const debug_factory = require("debug");
 const _ = require("lodash");
 const config = require("./config");
@@ -55,7 +55,7 @@ exports.tradeColumns = new services_1.pgp.helpers.ColumnSet([
 const updatePositionFields = exports.positionColumns.columns
     .map((x) => x.name)
     .filter((x) => x !== 'id');
-function addNewPositions(positions, trades, tx) {
+function writePositions(positions, trades, tx) {
     let insertPositions = services_1.pgp.helpers.insert(positions, exports.positionColumns, config.postgres.tables.positions);
     let updatePositions = _.map(updatePositionFields, (f) => `${services_1.pgp.as.name(f)}=EXCLUDED.${services_1.pgp.as.name(f)}`).join(', ');
     let insertTrades = services_1.pgp.helpers.insert(trades, exports.tradeColumns, config.postgres.tables.trades);
@@ -65,7 +65,7 @@ function addNewPositions(positions, trades, tx) {
     debug(query);
     return (tx || services_1.db).query(query);
 }
-exports.addNewPositions = addNewPositions;
+exports.writePositions = writePositions;
 function updatePosition(options, tx) {
     let presentColumns = exports.positionColumns.columns.filter((c) => options[c.name] !== undefined);
     let query = services_1.pgp.helpers.update(options, presentColumns, exports.positionColumns.table) +

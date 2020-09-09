@@ -5,7 +5,7 @@ import * as debug_factory from 'debug';
 
 import { DbData, DbPosition, DbStrategies, Quote, AssetType } from 'types';
 import { check_expired_legs } from './expired_legs';
-import { writePositions } from 'trading-data';
+import { writePositions, Brokers } from 'trading-data';
 import {
   print_trade_description,
   describe_position,

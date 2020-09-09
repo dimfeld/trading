@@ -81,3 +81,8 @@ export interface DbData {
   sorted_strategies: DbStrategy[];
   positions: { [symbol: string]: DbPosition[] };
 }
+
+export interface DbTradeAndPosition {
+  position: DbPosition;
+  trade: DbTrade;
+}

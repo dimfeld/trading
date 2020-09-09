@@ -5,6 +5,7 @@ import * as inquirer from 'inquirer';
 import {
   Change,
   MatchingPositionScore,
+  PositionChange,
   optionInfoFromSymbol,
 } from 'options-analysis';
 import { DbTrade, DbStrategy, DbStrategies, DbOptionLeg } from 'types';
@@ -19,15 +20,6 @@ import { DbPosition, DbData } from 'types';
 export interface UnderlyingWithTrade {
   underlying: string;
   trade: DbTrade;
-}
-
-export interface TradeAndPosition {
-  position: DbPosition;
-  trade: DbTrade;
-}
-
-export interface PositionChange extends TradeAndPosition {
-  change: Change;
 }
 
 export interface TradeMatches extends UnderlyingWithTrade {

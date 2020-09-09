@@ -1,13 +1,12 @@
 import * as _ from 'lodash';
 import * as hyperid_factory from 'hyperid';
 import { DbPosition, DbOptionLeg } from 'types';
-import { PositionChange } from '../ui';
 import * as analyze from 'options-analysis';
 
 const hyperid = hyperid_factory({ urlSafe: true });
 
 export function check_expired_legs(positions: DbPosition[]) {
-  let updated_positions: PositionChange[] = [];
+  let updated_positions: analyze.PositionChange[] = [];
 
   let today = analyze.occExpirationFromDate(new Date());
   _.each(positions, (position) => {
@@ -50,7 +49,7 @@ export function check_expired_legs(positions: DbPosition[]) {
 
       position.trades.push(trade);
 
-      let tp: PositionChange = {
+      let tp: analyze.PositionChange = {
         position,
         trade,
         change: analyze.Change.Closed,
