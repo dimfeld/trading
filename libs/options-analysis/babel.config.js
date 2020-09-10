@@ -9,7 +9,7 @@ module.exports = {
     },
     node: {
       presets: [
-        ['@babel/preset-env', { targets: { node: true } }],
+        ['@babel/preset-env', { targets: { node: "current" } }],
         ['@babel/preset-typescript', { allExtensions: true }],
       ],
     },
