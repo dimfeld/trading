@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createTechnicalCalculators = void 0;
 const date = require("date-fns");
 function totalForDays(prices, days) {
-    return prices.slice(0, days).reduce((acc, val) => acc + val.price, 0);
+    return prices.slice(0, days).reduce((acc, val) => acc + val.close, 0);
 }
 function emaMultiplier(days) {
     return 2 / (days + 1);
@@ -14,21 +14,23 @@ function ema(prices, days) {
     }
     // let smaForPeriod = totalForDays(latest, prices, days) / days;
     let k = emaMultiplier(days);
-    let value = prices[prices.length - 1].price;
+    let value = prices[prices.length - 1].close;
     for (let i = prices.length - 1; i >= 0; i--) {
-        value = value + k * (prices[i].price - value);
+        value = value + k * (prices[i].close - value);
     }
     return Math.round(value);
 }
-function technicalCalculator(symbol, prices) {
-    let fullDayToday = date.isToday(prices[0].date);
+function technicalCalculator(symbol, prices, 
+/** Exclude the first bar if it's from today. Use for daily bars only */
+excludeToday = true) {
+    let fullDayToday = excludeToday && date.isToday(prices[0].time);
     let pricesWithoutToday = fullDayToday ? prices.slice(1) : prices;
     let total49 = totalForDays(pricesWithoutToday, 49);
-    let total50Yesterday = total49 + pricesWithoutToday[49].price;
+    let total50Yesterday = total49 + pricesWithoutToday[49].close;
     let total199 = pricesWithoutToday
         .slice(49, 198)
-        .reduce((acc, val) => acc + val.price, total49);
-    let total200Yesterday = total199 + pricesWithoutToday[199].price;
+        .reduce((acc, val) => acc + val.close, total49);
+    let total200Yesterday = total199 + pricesWithoutToday[199].close;
     let ema9Yesterday = ema(pricesWithoutToday, 9);
     let ema10Yesterday = ema(pricesWithoutToday, 10);
     let ema12Yesterday = ema(pricesWithoutToday, 12);
@@ -38,12 +40,26 @@ function technicalCalculator(symbol, prices) {
     let ma200Yesterday = total200Yesterday / 200;
     // Bollinger bands calculations
     let total19 = totalForDays(pricesWithoutToday, 20);
-    let total20Yesterday = total19 + pricesWithoutToday[19].price;
+    let total20Yesterday = total19 + pricesWithoutToday[19].close;
     let ma20Yesterday = total20Yesterday / 20;
+    const numRsiDays = 20;
+    let gainsByDay = new Array(numRsiDays);
+    let lossesByDay = new Array(numRsiDays);
+    for (let i = 0; i < numRsiDays; ++i) {
+        let change = pricesWithoutToday[i].close - pricesWithoutToday[i + 1].close;
+        if (change >= 0) {
+            gainsByDay[i] = (gainsByDay[i - 1] || 0) + change;
+            lossesByDay[i] = lossesByDay[i - 1] || 0;
+        }
+        else {
+            gainsByDay[i] = gainsByDay[i - 1];
+            lossesByDay[i] = -change;
+        }
+    }
     let gain13 = 0;
     let loss13 = 0;
     for (let i = 0; i < 13; i++) {
-        let change = pricesWithoutToday[i].price - pricesWithoutToday[i + 1].price;
+        let change = pricesWithoutToday[i].close - pricesWithoutToday[i + 1].close;
         if (change > 0) {
             gain13 += change;
         }
@@ -53,7 +69,7 @@ function technicalCalculator(symbol, prices) {
     }
     let gain14 = gain13;
     let loss14 = loss13;
-    let change = pricesWithoutToday[13].price - pricesWithoutToday[14].price;
+    let change = pricesWithoutToday[13].close - pricesWithoutToday[14].close;
     if (change > 0) {
         gain14 += change;
     }
@@ -63,7 +79,7 @@ function technicalCalculator(symbol, prices) {
     let gain19 = gain14;
     let loss19 = loss14;
     for (let i = 14; i < 19; i++) {
-        let change = pricesWithoutToday[i].price - pricesWithoutToday[i + 1].price;
+        let change = pricesWithoutToday[i].close - pricesWithoutToday[i + 1].close;
         if (change > 0) {
             gain19 += change;
         }
@@ -73,7 +89,7 @@ function technicalCalculator(symbol, prices) {
     }
     let gain20 = gain19;
     let loss20 = loss19;
-    change = pricesWithoutToday[19].price - pricesWithoutToday[19].price;
+    change = pricesWithoutToday[19].close - pricesWithoutToday[19].close;
     if (change > 0) {
         gain20 += change;
     }
@@ -91,7 +107,7 @@ function technicalCalculator(symbol, prices) {
     function variance(initialPrice, avg, limit) {
         let initial = initialPrice ? initialPrice - avg : 0;
         return pricesWithoutToday.slice(0, limit).reduce((acc, val) => {
-            let v = val.price - avg;
+            let v = val.close - avg;
             return acc + v * v;
         }, initial * initial);
     }
@@ -118,12 +134,13 @@ function technicalCalculator(symbol, prices) {
         },
     };
     function calculateLatest(latest) {
+        latest *= 100;
         let ma20 = (total19 + latest) / 20;
         let variance20 = variance(latest, ma20, 19) / 19;
         let stddev20 = Math.sqrt(variance20);
         let rsi14;
         let rsi20;
-        let change = latest - pricesWithoutToday[0].price;
+        let change = latest - pricesWithoutToday[0].close;
         if (change > 0) {
             rsi14 = rsi(14, gain13 + change, loss13);
             rsi20 = rsi(20, gain19 + change, loss19);

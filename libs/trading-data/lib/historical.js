@@ -14,19 +14,14 @@ async function downloadPrices(brokers, symbols, size) {
         end: now,
         limit: size,
     });
+    let barSorter = sorters_1.default({
+        value: (b) => b.time.valueOf(),
+        descending: true,
+    });
     let output = new Map();
     for (let [symbol, bars] of data.entries()) {
-        let priceList = bars
-            .sort(sorters_1.default({ value: (b) => b.time.valueOf(), descending: true }))
-            .map((b) => {
-            return {
-                symbol,
-                date: b.time,
-                price: Math.round(b.close * 100),
-                volume: b.volume,
-            };
-        });
-        output.set(symbol, priceList);
+        bars.sort(barSorter);
+        output.set(symbol, bars);
     }
     // Skip the local cache for now.
     // let allRecords = Array.from(output.values()).flat();
@@ -44,7 +39,7 @@ async function downloadPrices(brokers, symbols, size) {
 async function getPriceHistory(brokers, symbols, history = 200) {
     return downloadPrices(brokers, symbols, history);
     // For simplicity we don't currently read from the cache.
-    // let rows = await db.query<HistoricalPrice[]>(
+    // let rows = await db.query<Bar[]>(
     //   `SELECT symbol, date, price FROM ${config.postgres.tables.historical_equity_prices}
     //   WHERE symbol=ANY($[symbols]) AND date >= $[minDate]
     //   ORDER BY date DESC`,

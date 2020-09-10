@@ -1,9 +1,12 @@
-import { HistoricalPrice } from './historical';
+import { Bar } from 'types';
 export interface Technicals {
     ma50: number;
     ma200: number;
+    ema9: number;
     ema10: number;
+    ema12: number;
     ema21: number;
+    ema26: number;
     rsi14: number;
     rsi20: number;
     bollinger: {
@@ -17,16 +20,16 @@ export interface Technicals {
 }
 export interface LatestTechnicals extends Technicals {
     symbol: string;
-    prices: HistoricalPrice[];
+    prices: Bar[];
     fullDayToday: boolean;
     yesterday: Technicals;
     latest: number;
 }
 export interface TechnicalCalculator {
     symbol: string;
-    prices: HistoricalPrice[];
+    prices: Bar[];
     fullDayToday: boolean;
     yesterday: Technicals;
     latest(latestPrice: number): LatestTechnicals;
 }
-export declare function createTechnicalCalculators(history: Map<string, HistoricalPrice[]>): Map<string, TechnicalCalculator>;
+export declare function createTechnicalCalculators(history: Map<string, Bar[]>): Map<string, TechnicalCalculator>;

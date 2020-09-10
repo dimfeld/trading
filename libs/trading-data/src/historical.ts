@@ -7,18 +7,11 @@ import { Brokers } from './brokers';
 import { BarTimeframe, Bar } from 'types';
 const debug = debugMod('historical');
 
-export interface HistoricalPrice {
-  date: Date;
-  /** Price as an integer. Divide by 100 to get actual price. */
-  price: number;
-  volume: number;
-}
-
 async function downloadPrices(
   brokers: Brokers,
   symbols: string[],
   size: number
-): Promise<Map<string, HistoricalPrice[]>> {
+): Promise<Map<string, Bar[]>> {
   debug('Downloading history for %s', symbols);
 
   let now = new Date();
@@ -30,22 +23,15 @@ async function downloadPrices(
     limit: size,
   });
 
-  let output = new Map<string, HistoricalPrice[]>();
-  for (let [symbol, bars] of data.entries()) {
-    let priceList = bars
-      .sort(
-        sorter<Bar>({ value: (b) => b.time.valueOf(), descending: true })
-      )
-      .map((b) => {
-        return {
-          symbol,
-          date: b.time,
-          price: Math.round(b.close * 100),
-          volume: b.volume,
-        };
-      });
+  let barSorter = sorter<Bar>({
+    value: (b) => b.time.valueOf(),
+    descending: true,
+  });
 
-    output.set(symbol, priceList);
+  let output = new Map<string, Bar[]>();
+  for (let [symbol, bars] of data.entries()) {
+    bars.sort(barSorter);
+    output.set(symbol, bars);
   }
 
   // Skip the local cache for now.
@@ -69,12 +55,12 @@ export async function getPriceHistory(
   brokers: Brokers,
   symbols: string[],
   history = 200
-): Promise<Map<string, HistoricalPrice[]>> {
+): Promise<Map<string, Bar[]>> {
   return downloadPrices(brokers, symbols, history);
 
   // For simplicity we don't currently read from the cache.
 
-  // let rows = await db.query<HistoricalPrice[]>(
+  // let rows = await db.query<Bar[]>(
   //   `SELECT symbol, date, price FROM ${config.postgres.tables.historical_equity_prices}
   //   WHERE symbol=ANY($[symbols]) AND date >= $[minDate]
   //   ORDER BY date DESC`,
