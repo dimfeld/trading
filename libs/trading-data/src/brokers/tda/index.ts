@@ -3,8 +3,8 @@ import got = require('got');
 import * as querystring from 'querystring';
 import * as debugMod from 'debug';
 
-import { Broker, GetOrderOptions } from '../broker_interface';
-import { Account, BrokerChoice, Position } from 'types';
+import { Broker, GetBarsOptions, GetOrderOptions } from '../broker_interface';
+import { Account, Bar, BarTimeframe, BrokerChoice, Position } from 'types';
 
 import {
   Order,
@@ -285,6 +285,83 @@ export class Api implements Broker {
       },
       {}
     );
+  }
+
+  async getBars(options: GetBarsOptions) {
+    let periodType: string;
+    let candleSize = 1;
+    let timeframe;
+    switch (options.timeframe) {
+      case BarTimeframe.minute:
+        timeframe = 'minute';
+        periodType = 'day';
+        break;
+      case BarTimeframe.fiveminute:
+        timeframe = 'minute';
+        periodType = 'day';
+        candleSize = 5;
+        break;
+      case BarTimeframe.fifteenminute:
+        timeframe = 'minute';
+        periodType = 'day';
+        candleSize = 15;
+        break;
+      case BarTimeframe.thirtyminute:
+        timeframe = 'minute';
+        periodType = 'day';
+        candleSize = 30;
+        break;
+      case BarTimeframe.day:
+        timeframe = 'daily';
+        periodType = 'year';
+        break;
+    }
+
+    let qs: any = {
+      periodType,
+      frequency: candleSize,
+      frequencyType: timeframe,
+      needExtendedHoursData: 'false',
+    };
+
+    if (options.start) {
+      qs.startDate = options.start.valueOf();
+      qs.endDate = (options.end || new Date()).valueOf();
+    } else {
+      let period = options.numBars;
+      if (!period) {
+        period = periodType === 'year' ? 2 : 1;
+      }
+      qs.period = period;
+    }
+
+    let results = await Promise.all(
+      options.symbols.map(async (s) => {
+        let url = `${HOST}/v1/marketdata/${s}/pricehistory`;
+        let results = await this.request(url, qs);
+        let bars = results.candles.map((c) => {
+          return {
+            open: c.open,
+            close: c.close,
+            low: c.low,
+            high: c.high,
+            volume: c.volume,
+            time: c.datetime,
+          };
+        });
+
+        return {
+          symbol: s,
+          bars,
+        };
+      })
+    );
+
+    let output = new Map<string, Bar[]>();
+    for (let result of results) {
+      output.set(result.symbol, result.bars);
+    }
+    return output;
   }
 
   async getAccounts(extraFields?: string[]) {

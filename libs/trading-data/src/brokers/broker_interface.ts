@@ -16,13 +16,17 @@ export interface GetBarsOptions {
   symbols: string[];
   timeframe: BarTimeframe;
 
-  /** The maximum number of bars to get */
-  limit?: number;
+  /** Number of days to retrieve, if start is omitted.
+   * Defaults to 2 years worth for day timeframe and 1 day for minute timeframes */
+  numBars?: number;
 
   /** Get bars on or after this date */
   start?: Date;
-  /** Get bars on or before this date. Must be used with `start` to get the proper results */
+  /** Get bars on or before this date. Defaults to end of day yesterday */
   end?: Date;
+
+  /** By default this returns data adjusted for dividends and splits. Set to true to get unadjusted data */
+  unadjusted?: boolean;
 }
 
 export interface GetOrderOptions {

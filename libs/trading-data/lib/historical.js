@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getPriceHistory = void 0;
+const dateFns = require("date-fns");
 const sorters_1 = require("sorters");
 const debugMod = require("debug");
 const types_1 = require("types");
@@ -12,7 +13,7 @@ async function downloadPrices(brokers, symbols, size) {
         symbols,
         timeframe: types_1.BarTimeframe.day,
         end: now,
-        limit: size,
+        start: dateFns.subBusinessDays(now, size),
     });
     let barSorter = sorters_1.default({
         value: (b) => b.time.valueOf(),

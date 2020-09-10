@@ -1,5 +1,5 @@
-import { Broker, GetOrderOptions } from '../broker_interface';
-import { Account, Position } from 'types';
+import { Broker, GetBarsOptions, GetOrderOptions } from '../broker_interface';
+import { Account, Bar, Position } from 'types';
 import { Order, Quote, OptionChain } from 'types';
 import { CreateOrderOptions } from '../orders';
 export declare function optionInfoFromSymbol(symbol: string): {
@@ -42,6 +42,7 @@ export declare class Api implements Broker {
     getQuotes(symbols: string | string[]): Promise<{
         [symbol: string]: Quote;
     }>;
+    getBars(options: GetBarsOptions): Promise<Map<string, Bar[]>>;
     getAccounts(extraFields?: string[]): Promise<any>;
     getAccount(): Promise<Account>;
     getPositions(): Promise<Position[]>;

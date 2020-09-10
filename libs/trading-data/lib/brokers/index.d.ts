@@ -1,7 +1,7 @@
 import * as tda from './tda';
 import * as alpaca from './alpaca';
 import { GetBarsOptions } from './broker_interface';
-import { Account, Bar, MarketStatus, Position, BrokerChoice } from 'types';
+import { Account, Bar, MarketStatus, MarketCalendar, Position, BrokerChoice } from 'types';
 import { WaitForOrdersOptions, CreateOrderOptions } from './orders';
 import { GetOrderOptions } from '..';
 export { GetBarsOptions, GetOrderOptions } from './broker_interface';
@@ -19,7 +19,7 @@ export interface BrokerOptions {
 export declare class Brokers {
     tda?: tda.Api;
     alpaca?: alpaca.Api;
-    constructor({ tda: tdaOptions, alpaca: alpacaOptions }: BrokerOptions);
+    constructor({ tda: tdaOptions, alpaca: alpacaOptions }?: BrokerOptions);
     init(): Promise<[void, void]>;
     end(): Promise<[void, void]>;
     getAccount(broker?: BrokerChoice): Promise<Account[]>;
@@ -30,10 +30,14 @@ export declare class Brokers {
     }>;
     getOptionChain(options: tda.GetOptionChainOptions): Promise<import("types").OptionChain>;
     marketStatus(): Promise<MarketStatus>;
+    /** Return market dates starting with the next business day and going back 300 business days.
+     * This equates to roughly
+     */
+    marketCalendar(): Promise<MarketCalendar>;
     private resolveBrokerChoice;
     private resolveMaybeBrokerChoice;
     createOrder(broker: BrokerChoice, options: CreateOrderOptions): Promise<import("types").Order>;
     getOrders(broker: BrokerChoice, options?: GetOrderOptions): Promise<import("types").Order[]>;
     waitForOrders(broker: BrokerChoice, options: WaitForOrdersOptions): Promise<Map<string, import("types").Order>>;
 }
-export declare function createBrokers(options: BrokerOptions): Promise<Brokers>;
+export declare function createBrokers(options?: BrokerOptions): Promise<Brokers>;

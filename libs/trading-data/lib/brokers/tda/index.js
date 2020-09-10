@@ -197,6 +197,76 @@ class Api {
             acc[occ_symbol] = result;
         }, {});
     }
+    async getBars(options) {
+        let periodType;
+        let candleSize = 1;
+        let timeframe;
+        switch (options.timeframe) {
+            case types_1.BarTimeframe.minute:
+                timeframe = 'minute';
+                periodType = 'day';
+                break;
+            case types_1.BarTimeframe.fiveminute:
+                timeframe = 'minute';
+                periodType = 'day';
+                candleSize = 5;
+                break;
+            case types_1.BarTimeframe.fifteenminute:
+                timeframe = 'minute';
+                periodType = 'day';
+                candleSize = 15;
+                break;
+            case types_1.BarTimeframe.thirtyminute:
+                timeframe = 'minute';
+                periodType = 'day';
+                candleSize = 30;
+                break;
+            case types_1.BarTimeframe.day:
+                timeframe = 'daily';
+                periodType = 'year';
+                break;
+        }
+        let qs = {
+            periodType,
+            frequency: candleSize,
+            frequencyType: timeframe,
+            needExtendedHoursData: 'false',
+        };
+        if (options.start) {
+            qs.startDate = options.start.valueOf();
+            qs.endDate = (options.end || new Date()).valueOf();
+        }
+        else {
+            let period = options.numBars;
+            if (!period) {
+                period = periodType === 'year' ? 2 : 1;
+            }
+            qs.period = period;
+        }
+        let results = await Promise.all(options.symbols.map(async (s) => {
+            let url = `${HOST}/v1/marketdata/${s}/pricehistory`;
+            let results = await this.request(url, qs);
+            let bars = results.candles.map((c) => {
+                return {
+                    open: c.open,
+                    close: c.close,
+                    low: c.low,
+                    high: c.high,
+                    volume: c.volume,
+                    time: c.datetime,
+                };
+            });
+            return {
+                symbol: s,
+                bars,
+            };
+        }));
+        let output = new Map();
+        for (let result of results) {
+            output.set(result.symbol, result.bars);
+        }
+        return output;
+    }
     async getAccounts(extraFields) {
         let q = extraFields ? '?fields=' + extraFields.join(',') : '';
         return this.request(`${HOST}/v1/accounts${q}`);

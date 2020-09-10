@@ -20,6 +20,7 @@ var BarTimeframe;
     BarTimeframe["minute"] = "minute";
     BarTimeframe["fiveminute"] = "5Min";
     BarTimeframe["fifteenminute"] = "15Min";
+    BarTimeframe["thirtyminute"] = "30Min";
     BarTimeframe["day"] = "day";
 })(BarTimeframe = exports.BarTimeframe || (exports.BarTimeframe = {}));
 //# sourceMappingURL=index.js.map

@@ -20,7 +20,7 @@ async function downloadPrices(
     symbols,
     timeframe: BarTimeframe.day,
     end: now,
-    limit: size,
+    start: dateFns.subBusinessDays(now, size),
   });
 
   let barSorter = sorter<Bar>({

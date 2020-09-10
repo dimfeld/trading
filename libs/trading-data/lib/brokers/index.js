@@ -19,7 +19,7 @@ const default_auth_1 = require("./default_auth");
 __exportStar(require("./default_auth"), exports);
 /** A class that arbitrates requests through multiple brokers */
 class Brokers {
-    constructor({ tda: tdaOptions, alpaca: alpacaOptions }) {
+    constructor({ tda: tdaOptions, alpaca: alpacaOptions } = {}) {
         var _a;
         tdaOptions = tdaOptions !== null && tdaOptions !== void 0 ? tdaOptions : { auth: default_auth_1.defaultTdaAuth(), autorefresh: true };
         alpacaOptions = alpacaOptions !== null && alpacaOptions !== void 0 ? alpacaOptions : default_auth_1.defaultAlpacaAuth();
@@ -38,10 +38,7 @@ class Brokers {
         return Promise.all(this.resolveMaybeBrokerChoice(broker).map((api) => api.getAccount()));
     }
     getBars(options) {
-        if (!this.alpaca) {
-            return Promise.reject(new Error('getBars requires the Alpaca broker'));
-        }
-        return this.alpaca.getBars(options);
+        return this.tda.getBars(options);
     }
     async getPositions(broker) {
         let pos = await Promise.all(this.resolveMaybeBrokerChoice(broker).map((api) => api.getPositions()));
@@ -55,6 +52,12 @@ class Brokers {
     }
     marketStatus() {
         return this.alpaca.marketStatus();
+    }
+    /** Return market dates starting with the next business day and going back 300 business days.
+     * This equates to roughly
+     */
+    marketCalendar() {
+        return this.alpaca.marketCalendar();
     }
     resolveBrokerChoice(choice) {
         switch (choice) {

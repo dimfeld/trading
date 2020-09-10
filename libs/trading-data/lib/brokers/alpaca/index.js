@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Api = void 0;
 const Alpaca = require("@alpacahq/alpaca-trade-api");
+const sorters_1 = require("sorters");
+const date = require("date-fns");
 const types_1 = require("types");
 const tradeTypeMap = {
     [types_1.OrderType.limit]: 'limit',
@@ -101,23 +103,51 @@ class Api {
         };
     }
     async getBars(options) {
-        let data = await request(() => this.api.getBars(options.timeframe, options.symbols.join(','), {
-            start: options.start,
-            end: options.end,
-            limit: options.limit,
+        /* This polygon integration doesn't work correctly... it seems to omit every Friday */
+        let multiplier = 1;
+        let timeframe;
+        switch (options.timeframe) {
+            case types_1.BarTimeframe.day:
+                timeframe = 'day';
+                break;
+            case types_1.BarTimeframe.fiveminute:
+                timeframe = 'minute';
+                multiplier = 5;
+                break;
+            case types_1.BarTimeframe.fifteenminute:
+                timeframe = 'minute';
+                multiplier = 15;
+                break;
+            case types_1.BarTimeframe.thirtyminute:
+                timeframe = 'minute';
+                multiplier = 30;
+                break;
+        }
+        let endDate = options.end || new Date();
+        let start = options.start.valueOf();
+        let end = endDate.valueOf();
+        console.dir({ start, end });
+        let data = await Promise.all(options.symbols.map(async (s) => {
+            let result = await request(() => this.api.getHistoricAggregatesV2(s, multiplier, timeframe, start, end, { unadjusted: options.unadjusted, sort: 'desc' }));
+            console.dir(result.results);
+            let bars = result.results.map((r) => {
+                return {
+                    time: new Date(r.t),
+                    open: r.o,
+                    close: r.c,
+                    high: r.h,
+                    low: r.l,
+                    volume: r.v,
+                };
+            });
+            return {
+                symbol: s,
+                bars,
+            };
         }));
         let output = new Map();
-        for (let key in data) {
-            output.set(key, data[key].map((aBar) => {
-                return {
-                    open: +aBar.openPrice,
-                    close: +aBar.closePrice,
-                    high: +aBar.highPrice,
-                    low: +aBar.lowPrice,
-                    volume: +aBar.volume,
-                    time: new Date(aBar.startEpochTime),
-                };
-            }));
+        for (let bars of data) {
+            output.set(bars.symbol, bars.bars);
         }
         return output;
     }
@@ -128,6 +158,37 @@ class Api {
             nextOpen: new Date(data.next_open),
             nextClose: new Date(data.next_close),
         };
+    }
+    async marketCalendar() {
+        let data = await request(() => this.api.getCalendar({
+            start: date.subBusinessDays(new Date(), 300),
+            end: date.addBusinessDays(new Date(), 1),
+        }));
+        let values = data
+            .map((c) => {
+            return {
+                date: new Date(c.date),
+                open: c.open,
+                close: c.close,
+            };
+        })
+            .sort(sorters_1.default({
+            value: (c) => c.date.valueOf(),
+            descending: true,
+        }));
+        let mostRecentOrToday = values.findIndex((v) => date.isToday(v.date) || date.isPast(v.date));
+        if (mostRecentOrToday > 0) {
+            return {
+                next: values[mostRecentOrToday - 1],
+                current: values.slice(mostRecentOrToday || 0),
+            };
+        }
+        else {
+            return {
+                next: null,
+                current: values,
+            };
+        }
     }
     async getOrders(options = {}) {
         let reqOptions = {

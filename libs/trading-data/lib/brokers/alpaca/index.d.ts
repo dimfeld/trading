@@ -1,6 +1,6 @@
 import * as Alpaca from '@alpacahq/alpaca-trade-api';
 import { Broker, GetBarsOptions, GetOrderOptions } from '../broker_interface';
-import { Account, Bar, Order, Position } from 'types';
+import { Account, Bar, Order, Position, MarketCalendar } from 'types';
 import { CreateOrderOptions } from '../orders';
 export interface AlpacaBrokerOptions {
     key: string;
@@ -20,6 +20,7 @@ export declare class Api implements Broker {
         nextOpen: Date;
         nextClose: Date;
     }>;
+    marketCalendar(): Promise<MarketCalendar>;
     getOrders(options?: GetOrderOptions): Promise<Order[]>;
     getPositions(): Promise<Position[]>;
     createOrder(order: CreateOrderOptions): Promise<Order>;

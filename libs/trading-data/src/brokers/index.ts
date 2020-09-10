@@ -1,7 +1,14 @@
 import * as tda from './tda';
 import * as alpaca from './alpaca';
 import { GetBarsOptions } from './broker_interface';
-import { Account, Bar, MarketStatus, Position, BrokerChoice } from 'types';
+import {
+  Account,
+  Bar,
+  MarketStatus,
+  MarketCalendar,
+  Position,
+  BrokerChoice,
+} from 'types';
 import {
   waitForOrders,
   WaitForOrdersOptions,
@@ -29,7 +36,7 @@ export class Brokers {
   tda?: tda.Api;
   alpaca?: alpaca.Api;
 
-  constructor({ tda: tdaOptions, alpaca: alpacaOptions }: BrokerOptions) {
+  constructor({ tda: tdaOptions, alpaca: alpacaOptions }: BrokerOptions = {}) {
     tdaOptions = tdaOptions ?? { auth: defaultTdaAuth(), autorefresh: true };
     alpacaOptions = alpacaOptions ?? defaultAlpacaAuth();
     this.tda = new tda.Api(tdaOptions.auth, tdaOptions.autorefresh ?? true);
@@ -51,11 +58,7 @@ export class Brokers {
   }
 
   getBars(options: GetBarsOptions): Promise<Map<string, Bar[]>> {
-    if (!this.alpaca) {
-      return Promise.reject(new Error('getBars requires the Alpaca broker'));
-    }
-
-    return this.alpaca.getBars(options);
+    return this.tda.getBars(options);
   }
 
   async getPositions(broker?: BrokerChoice): Promise<Position[]> {
@@ -76,6 +79,13 @@ export class Brokers {
 
   marketStatus(): Promise<MarketStatus> {
     return this.alpaca.marketStatus();
+  }
+
+  /** Return market dates starting with the next business day and going back 300 business days.
+   * This equates to roughly
+   */
+  marketCalendar(): Promise<MarketCalendar> {
+    return this.alpaca.marketCalendar();
   }
 
   private resolveBrokerChoice(choice: BrokerChoice) {
@@ -109,7 +119,7 @@ export class Brokers {
   }
 }
 
-export async function createBrokers(options: BrokerOptions) {
+export async function createBrokers(options?: BrokerOptions) {
   let api = new Brokers(options);
   await api.init();
   return api;
