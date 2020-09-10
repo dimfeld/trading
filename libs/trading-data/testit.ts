@@ -10,7 +10,7 @@ async function run() {
   let brokers = await data.createBrokers();
   let cal = await brokers.marketCalendar();
   let startIndex = 200;
-  let symbol = 'AAPL';
+  let symbol = 'MSFT';
   console.log(`Getting bars starting at ${cal.current[startIndex].date}`);
   let bars = await brokers.getBars({
     symbols: [symbol],

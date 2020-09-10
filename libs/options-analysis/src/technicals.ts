@@ -2,28 +2,33 @@ import * as _ from 'lodash';
 import { Bar } from 'types';
 import * as date from 'date-fns';
 
-function totalForDays(prices: Bar[], days: number) {
-  return prices.slice(0, days).reduce((acc, val) => acc + val.close, 0);
+function totalForDays(prices: number[], days: number) {
+  let result = 0;
+  for (let i = 0; i < days; i += 1) {
+    result += prices[i];
+  }
+  return result;
 }
 
 function emaMultiplier(days: number) {
   return 2 / (days + 1);
 }
 
-function ema(prices: Bar[], days: number) {
+function ema(prices: number[], days: number) {
   if (prices.length < days) {
     return null;
   }
 
-  // let smaForPeriod = totalForDays(latest, prices, days) / days;
+  // let smaForPeriod = totalForDays(prices, days) / days;
 
   let k = emaMultiplier(days);
-  let value = prices[prices.length - 1].close;
-  for (let i = prices.length - 1; i >= 0; i--) {
-    value = value + k * (prices[i].close - value);
+  let maxDate = Math.min(250, prices.length - 1);
+  let value = prices[maxDate];
+  for (let i = maxDate - 1; i >= 0; i--) {
+    value = value + k * (prices[i] - value);
   }
 
-  return Math.round(value);
+  return value;
 }
 
 export interface Technicals {
@@ -62,23 +67,24 @@ export interface TechnicalCalculator {
   latest(latestPrice: number): LatestTechnicals;
 }
 
-function technicalCalculator(
+export function technicalCalculator(
   symbol: string,
-  prices: Bar[],
+  bars: Bar[],
   /** Exclude the first bar if it's from today. Use for daily bars only */
   excludeToday = true
 ): TechnicalCalculator {
-  let fullDayToday = excludeToday && date.isToday(prices[0].time);
+  let prices = bars.map((b) => b.close /*(b.open + b.close) / 2*/);
+  let fullDayToday = excludeToday && date.isToday(bars[0].time);
   let pricesWithoutToday = fullDayToday ? prices.slice(1) : prices;
 
   let total49 = totalForDays(pricesWithoutToday, 49);
-  let total50Yesterday = total49 + pricesWithoutToday[49].close;
+  let total50Yesterday = total49 + pricesWithoutToday[49];
 
   let total199 = pricesWithoutToday
-    .slice(49, 198)
-    .reduce((acc, val) => acc + val.close, total49);
+    .slice(50, 199)
+    .reduce((acc, val) => acc + val, total50Yesterday);
 
-  let total200Yesterday = total199 + pricesWithoutToday[199].close;
+  let total200Yesterday = total199 + pricesWithoutToday[199];
 
   let ema9Yesterday = ema(pricesWithoutToday, 9);
   let ema10Yesterday = ema(pricesWithoutToday, 10);
@@ -89,88 +95,66 @@ function technicalCalculator(
   let ma200Yesterday = total200Yesterday / 200;
 
   // Bollinger bands calculations
-  let total19 = totalForDays(pricesWithoutToday, 20);
+  let total19 = totalForDays(pricesWithoutToday, 19);
 
-  let total20Yesterday = total19 + pricesWithoutToday[19].close;
+  let total20Yesterday = total19 + pricesWithoutToday[19];
   let ma20Yesterday = total20Yesterday / 20;
 
+  const lastRsiDay = Math.min(250, prices.length - 2);
   const numRsiDays = 20;
+  // These start from the end of the series.
   let gainsByDay = new Array(numRsiDays);
   let lossesByDay = new Array(numRsiDays);
 
   for (let i = 0; i < numRsiDays; ++i) {
-    let change = pricesWithoutToday[i].close - pricesWithoutToday[i + 1].close;
+    let priceIndex = lastRsiDay - i;
+    let change =
+      pricesWithoutToday[priceIndex] - pricesWithoutToday[priceIndex + 1];
     if (change >= 0) {
       gainsByDay[i] = (gainsByDay[i - 1] || 0) + change;
       lossesByDay[i] = lossesByDay[i - 1] || 0;
     } else {
       gainsByDay[i] = gainsByDay[i - 1];
-      lossesByDay[i] = -change;
+      lossesByDay[i] = (lossesByDay[i - 1] || 0) - change;
     }
   }
 
-  let gain13 = 0;
-  let loss13 = 0;
+  function rsi(avgGain, avgLoss) {
+    return 100 - 100 / (1 + avgGain / avgLoss);
+  }
 
-  for (let i = 0; i < 13; i++) {
-    let change = pricesWithoutToday[i].close - pricesWithoutToday[i + 1].close;
+  let avgGain14 = gainsByDay[13] / 14;
+  let avgLoss14 = gainsByDay[13] / 14;
+  let avgGain20 = gainsByDay[19] / 20;
+  let avgLoss20 = gainsByDay[19] / 20;
+
+  for (let i = lastRsiDay - numRsiDays; i >= 0; --i) {
+    let change = prices[i] - prices[i - 1];
+    let gain;
+    let loss;
     if (change > 0) {
-      gain13 += change;
-    } else if (change < 0) {
-      loss13 -= change;
+      gain = change;
+      loss = 0;
+    } else {
+      gain = 0;
+      loss = change;
     }
+
+    avgGain14 = (avgGain14 * 13 + gain) / 14;
+    avgLoss14 = (avgLoss14 * 13 - loss) / 14;
+    avgGain20 = (avgGain20 * 19 + gain) / 20;
+    avgLoss20 = (avgLoss20 * 19 - loss) / 20;
   }
-
-  let gain14 = gain13;
-  let loss14 = loss13;
-
-  let change = pricesWithoutToday[13].close - pricesWithoutToday[14].close;
-  if (change > 0) {
-    gain14 += change;
-  } else if (change < 0) {
-    loss14 += change;
-  }
-
-  let gain19 = gain14;
-  let loss19 = loss14;
-
-  for (let i = 14; i < 19; i++) {
-    let change = pricesWithoutToday[i].close - pricesWithoutToday[i + 1].close;
-    if (change > 0) {
-      gain19 += change;
-    } else if (change < 0) {
-      loss19 -= change;
-    }
-  }
-
-  let gain20 = gain19;
-  let loss20 = loss19;
-  change = pricesWithoutToday[19].close - pricesWithoutToday[19].close;
-  if (change > 0) {
-    gain20 += change;
-  } else if (change < 0) {
-    loss20 += change;
-  }
-
-  function rsi(numDays, gains, losses) {
-    let avgGain = gains / numDays;
-    let avgLoss = losses / numDays;
-    let rs = avgGain / avgLoss;
-    return 100 - 100 / (1 + rs);
-  }
-
-  let rsi20Yesterday = rsi(20, gain20, loss20);
-  let rsi14Yesterday = rsi(14, gain14, loss14);
 
   function variance(initialPrice, avg, limit) {
     let initial = initialPrice ? initialPrice - avg : 0;
     return pricesWithoutToday.slice(0, limit).reduce((acc, val) => {
-      let v = val.close - avg;
+      let v = val - avg;
       return acc + v * v;
     }, initial * initial);
   }
 
-  let variance20Yesterday = variance(0, ma20Yesterday, 20) / 19;
+  let variance20Yesterday = variance(0, ma20Yesterday, 20) / 20;
   let stddev20Yesterday = Math.sqrt(variance20Yesterday);
 
   let yesterday = {
@@ -182,8 +166,8 @@ function technicalCalculator(
     ema26: ema26Yesterday,
     ma50: ma50Yesterday,
     ma200: ma200Yesterday,
-    rsi14: rsi14Yesterday,
-    rsi20: rsi20Yesterday,
+    rsi14: rsi(avgGain14, avgLoss14),
+    rsi20: rsi(avgGain20, avgLoss20),
     bollinger: {
       upper1SD: ma20Yesterday + stddev20Yesterday,
       lower1SD: ma20Yesterday - stddev20Yesterday,
@@ -195,28 +179,28 @@ function technicalCalculator(
   };
 
   function calculateLatest(latest: number) {
-    latest *= 100;
     let ma20 = (total19 + latest) / 20;
-    let variance20 = variance(latest, ma20, 19) / 19;
+    let variance20 = variance(latest, ma20, 19) / 20;
     let stddev20 = Math.sqrt(variance20);
 
     let rsi14;
     let rsi20;
-    let change = latest - pricesWithoutToday[0].close;
+    let change = latest - pricesWithoutToday[0];
     if (change > 0) {
-      rsi14 = rsi(14, gain13 + change, loss13);
-      rsi20 = rsi(20, gain19 + change, loss19);
+      rsi14 = rsi((avgGain14 * 13 + change) / 14, avgLoss14);
+      rsi20 = rsi((avgGain20 * 19 + change) / 20, avgLoss20);
     } else {
-      rsi14 = rsi(14, gain13, loss13 - change);
-      rsi20 = rsi(20, gain19, loss19 - change);
+      rsi14 = rsi(avgGain14, (avgLoss14 * 13 - change) / 14);
+      rsi20 = rsi(avgGain20, (avgLoss20 * 19 - change) / 20);
     }
 
     return {
       symbol,
-      prices,
+      prices: bars,
       fullDayToday,
       yesterday,
       latest,
+      ma20,
       ma50: (total49 + latest) / 50,
       ma200: (total199 + latest) / 200,
       ema9: ema9Yesterday + emaMultiplier(9) * (latest - ema9Yesterday),
@@ -239,7 +223,7 @@ function technicalCalculator(
 
   return {
     symbol,
-    prices,
+    prices: bars,
     fullDayToday,
     yesterday,
     latest: calculateLatest,

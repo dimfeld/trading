@@ -32,4 +32,7 @@ export interface TechnicalCalculator {
     yesterday: Technicals;
     latest(latestPrice: number): LatestTechnicals;
 }
+export declare function technicalCalculator(symbol: string, bars: Bar[], 
+/** Exclude the first bar if it's from today. Use for daily bars only */
+excludeToday?: boolean): TechnicalCalculator;
 export declare function createTechnicalCalculators(history: Map<string, Bar[]>): Map<string, TechnicalCalculator>;
