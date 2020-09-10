@@ -58,8 +58,6 @@ dependencies:
   immer: 5.3.6
   inquirer: 5.2.0
   inquirer-autocomplete-prompt: 0.12.2
-  jest: 24.9.0
-  jest-extended: 0.11.5
   jest-fetch-mock: 2.1.2
   just-unique: 3.2.0
   ky: 0.15.0
@@ -101,6 +99,8 @@ dependencies:
   tslib: 1.13.0
   tslint: 5.20.1
   uuid: 3.4.0
+  uvu: 0.3.3
+  watchlist: 0.2.3
   whatwg-fetch: 3.4.0
   xstate: 4.13.0
 lockfileVersion: 5.1
@@ -3436,6 +3436,12 @@ packages:
       node: '>= 0.6.0'
     resolution:
       integrity: sha512-g213uqF8fyk40W8SBjm079n3CZB4qSpCrA2ye1fLGzH/4HEgB6tzuW2CbLE7leb4t45/6h44Ud59Su1/ROTfqw==
+  /dequal/1.0.1:
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-Fx8jxibzkJX2aJgyfSdLhr9tlRoTnHKrRJuu2XHlAgKioN2j19/Bcbe0d4mFXYZ3+wpE2KVobUVTfDutcD17xQ==
   /detect-indent/6.0.0:
     dev: false
     engines:
@@ -5859,6 +5865,12 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
+  /kleur/4.1.1:
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-BsNhM6T/yTWFG580CRnYhT3LfUuPK7Hwrm+W2H0G8lK/nogalP5Nsrh/cHjxVVkzl0sFm7z8b8rNcZCfKxeoxA==
   /ky-universal/0.3.0_ky@0.15.0:
     dependencies:
       abort-controller: 3.0.0
@@ -6281,6 +6293,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-al0MUK7cpIcglMv3YF13qSgdAIqxHTO7brRtaz3DlSULbqfazqkc5kEjNrLDOM7fsjshoFIihnU8snrP7zUvhQ==
+  /mri/1.1.6:
+    dev: false
+    engines:
+      node: '>=4'
+    resolution:
+      integrity: sha512-oi1b3MfbyGa7FJMP9GmLTttni5JoICpYBRlq+x5V16fZbLsnL9N3wFqqIm/nIG43FjUFkFh9Epzp/kzUGUnJxQ==
   /ms/2.0.0:
     dev: false
     resolution:
@@ -8219,6 +8237,14 @@ packages:
       npm: '>=2.0.0'
     resolution:
       integrity: sha512-BHdBMVoWC2sL26w//BCu3YzKT4s2jip/WhwsGEDmeKYBhKDZeYezVUnHatYB7L85v5xs0BAQmg6BEYJEKxBabg==
+  /sade/1.7.3:
+    dependencies:
+      mri: 1.1.6
+    dev: false
+    engines:
+      node: '>= 6'
+    resolution:
+      integrity: sha512-m4BctppMvJ60W1dXnHq7jMmFe3hPJZDAH85kQ3ACTo7XZNVUuTItCQ+2HfyaMeV5cKrbw7l4vD/6We3GBxvdJw==
   /safe-buffer/5.1.2:
     dev: false
     resolution:
@@ -9120,6 +9146,12 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-FWtleNAtZ/Ki2qtqej2CXTOayOH9bHDQF+Q48VpWyDXjbYxA4Yz8iDB31zXOBUlOHHKidDbqGVrTUvQMPmBGBw==
+  /totalist/1.1.0:
+    dev: false
+    engines:
+      node: '>=6'
+    resolution:
+      integrity: sha512-gduQwd1rOdDMGxFG1gEvhV88Oirdo2p+KjoYFU7k2g+i7n6AFFbDQ5kMPUsW0pNbfQsB/cwXvT1i4Bue0s9g5g==
   /tough-cookie/2.5.0:
     dependencies:
       psl: 1.8.0
@@ -9447,6 +9479,19 @@ packages:
     hasBin: true
     resolution:
       integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==
+  /uvu/0.3.3:
+    dependencies:
+      dequal: 1.0.1
+      diff: 4.0.2
+      kleur: 4.1.1
+      sade: 1.7.3
+      totalist: 1.1.0
+    dev: false
+    engines:
+      node: '>=8'
+    hasBin: true
+    resolution:
+      integrity: sha512-5oeS+bkoRM5FGjXMXCZvjLLeUB9P5HXn2LFiTQaItopJFBtXuJ2XxWkWJNe2NgWthxFUOZR+eyhodgiaFqv7wQ==
   /v8-compile-cache/2.1.1:
     dev: false
     resolution:
@@ -9490,6 +9535,15 @@ packages:
     dev: false
     resolution:
       integrity: sha1-L3+bj9ENZ3JisYqITijRlhjgKPs=
+  /watchlist/0.2.3:
+    dependencies:
+      mri: 1.1.6
+    dev: false
+    engines:
+      node: '>=8'
+    hasBin: true
+    resolution:
+      integrity: sha512-xStuPg489QXZbRirnmIMo7OaKFnGkvTQn7tCUC/sVmVVEvDQQnnVl/k9D5yg3nXgpebgPHpfApBLHMpEbAqvSQ==
   /webidl-conversions/4.0.2:
     dev: false
     resolution:
@@ -9759,10 +9813,12 @@ packages:
       tda-api: github.com/dimfeld/node-tda-api/e2bad38d38a9798b27daffb3342f57b72347530d
       ts-node: 9.0.0_typescript@4.0.2
       typescript: 4.0.2
+      uvu: 0.3.3
+      watchlist: 0.2.3
     dev: false
     name: '@rush-temp/options-analysis'
     resolution:
-      integrity: sha512-6c9HpxxQfNvq5/RSUKO8TcvevHoXfBukpQ4roQum+ZO8/aH3Q02tTN3HiqH9N4sH1rU1jKqp81dMrD+EKdmuTg==
+      integrity: sha512-0QDsx6Rq2UG4R/MuZXRqv+v2ZXW8w3Fg4Tay2WQJgAS2Jpm+OY2g3KrzR6knCRNJKfHaxaZVLdGSvkOStl8IbA==
       tarball: 'file:projects/options-analysis.tgz'
     version: 0.0.0
   'file:projects/options-liquidity.tgz':
@@ -10070,8 +10126,6 @@ specifiers:
   immer: ^5.0.0
   inquirer: ^5.2.0
   inquirer-autocomplete-prompt: ^0.12.2
-  jest: ^24.9.0
-  jest-extended: ^0.11.2
   jest-fetch-mock: ^2.1.2
   just-unique: ^3.2.0
   ky: ^0.15.0
@@ -10113,5 +10167,7 @@ specifiers:
   tslib: ^1.10.0
   tslint: ^5.20.0
   uuid: ^3.3.3
+  uvu: ~0.3.3
+  watchlist: ~0.2.3
   whatwg-fetch: ^3.0.0
   xstate: ^4.7.0-rc6

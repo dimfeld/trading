@@ -1,4 +1,4 @@
-import orderBy from 'lodash/orderBy';
+import sorter from 'sorters';
 import { OptionLeg } from './types';
 
 export interface HasOptionLegs {
@@ -35,7 +35,8 @@ export function matchPositions<T extends HasOptionLegs>(
         position,
       };
     })
-    .filter((x) => x.score > 0);
+    .filter((x) => x.score > 0)
+    .sort(sorter({ value: 'score', descending: true }));
 
-  return orderBy(matched, (x) => x.score, 'desc');
+  return matched;
 }

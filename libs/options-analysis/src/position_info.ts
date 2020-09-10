@@ -1,6 +1,4 @@
 import { Dictionary } from 'lodash';
-import sum from 'lodash/sum';
-import map from 'lodash/map';
 import { Position, Trade, PositionLegInfo } from './types';
 
 export default function positionInfo<T extends Position<TR>, TR extends Trade>(
@@ -69,9 +67,12 @@ export default function positionInfo<T extends Position<TR>, TR extends Trade>(
     return leg.size * legPrice * multiplier;
   });
 
-  let openValue = sum(currentLegValues);
+  let openValue = currentLegValues.reduce((acc, val) => acc + val, 0);
 
-  let totalRealized = sum(map(legData, (leg) => leg.realized));
+  let totalRealized = Object.values(legData).reduce(
+    (acc, leg) => acc + leg.realized,
+    0
+  );
 
   let unrealized = openValue - openTotalBasis;
   let openPlPct =

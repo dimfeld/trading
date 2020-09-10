@@ -1,8 +1,10 @@
 /* tslint:disable no-implicit-dependencies */
 import * as position from './position_simulator';
 import { OptionLeg, fullSymbol } from './types';
-import 'jest-extended';
 import * as _ from 'lodash';
+import { test, suite } from 'uvu';
+import * as assert from 'uvu/assert';
+import sorter from 'sorters';
 
 function expectedLegs(legs: OptionLeg[]) {
   return _.transform(
@@ -32,8 +34,9 @@ function checkSimState(sim, legs, description = 'simulator state') {
     },
     {}
   );
-  expect(checkLegs).toEqual(expectedLegs(legs));
+  assert.equal(checkLegs, expectedLegs(legs));
 
+  let s = sorter('symbol');
   let flattened = _.chain(legs)
     .groupBy('symbol')
     .map((l, symbol) => {
@@ -43,14 +46,14 @@ function checkSimState(sim, legs, description = 'simulator state') {
       }
     })
     .compact()
-    .value();
+    .value()
+    .sort(s);
 
-  expect(sim.getFlattenedList()).toIncludeAllMembers(flattened);
-  // assert.sameDeepMembers(sim.getFlattenedList(), flattened, 'getFlattenedList');
+  assert.equal(sim.getFlattenedList().sort(s), flattened);
 }
 
-describe('simulator', function() {
-  it('new position from scratch', function() {
+suite('simulator', function () {
+  test('new position from scratch', function () {
     let sim = new position.PositionSimulator();
     let leg = {
       symbol: 'ANET  171020P00180000',
@@ -72,11 +75,11 @@ describe('simulator', function() {
       },
     ];
 
-    expect(result).toEqual(expected);
+    assert.equal(result, expected);
     checkSimState(sim, [leg]);
   });
 
-  it('multiple new positions from scratch', function() {
+  test('multiple new positions from scratch', function () {
     let sim = new position.PositionSimulator();
     let legs = [
       {
@@ -114,11 +117,11 @@ describe('simulator', function() {
       },
     ];
 
-    expect(result).toEqual(expected);
+    assert.equal(result, expected);
     checkSimState(sim, legs);
   });
 
-  it('adding to a position', function() {
+  test('adding to a position', function () {
     let legs = [
       {
         symbol: 'ANET  171020P00180000',
@@ -170,11 +173,11 @@ describe('simulator', function() {
       },
     ];
 
-    expect(result).toEqual(expectedResult);
+    assert.equal(result, expectedResult);
     checkSimState(sim, legs.concat(newLegs), 'sim state after add');
   });
 
-  it('closing a position', function() {
+  test('closing a position', function () {
     let legs = [
       {
         symbol: 'ANET  171020P00180000',
@@ -217,7 +220,7 @@ describe('simulator', function() {
       },
     ];
 
-    expect(result).toEqual(expected);
+    assert.equal(result, expected);
     checkSimState(sim, [legs[0]], 'sim state after close');
 
     result = sim.addLegs([closingLegs[1]]);
@@ -233,11 +236,11 @@ describe('simulator', function() {
       },
     ];
 
-    expect(result).toEqual(expected);
+    assert.equal(result, expected);
     checkSimState(sim, [], 'sim state after close');
   });
 
-  it('partial close', function() {
+  test('partial close', function () {
     let legs = [
       {
         symbol: 'ANET  171020P00180000',
@@ -290,7 +293,8 @@ describe('simulator', function() {
       },
     ];
 
-    expect(result).toIncludeAllMembers(expected);
+    let stateSort = sorter('affected.symbol');
+    assert.equal(result.sort(stateSort), expected.sort(stateSort));
     checkSimState(
       sim,
       [reducedShort, legs[0]],
@@ -320,7 +324,8 @@ describe('simulator', function() {
       },
     ];
 
-    expect(result).toIncludeAllMembers(expected);
+    let s = sorter('affected.symbol');
+    assert.equal(result.sort(stateSort), expected.sort(stateSort));
     checkSimState(
       sim,
       [reducedShort, reducedLong],
@@ -328,7 +333,7 @@ describe('simulator', function() {
     );
   });
 
-  it('rolling', function() {
+  test('rolling', function () {
     let initialState = [
       {
         symbol: 'ANET  171020P00180000',
@@ -409,7 +414,7 @@ describe('simulator', function() {
       },
     ];
 
-    expect(result).toEqual(expectedResult);
+    assert.equal(result, expectedResult);
     checkSimState(
       sim,
       [rolling[2], rolling[3]],
@@ -417,7 +422,10 @@ describe('simulator', function() {
     );
   });
 
-  it.todo('closing short and opening long at same strike');
-  it.todo('closing long and opening short at same strike');
-  it.todo('single list of options modifies the same one multiple times');
+  // TEST TODO
+  // test('closing short and opening long at same strike');
+  // test('closing long and opening short at same strike');
+  // test('single list of options modifies the same one multiple times');
 });
+
+test.run();

@@ -1,7 +1,9 @@
 import { fullSymbol, optionInfoFromSymbol, optionInfoFromLeg } from './types';
+import { suite, test } from 'uvu';
+import * as assert from 'uvu/assert';
 
-describe('fullSymbol', function() {
-  it('put', function() {
+suite('fullSymbol', function () {
+  test('put', function () {
     let leg = {
       underlying: 'ANET',
       strike: 180,
@@ -10,10 +12,10 @@ describe('fullSymbol', function() {
       size: 2,
     };
 
-    expect(fullSymbol(leg)).toBe('ANET  171020P00180000');
+    assert.equal(fullSymbol(leg), 'ANET  171020P00180000');
   });
 
-  it('call', function() {
+  test('call', function () {
     let leg = {
       underlying: 'ABCDEF',
       strike: 5.75,
@@ -22,10 +24,10 @@ describe('fullSymbol', function() {
       size: 2,
     };
 
-    expect(fullSymbol(leg)).toBe('ABCDEF171020C00005750');
+    assert.equal(fullSymbol(leg), 'ABCDEF171020C00005750');
   });
 
-  it('stock', function() {
+  test('stock', function () {
     let leg = {
       underlying: 'IBM',
       strike: null,
@@ -34,12 +36,12 @@ describe('fullSymbol', function() {
       size: 300,
     };
 
-    expect(fullSymbol(leg)).toBe('IBM');
+    assert.equal(fullSymbol(leg), 'IBM');
   });
 });
 
-describe('optionInfoFromSymbol', function() {
-  it('call', function() {
+suite('optionInfoFromSymbol', function () {
+  test('call', function () {
     let expected = {
       underlying: 'ABCDEF',
       strike: 5.75,
@@ -48,10 +50,10 @@ describe('optionInfoFromSymbol', function() {
     };
 
     let seen = optionInfoFromSymbol('ABCDEF171020C00005750');
-    expect(seen).toEqual(expected);
+    assert.equal(seen, expected);
   });
 
-  it('put', function() {
+  test('put', function () {
     let expected = {
       underlying: 'ANET',
       strike: 180,
@@ -60,10 +62,10 @@ describe('optionInfoFromSymbol', function() {
     };
 
     let seen = optionInfoFromSymbol('ANET  171020P00180000');
-    expect(seen).toEqual(expected);
+    assert.equal(seen, expected);
   });
 
-  it('stock', function() {
+  test('stock', function () {
     let expected = {
       underlying: 'ANET',
       expiration: undefined,
@@ -72,6 +74,8 @@ describe('optionInfoFromSymbol', function() {
     };
 
     let seen = optionInfoFromSymbol('ANET');
-    expect(seen).toEqual(expected);
+    assert.equal(seen, expected);
   });
 });
+
+test.run();

@@ -1,5 +1,13 @@
 import positionInfo from './position_info';
 import { Position, Trade } from './types';
+import { test } from 'uvu';
+import * as assert from 'uvu/assert';
+
+function assertCloseTo(a: number, b: number) {
+  if (Math.abs(a - b) > 1e-6) {
+    throw new Error(`Expected ${a} to be float-equal to ${b}`);
+  }
+}
 
 function mockQuote(symbol: string) {
   switch (symbol) {
@@ -12,7 +20,7 @@ function mockQuote(symbol: string) {
   }
 }
 
-test('single long option', function() {
+test('single long option', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -25,7 +33,7 @@ test('single long option', function() {
     legs: [{ symbol: 'ANET  171020P00180000', size: 1 }],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: 50,
     totalRealized: 0,
@@ -50,7 +58,7 @@ test('single long option', function() {
   });
 });
 
-test('single short option', function() {
+test('single short option', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -63,7 +71,7 @@ test('single short option', function() {
     legs: [{ symbol: 'ANET  171020P00180000', size: -1 }],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: -50,
     totalRealized: 0,
@@ -88,7 +96,7 @@ test('single short option', function() {
   });
 });
 
-test('losing credit spread', function() {
+test('losing credit spread', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -107,7 +115,7 @@ test('losing credit spread', function() {
     ],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: -50,
     totalRealized: 0,
@@ -141,7 +149,7 @@ test('losing credit spread', function() {
   });
 });
 
-test('winning credit spread', function() {
+test('winning credit spread', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -160,7 +168,7 @@ test('winning credit spread', function() {
     ],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: 25,
     totalRealized: 0,
@@ -194,7 +202,7 @@ test('winning credit spread', function() {
   });
 });
 
-test('winning debit spread', function() {
+test('winning debit spread', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -213,7 +221,7 @@ test('winning debit spread', function() {
     ],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: 50,
     totalRealized: 0,
@@ -247,7 +255,7 @@ test('winning debit spread', function() {
   });
 });
 
-test('losing debit spread', function() {
+test('losing debit spread', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -266,7 +274,7 @@ test('losing debit spread', function() {
     ],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: -25,
     totalRealized: 0,
@@ -301,7 +309,7 @@ test('losing debit spread', function() {
   });
 });
 
-test('closed single long option', function() {
+test('closed single long option', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -319,7 +327,7 @@ test('closed single long option', function() {
     legs: [],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: 50,
     totalRealized: 100,
@@ -344,7 +352,7 @@ test('closed single long option', function() {
   });
 });
 
-test('closed single short option', function() {
+test('closed single short option', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -363,7 +371,7 @@ test('closed single short option', function() {
     legs: [],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: -50,
     totalRealized: -100,
@@ -388,7 +396,7 @@ test('closed single short option', function() {
   });
 });
 
-test('closed losing credit spread', function() {
+test('closed losing credit spread', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -413,7 +421,7 @@ test('closed losing credit spread', function() {
     legs: [],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: -25,
     totalRealized: -25,
@@ -447,7 +455,7 @@ test('closed losing credit spread', function() {
   });
 });
 
-test('closed winning credit spread', function() {
+test('closed winning credit spread', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -472,7 +480,7 @@ test('closed winning credit spread', function() {
     legs: [],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: 75,
     totalRealized: 150,
@@ -506,7 +514,7 @@ test('closed winning credit spread', function() {
   });
 });
 
-test('closed winning debit spread', function() {
+test('closed winning debit spread', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -530,7 +538,7 @@ test('closed winning debit spread', function() {
     legs: [],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: 400,
     totalRealized: 400,
@@ -564,7 +572,7 @@ test('closed winning debit spread', function() {
   });
 });
 
-test('closed losing debit spread', function() {
+test('closed losing debit spread', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -588,7 +596,7 @@ test('closed losing debit spread', function() {
     legs: [],
   };
 
-  expect(positionInfo(pos, mockQuote)).toStrictEqual({
+  assert.equal(positionInfo(pos, mockQuote), {
     underlyingPrice: mockQuote('ANET'),
     totalPlPct: -90,
     totalRealized: -180,
@@ -622,7 +630,7 @@ test('closed losing debit spread', function() {
   });
 });
 
-test('open debit spread, add some, close some', function() {
+test('open debit spread, add some, close some', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -667,17 +675,17 @@ test('open debit spread, add some, close some', function() {
 
   let result = positionInfo(pos, mockQuote);
 
-  expect(result.totalPlPct).toBeCloseTo(totalPlPct);
-  expect(result.totalRealized).toBeCloseTo(realized);
-  expect(result.totalBasis).toBeCloseTo(totalBasis);
-  expect(result.openPlPct).toBeCloseTo(openPlPct);
-  expect(result.unrealized).toBeCloseTo(unrealized);
-  expect(result.openBasis).toBeCloseTo(openBasis);
-  expect(result.netLiquidity).toBeCloseTo(netLiquidity);
-  expect(result.underlyingPrice).toBe(mockQuote('ANET'));
+  assertCloseTo(result.totalPlPct, totalPlPct);
+  assertCloseTo(result.totalRealized, realized);
+  assertCloseTo(result.totalBasis, totalBasis);
+  assertCloseTo(result.openPlPct, openPlPct);
+  assertCloseTo(result.unrealized, unrealized);
+  assertCloseTo(result.openBasis, openBasis);
+  assertCloseTo(result.netLiquidity, netLiquidity);
+  assert.is(result.underlyingPrice, mockQuote('ANET'));
 });
 
-test('open credit spread, add some, close some', function() {
+test('open credit spread, add some, close some', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -722,17 +730,17 @@ test('open credit spread, add some, close some', function() {
 
   let result = positionInfo(pos, mockQuote);
 
-  expect(result.totalBasis).toBeCloseTo(totalBasis);
-  expect(result.openBasis).toBeCloseTo(openBasis);
-  expect(result.netLiquidity).toBeCloseTo(netLiquidity);
-  expect(result.unrealized).toBeCloseTo(unrealized);
-  expect(result.totalPlPct).toBeCloseTo(totalPlPct);
-  expect(result.totalRealized).toBeCloseTo(realized);
-  expect(result.openPlPct).toBeCloseTo(openPlPct);
-  expect(result.underlyingPrice).toBe(mockQuote('ANET'));
+  assertCloseTo(result.totalBasis, totalBasis);
+  assertCloseTo(result.openBasis, openBasis);
+  assertCloseTo(result.netLiquidity, netLiquidity);
+  assertCloseTo(result.unrealized, unrealized);
+  assertCloseTo(result.totalPlPct, totalPlPct);
+  assertCloseTo(result.totalRealized, realized);
+  assertCloseTo(result.openPlPct, openPlPct);
+  assert.equal(result.underlyingPrice, mockQuote('ANET'));
 });
 
-test('open some credit spreads, close some, add some more, close some', function() {
+test('open some credit spreads, close some, add some more, close some', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -786,17 +794,17 @@ test('open some credit spreads, close some, add some more, close some', function
 
   let result = positionInfo(pos, mockQuote);
 
-  expect(result.totalBasis).toBeCloseTo(totalBasis);
-  expect(result.openBasis).toBeCloseTo(openBasis);
-  expect(result.netLiquidity).toBeCloseTo(netLiquidity);
-  expect(result.unrealized).toBeCloseTo(unrealized);
-  expect(result.totalPlPct).toBeCloseTo(totalPlPct);
-  expect(result.totalRealized).toBeCloseTo(realized);
-  expect(result.openPlPct).toBeCloseTo(openPlPct);
-  expect(result.underlyingPrice).toBe(mockQuote('ANET'));
+  assertCloseTo(result.totalBasis, totalBasis);
+  assertCloseTo(result.openBasis, openBasis);
+  assertCloseTo(result.netLiquidity, netLiquidity);
+  assertCloseTo(result.unrealized, unrealized);
+  assertCloseTo(result.totalPlPct, totalPlPct);
+  assertCloseTo(result.totalRealized, realized);
+  assertCloseTo(result.openPlPct, openPlPct);
+  assert.equal(result.underlyingPrice, mockQuote('ANET'));
 });
 
-test('rolling spreads with increasing cost basis', function() {
+test('rolling spreads with increasing cost basis', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -836,17 +844,17 @@ test('rolling spreads with increasing cost basis', function() {
 
   let result = positionInfo(pos, mockQuote);
 
-  expect(result.totalBasis).toBeCloseTo(totalBasis);
-  expect(result.openBasis).toBeCloseTo(openBasis);
-  expect(result.netLiquidity).toBeCloseTo(netLiquidity);
-  expect(result.unrealized).toBeCloseTo(unrealized);
-  expect(result.totalPlPct).toBeCloseTo(totalPlPct);
-  expect(result.totalRealized).toBeCloseTo(realized);
-  expect(result.openPlPct).toBeCloseTo(openPlPct);
-  expect(result.underlyingPrice).toBe(mockQuote('ANET'));
+  assertCloseTo(result.totalBasis, totalBasis);
+  assertCloseTo(result.openBasis, openBasis);
+  assertCloseTo(result.netLiquidity, netLiquidity);
+  assertCloseTo(result.unrealized, unrealized);
+  assertCloseTo(result.totalPlPct, totalPlPct);
+  assertCloseTo(result.totalRealized, realized);
+  assertCloseTo(result.openPlPct, openPlPct);
+  assert.equal(result.underlyingPrice, mockQuote('ANET'));
 });
 
-test('rolling spreads with decreasing cost basis', function() {
+test('rolling spreads with decreasing cost basis', function () {
   let pos: Position<Trade> = {
     symbol: 'ANET',
     trades: [
@@ -886,12 +894,14 @@ test('rolling spreads with decreasing cost basis', function() {
 
   let result = positionInfo(pos, mockQuote);
 
-  expect(result.totalBasis).toBeCloseTo(totalBasis);
-  expect(result.openBasis).toBeCloseTo(openBasis);
-  expect(result.netLiquidity).toBeCloseTo(netLiquidity);
-  expect(result.unrealized).toBeCloseTo(unrealized);
-  expect(result.totalPlPct).toBeCloseTo(totalPlPct);
-  expect(result.totalRealized).toBeCloseTo(realized);
-  expect(result.openPlPct).toBeCloseTo(openPlPct);
-  expect(result.underlyingPrice).toBe(mockQuote('ANET'));
+  assertCloseTo(result.totalBasis, totalBasis);
+  assertCloseTo(result.openBasis, openBasis);
+  assertCloseTo(result.netLiquidity, netLiquidity);
+  assertCloseTo(result.unrealized, unrealized);
+  assertCloseTo(result.totalPlPct, totalPlPct);
+  assertCloseTo(result.totalRealized, realized);
+  assertCloseTo(result.openPlPct, openPlPct);
+  assert.equal(result.underlyingPrice, mockQuote('ANET'));
 });
+
+test.run();
