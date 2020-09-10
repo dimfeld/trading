@@ -346,10 +346,14 @@ class Api {
                 }
             }, [])
                 .value();
+            let optionsCount = 0;
             let legs = _.map(trade.orderLegCollection, (leg) => {
                 let symbol = tdaToOccSymbol(leg.instrument.symbol);
                 let multiplier = leg.instruction.startsWith('BUY') ? 1 : -1;
                 let legPrices = executionPrices[leg.legId];
+                if (symbol.length > 6) {
+                    optionsCount += Math.abs(legPrices.size);
+                }
                 let priceEach = legPrices.total / legPrices.size;
                 return {
                     symbol,
@@ -363,7 +367,7 @@ class Api {
                 status: statusMap[trade.status],
                 traded: trade.closeTime || latestExecution,
                 price: trade.price,
-                commissions: null,
+                commissions: optionsCount * 0.65,
                 legs,
             };
         });
