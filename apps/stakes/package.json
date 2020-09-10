@@ -77,7 +77,7 @@
     "rollup-plugin-svelte": "^5.1.1",
     "rollup-plugin-terser": "^4.0.4",
     "sapper": "^0.28",
-    "svelte": "^3.24",
+    "svelte": "~3.25",
     "svelte-awesome": "^2.2.1",
     "svelte-notifications": "^0.9.8",
     "svelte-preprocess": "^4",
