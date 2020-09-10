@@ -1,31 +1,28 @@
 import each from 'lodash/each';
-import isEmpty from 'lodash/isEmpty';
-import flatMap from 'lodash/flatMap';
-import map from 'lodash/map';
-import orderBy from 'lodash/orderBy';
-import pick from 'lodash/pick';
+import isEmpty from 'just-is-empty';
+import pick from 'just-pick';
 import sortedIndexBy from 'lodash/sortedIndexBy';
-import { Dictionary } from 'lodash';
+import sorter from 'sorters';
 import debugMod from 'debug';
 import { ContractInfo } from 'types';
 
 const debug = debugMod('option_finder');
 
-export type StrikeMap = Dictionary<ContractInfo[]>;
-export type ExpirationDateMap = Dictionary<StrikeMap>;
+export type StrikeMap = { [key: string]: ContractInfo[] };
+export type ExpirationDateMap = { [key: string]: StrikeMap };
 
 export function closestDeltas(strikes: StrikeMap, deltas: number[]) {
-  let sorted = orderBy(
-    map(strikes, (contractList) => contractList[0]),
-    (x) => Math.abs(x.delta),
-    'asc'
-  );
+  let sorted = Object.values(strikes)
+    .map((contractList) => contractList[0])
+    .sort(
+      sorter<ContractInfo>((x) => Math.abs(x.delta))
+    );
 
   if (!sorted.length) {
     return null;
   }
 
-  let closest = map(deltas, (targetDelta) => {
+  let closest = deltas.map((targetDelta) => {
     if (targetDelta > 1) {
       // Deal with 0-1 delta range.
       targetDelta /= 100;
@@ -66,7 +63,7 @@ export function closestAfterDte(
   dates: ExpirationDateMap,
   dteTarget: string[]
 ): ClosestDte[] {
-  let closestDte = map(dteTarget, (target) => {
+  let closestDte = dteTarget.map((target) => {
     let dteNum = Number.parseInt(target, 10);
     let requireMonthly = target[target.length - 1] === 'M';
     return {
@@ -125,7 +122,7 @@ export function analyzeSide(
   }
 
   let expirations = closestAfterDte(allExpirations, config.dte);
-  let result = map(expirations, (expiration) => {
+  let result = expirations.map((expiration) => {
     let deltas = closestDeltas(expiration.strikes, config.delta);
     return {
       deltas,
@@ -182,7 +179,7 @@ export function analyzeLiquidity(
   let puts = analyzeSide(config, chain.putExpDateMap);
 
   let allData = calls.concat(puts);
-  let results = flatMap(allData, (expiration) => {
+  let results = allData.flatMap((expiration) => {
     return expiration.deltas
       .map((delta) => {
         let contract = delta.contract;

@@ -1,8 +1,3 @@
-import isNil from 'lodash/isNil';
-import trimStart from 'lodash/trimStart';
-import padStart from 'lodash/padStart';
-import padEnd from 'lodash/padEnd';
-
 export interface TradeLeg {
   size: number;
   price: number;
@@ -48,12 +43,9 @@ export interface OptionInfo {
 }
 
 export function occExpirationFromDate(d: Date) {
-  let year = d
-    .getUTCFullYear()
-    .toString()
-    .slice(2);
-  let month = padStart((d.getUTCMonth() + 1).toString(), 2, '0');
-  let day = padStart(d.getUTCDate().toString(), 2, '0');
+  let year = d.getUTCFullYear().toString().slice(2);
+  let month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+  let day = d.getUTCDate().toString().padStart(2, '0');
   return `${year}${month}${day}`;
 }
 
@@ -63,10 +55,10 @@ export function dateFromOccExpiration(e: string) {
 }
 
 export function fullSymbol(ol: OptionInfo, padSymbol = true) {
-  if (!isNil(ol.call) && ol.strike) {
+  if (typeof ol.call === 'boolean' && ol.strike) {
     let legType = ol.call ? 'C' : 'P';
-    let strike = padStart((ol.strike * 1000).toString(), 8, '0').slice(0, 8);
-    let symbol = padSymbol ? padEnd(ol.underlying, 6, ' ') : ol.underlying;
+    let strike = (ol.strike * 1000).toString().padStart(8, '0').slice(0, 8);
+    let symbol = padSymbol ? ol.underlying.padEnd(6, ' ') : ol.underlying;
     return `${symbol}${ol.expiration}${legType}${strike}`;
   } else {
     // Otherwise it's just an equity.
@@ -89,7 +81,7 @@ export function optionInfoFromSymbol(symbol: string): OptionInfo {
     underlying,
     expiration: symbol.slice(6, 12),
     call: symbol[12] === 'C',
-    strike: +trimStart(symbol.slice(13)) / 1000,
+    strike: +symbol.slice(13).trimStart() / 1000,
   };
 }
 

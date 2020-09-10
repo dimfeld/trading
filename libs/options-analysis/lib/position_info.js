@@ -5,12 +5,6 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = positionInfo;
 
-var _sum = _interopRequireDefault(require("lodash/sum"));
-
-var _map = _interopRequireDefault(require("lodash/map"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 function positionInfo(position, fetchQuote) {
   let openTotalBasis = 0;
   let maxTotalBasis = 0;
@@ -69,8 +63,8 @@ function positionInfo(position, fetchQuote) {
     let multiplier = leg.symbol.length > 6 ? 100 : 1;
     return leg.size * legPrice * multiplier;
   });
-  let openValue = (0, _sum.default)(currentLegValues);
-  let totalRealized = (0, _sum.default)((0, _map.default)(legData, leg => leg.realized));
+  let openValue = currentLegValues.reduce((acc, val) => acc + val, 0);
+  let totalRealized = Object.values(legData).reduce((acc, leg) => acc + leg.realized, 0);
   let unrealized = openValue - openTotalBasis;
   let openPlPct = openTotalBasis === 0 ? 0 : 100 * unrealized / Math.abs(openTotalBasis);
   let totalPlPct = 100 * (unrealized + totalRealized) / Math.abs(maxTotalBasis);

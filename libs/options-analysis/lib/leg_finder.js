@@ -11,17 +11,13 @@ exports.analyzeLiquidity = analyzeLiquidity;
 
 var _each = _interopRequireDefault(require("lodash/each"));
 
-var _isEmpty = _interopRequireDefault(require("lodash/isEmpty"));
+var _justIsEmpty = _interopRequireDefault(require("just-is-empty"));
 
-var _flatMap = _interopRequireDefault(require("lodash/flatMap"));
-
-var _map = _interopRequireDefault(require("lodash/map"));
-
-var _orderBy = _interopRequireDefault(require("lodash/orderBy"));
-
-var _pick = _interopRequireDefault(require("lodash/pick"));
+var _justPick = _interopRequireDefault(require("just-pick"));
 
 var _sortedIndexBy = _interopRequireDefault(require("lodash/sortedIndexBy"));
+
+var _sorters = _interopRequireDefault(require("sorters"));
 
 var _debug = _interopRequireDefault(require("debug"));
 
@@ -30,13 +26,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const debug = (0, _debug.default)('option_finder');
 
 function closestDeltas(strikes, deltas) {
-  let sorted = (0, _orderBy.default)((0, _map.default)(strikes, contractList => contractList[0]), x => Math.abs(x.delta), 'asc');
+  let sorted = Object.values(strikes).map(contractList => contractList[0]).sort((0, _sorters.default)(x => Math.abs(x.delta)));
 
   if (!sorted.length) {
     return null;
   }
 
-  let closest = (0, _map.default)(deltas, targetDelta => {
+  let closest = deltas.map(targetDelta => {
     if (targetDelta > 1) {
       // Deal with 0-1 delta range.
       targetDelta /= 100;
@@ -58,7 +54,7 @@ function closestDeltas(strikes, deltas) {
 }
 
 function closestAfterDte(dates, dteTarget) {
-  let closestDte = (0, _map.default)(dteTarget, target => {
+  let closestDte = dteTarget.map(target => {
     let dteNum = Number.parseInt(target, 10);
     let requireMonthly = target[target.length - 1] === 'M';
     return {
@@ -99,12 +95,12 @@ function closestAfterDte(dates, dteTarget) {
 }
 
 function analyzeSide(config, allExpirations) {
-  if ((0, _isEmpty.default)(allExpirations)) {
+  if ((0, _justIsEmpty.default)(allExpirations)) {
     return [];
   }
 
   let expirations = closestAfterDte(allExpirations, config.dte);
-  let result = (0, _map.default)(expirations, expiration => {
+  let result = expirations.map(expiration => {
     let deltas = closestDeltas(expiration.strikes, config.delta);
     return {
       deltas,
@@ -135,7 +131,7 @@ function analyzeLiquidity(config, chain) {
   let calls = analyzeSide(config, chain.callExpDateMap);
   let puts = analyzeSide(config, chain.putExpDateMap);
   let allData = calls.concat(puts);
-  let results = (0, _flatMap.default)(allData, expiration => {
+  let results = allData.flatMap(expiration => {
     return expiration.deltas.map(delta => {
       let contract = delta.contract;
       return {
@@ -143,7 +139,7 @@ function analyzeLiquidity(config, chain) {
         targetDte: expiration.target,
         targetDelta: delta.target,
         spreadPercent: contract.bid ? (contract.ask / contract.bid - 1) * 100 : 1000,
-        ...(0, _pick.default)(contract, ['symbol', 'delta', 'putCall', 'strikePrice', 'daysToExpiration', 'bid', 'ask', 'totalVolume', 'openInterest'])
+        ...(0, _justPick.default)(contract, ['symbol', 'delta', 'putCall', 'strikePrice', 'daysToExpiration', 'bid', 'ask', 'totalVolume', 'openInterest'])
       };
     }).filter(data => filterLiquidity(config, data));
   });

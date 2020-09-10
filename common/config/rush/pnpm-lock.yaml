@@ -38,7 +38,6 @@ dependencies:
   '@types/split2': 2.1.6
   '@types/uuid': 3.4.9
   autoprefixer: 9.8.6
-  babel-jest: 24.9.0
   bluebird: 3.7.2
   chai: 4.2.0
   cheerio: 1.0.0-rc.3
@@ -47,7 +46,8 @@ dependencies:
   csv-parse: 2.5.0
   csv-stringify: 3.1.1
   dashdash: 1.14.1
-  date-fns-tz: 1.0.10
+  date-fns: 2.16.1
+  date-fns-tz: 1.0.10_date-fns@2.16.1
   decoders: 1.22.2
   eslint: 6.8.0
   eventsourcemock: 2.0.0
@@ -59,6 +59,8 @@ dependencies:
   inquirer: 5.2.0
   inquirer-autocomplete-prompt: 0.12.2
   jest-fetch-mock: 2.1.2
+  just-is-empty: 2.0.1
+  just-pick: 2.1.0
   just-unique: 3.2.0
   ky: 0.15.0
   ky-universal: 0.3.0_ky@0.15.0
@@ -2272,22 +2274,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-zg7Hz2k5lI8kb7U32998pRRFin7zJlkfezGJjUc2heaD4Pw2wObakCDVzkKztTm/Ln7eiVvYsjqak0Ed4LkMDA==
-  /babel-jest/24.9.0:
-    dependencies:
-      '@jest/transform': 24.9.0
-      '@jest/types': 24.9.0
-      '@types/babel__core': 7.1.9
-      babel-plugin-istanbul: 5.2.0
-      babel-preset-jest: 24.9.0
-      chalk: 2.4.2
-      slash: 2.0.0
-    dev: false
-    engines:
-      node: '>= 6'
-    peerDependencies:
-      '@babel/core': ^7.0.0
-    resolution:
-      integrity: sha512-ntuddfyiN+EhMw58PTNL1ph4C9rECiQXjI4nMMBKBaNjXvqLdkXpPRcMSr4iyBrJg/+wz9brFUD6RhOAT6r4Iw==
   /babel-jest/24.9.0_@babel+core@7.11.6:
     dependencies:
       '@babel/core': 7.11.6
@@ -2330,17 +2316,6 @@ packages:
       node: '>= 6'
     resolution:
       integrity: sha512-2EMA2P8Vp7lG0RAzr4HXqtYwacfMErOuv1U3wrvxHX6rD1sV6xS3WXG3r8TRQ2r6w8OhvSdWt+z41hQNwNm3Xw==
-  /babel-preset-jest/24.9.0:
-    dependencies:
-      '@babel/plugin-syntax-object-rest-spread': 7.8.3
-      babel-plugin-jest-hoist: 24.9.0
-    dev: false
-    engines:
-      node: '>= 6'
-    peerDependencies:
-      '@babel/core': ^7.0.0
-    resolution:
-      integrity: sha512-izTUuhE4TMfTRPF92fFwD2QfdXaZW08qvWTFCI51V8rW5x00UuPgc3ajRoWofXOuxjfcOM5zzSYsQS3H8KGCAg==
   /babel-preset-jest/24.9.0_@babel+core@7.11.6:
     dependencies:
       '@babel/core': 7.11.6
@@ -3258,12 +3233,6 @@ packages:
     dev: false
     resolution:
       integrity: sha512-YTWYI9se1P55u58gL5GkQHW4P6VJBJ5iBT+B5a7i2Tjadhv52paJG0qHX4A0OR6/t52odI64KP2YvFpkDOi3eQ==
-  /date-fns-tz/1.0.10:
-    dev: false
-    peerDependencies:
-      date-fns: '>=2.0.0-alpha.13'
-    resolution:
-      integrity: sha512-cHQAz0/9uDABaUNDM80Mj1FL4ODlxs1xEY4b0DQuAooO2UdNKvDkNbV8ogLnxLbv02Ru1HXFcot0pVvDRBgptg==
   /date-fns-tz/1.0.10_date-fns@2.16.1:
     dependencies:
       date-fns: 2.16.1
@@ -3272,10 +3241,6 @@ packages:
       date-fns: '>=2.0.0-alpha.13'
     resolution:
       integrity: sha512-cHQAz0/9uDABaUNDM80Mj1FL4ODlxs1xEY4b0DQuAooO2UdNKvDkNbV8ogLnxLbv02Ru1HXFcot0pVvDRBgptg==
-  /date-fns/1.30.1:
-    dev: false
-    resolution:
-      integrity: sha512-hBSVCvSmWC+QypYObzwGOd9wqdDpOt+0wl0KbU+R+uuZBS1jN8VsD1ss3irQDknRj5NvxiTF6oj/nDRnN/UQNw==
   /date-fns/2.16.1:
     dev: false
     engines:
@@ -5815,6 +5780,14 @@ packages:
     dev: false
     resolution:
       integrity: sha512-ApcjaOdVTJ7y4r08xI5wIqpvwS48Q0PBG4DJROcEkH1f8MdAiNFyFxz3xoL0LWAVwjrwPYZdVHHxhRHcx/uGLA==
+  /just-is-empty/2.0.1:
+    dev: false
+    resolution:
+      integrity: sha512-c05XqAnVCLRrd5u8WnKrUKjVsjQHAF8mI1fVUWvnfrAMLFiu/8tWDG/TaKEnQMcQ3YlQPZqdAcsX1gv4G9/Gcw==
+  /just-pick/2.1.0:
+    dev: false
+    resolution:
+      integrity: sha512-C1PuyjBfPOqv8mHxva3tcEG/BuZfyTjeNpFbg7/R9c/+/YVqVQd/tECZ7l4QX4vhONSRiOlJ6NyTbBJLMRw0wg==
   /just-unique/3.2.0:
     dev: false
     resolution:
@@ -9789,7 +9762,7 @@ packages:
     dev: false
     name: '@rush-temp/alpaca-cml'
     resolution:
-      integrity: sha512-4bFDx6Us+L9Z4tWMSK8RnpsMjwRTZXRnT4feY5bNxJpgdo3jRrf7yay/P8+Yb+tbt38wgMBletI13oEm2L8Ovg==
+      integrity: sha512-4+hv4kDHejYo0GSY/StxgQ/JFXVOAuaEImWRHQ7oI4Zt2P3SMN7xDhtZTPVH1kLTlta40ielblsY+hId6iNZHg==
       tarball: 'file:projects/alpaca-cml.tgz'
     version: 0.0.0
   'file:projects/options-analysis.tgz':
@@ -9803,13 +9776,17 @@ packages:
       '@types/jest': 24.9.1
       '@types/lodash': 4.14.161
       babel-jest: 24.9.0_@babel+core@7.11.6
+      date-fns: 2.16.1
       debug: 3.2.6
       hyperid: 1.4.1
       jest: 24.9.0
       jest-extended: 0.11.5
+      just-is-empty: 2.0.1
+      just-pick: 2.1.0
       lodash: 4.17.20
       npm-run-all: 4.1.5
       rimraf: 3.0.2
+      sorters: 0.0.3
       tda-api: github.com/dimfeld/node-tda-api/e2bad38d38a9798b27daffb3342f57b72347530d
       ts-node: 9.0.0_typescript@4.0.2
       typescript: 4.0.2
@@ -9818,7 +9795,7 @@ packages:
     dev: false
     name: '@rush-temp/options-analysis'
     resolution:
-      integrity: sha512-0QDsx6Rq2UG4R/MuZXRqv+v2ZXW8w3Fg4Tay2WQJgAS2Jpm+OY2g3KrzR6knCRNJKfHaxaZVLdGSvkOStl8IbA==
+      integrity: sha512-CY7oieRZul6jdSnALV+/ojjq+M3uTN6PHX2sc4Pwea6rcpOUU+u4w4LCP8LM8VXmyRVMFiEcJIQh8ZJ2deUfKQ==
       tarball: 'file:projects/options-analysis.tgz'
     version: 0.0.0
   'file:projects/options-liquidity.tgz':
@@ -9884,7 +9861,7 @@ packages:
     dev: false
     name: '@rush-temp/records'
     resolution:
-      integrity: sha512-VO7XSWCchmBMTIxzFRJWmyiduolF7NIyU5KC8UXQfxcW2gfmPeWBOdeMJtiOqmu1miF25abYqF/FbcOPsDjHWg==
+      integrity: sha512-gcInZvy2qk73dSrcEqA+1xwRNsgDXON9xUjyT4ZvBxuq2JfbXk3Dd5q8JlKjFjBGOAdQfYLjLKVBpkMhmEYUCA==
       tarball: 'file:projects/records.tgz'
     version: 0.0.0
   'file:projects/stakes.tgz':
@@ -9962,7 +9939,7 @@ packages:
     dev: false
     name: '@rush-temp/stakes'
     resolution:
-      integrity: sha512-mfI1X8bQ+bRt1VOAsWeceJbxCw3b1jGbRjqcZv8yf4+GVgKEY1t1mJ38tD1+UefPH8A7wMuZAXV/qBpnb/3vfQ==
+      integrity: sha512-4tBuKxQXpRlTjokYAyP8/XxHDFwIvEx9DtaXMH2qOtT+LcA8/cIQpVJKCGoNoOKbOji28zBWeNW5ya6DisVQRA==
       tarball: 'file:projects/stakes.tgz'
     version: 0.0.0
   'file:projects/tm-automation.tgz':
@@ -9992,7 +9969,7 @@ packages:
       '@types/got': 9.6.11
       '@types/lodash': 4.14.161
       '@types/node': 11.15.21
-      date-fns: 1.30.1
+      date-fns: 2.16.1
       debug: 3.2.6
       find-up: 5.0.0
       got: 9.6.0
@@ -10009,7 +9986,7 @@ packages:
     dev: false
     name: '@rush-temp/trading-data'
     resolution:
-      integrity: sha512-yqWPmyvtONNMDZBlg4JDsmstH6m/3qQ8dBTo+X2Cvk7eFw2uK3hbbNS345F7zzfRSC0muA4l5ba541gq++Yn9w==
+      integrity: sha512-GJbipIbslsQrvZRZ7ir6GNp2qS8nWNRZlzyRrYnK+nAfcw2BeTCKBDig2ks/K4F8HWpl2oj1YQejw6sGcmroXg==
       tarball: 'file:projects/trading-data.tgz'
     version: 0.0.0
   'file:projects/types.tgz':
@@ -10106,15 +10083,15 @@ specifiers:
   '@types/split2': ^2.1.6
   '@types/uuid': ^3.4.6
   autoprefixer: ^9.7.0
-  babel-jest: ^24.9.0
   bluebird: ^3.5.1
-  chai: ^4.1.2
+  chai: ~4.2.0
   cheerio: ^1.0.0-rc.2
   compression: ^1.7.1
   cssnano: ^4.1.10
   csv-parse: ^2.4.0
   csv-stringify: ^3.1.1
   dashdash: ^1.14.1
+  date-fns: ~2.16.1
   date-fns-tz: ^1.0.8
   decoders: ^1.16.1
   eslint: ^6.6.0
@@ -10127,6 +10104,8 @@ specifiers:
   inquirer: ^5.2.0
   inquirer-autocomplete-prompt: ^0.12.2
   jest-fetch-mock: ^2.1.2
+  just-is-empty: ~2.0.1
+  just-pick: ~2.1.0
   just-unique: ^3.2.0
   ky: ^0.15.0
   ky-universal: ^0.3.0

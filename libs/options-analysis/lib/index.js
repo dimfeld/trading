@@ -91,6 +91,19 @@ Object.keys(_import_trades).forEach(function (key) {
   });
 });
 
+var _technicals = require("./technicals");
+
+Object.keys(_technicals).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _technicals[key];
+    }
+  });
+});
+
 var _position_info = _interopRequireDefault(require("./position_info"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }

@@ -1,7 +1,10 @@
-import { Dictionary } from 'lodash';
 import { ContractInfo } from 'types';
-export declare type StrikeMap = Dictionary<ContractInfo[]>;
-export declare type ExpirationDateMap = Dictionary<StrikeMap>;
+export declare type StrikeMap = {
+    [key: string]: ContractInfo[];
+};
+export declare type ExpirationDateMap = {
+    [key: string]: StrikeMap;
+};
 export declare function closestDeltas(strikes: StrikeMap, deltas: number[]): {
     target: number;
     contract: ContractInfo;
@@ -49,57 +52,6 @@ export interface AnalyzeLiquidityOptions {
 }
 export declare function analyzeLiquidity(config: AnalyzeSideOptions & FilterLiquidityArguments, chain: AnalyzeLiquidityOptions): {
     symbol: string;
-    results: {
-        symbol: string;
-        description: string;
-        mark: number;
-        putCall: string;
-        exchangeName: string;
-        bid: number;
-        ask: number;
-        last: number;
-        bidSize: number;
-        askSize: number;
-        lastSize: number;
-        highPrice: number;
-        lowPrice: number;
-        openPrice: number;
-        closePrice: number;
-        totalVolume: number;
-        tradeDate: number;
-        tradeTimeInLong: number;
-        quoteTimeInLong: number;
-        netChange: number;
-        volatility: number;
-        delta: number;
-        gamma: number;
-        theta: number;
-        vega: number;
-        rho: number;
-        openInterest: number;
-        timeValue: number;
-        theoreticalOptionValue: number;
-        theoreticalVolatility: number;
-        optionDeliverablesList: any;
-        strikePrice: number;
-        expirationDate: number;
-        daysToExpiration: number;
-        expirationType: string;
-        lastTradingDay: number;
-        multiplier: number;
-        settlementType: string;
-        deliverableNote: string;
-        isIndexOption: boolean;
-        percentChange: number;
-        markChange: number;
-        markPercentChange: number;
-        inTheMoney: boolean;
-        mini: boolean;
-        nonStandard: boolean;
-        expiration: string;
-        targetDte: number;
-        targetDelta: number;
-        spreadPercent: number;
-    }[];
+    results: any[];
 };
 export {};

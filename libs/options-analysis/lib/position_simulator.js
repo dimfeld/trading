@@ -4,17 +4,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.PositionSimulator = exports.Change = void 0;
-
-var _sumBy = _interopRequireDefault(require("lodash/sumBy"));
-
-var _each = _interopRequireDefault(require("lodash/each"));
-
-var _map = _interopRequireDefault(require("lodash/map"));
-
-var _flatMap = _interopRequireDefault(require("lodash/flatMap"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
 let Change;
 exports.Change = Change;
 
@@ -28,7 +17,8 @@ exports.Change = Change;
 class PositionSimulator {
   constructor(initial) {
     this.legs = {};
-    (0, _each.default)(initial, leg => {
+
+    for (let leg of initial || []) {
       let symbol = leg.symbol;
       let list = this.legs[symbol];
 
@@ -37,12 +27,16 @@ class PositionSimulator {
       } else {
         this.legs[symbol] = [leg];
       }
-    });
+    }
   }
 
   getFlattenedList() {
-    return (0, _map.default)(this.legs, (legs, symbol) => {
-      let size = (0, _sumBy.default)(legs, 'size');
+    return Object.entries(this.legs).map(([symbol, legs]) => {
+      if (!legs) {
+        return;
+      }
+
+      let size = legs.reduce((acc, val) => acc + val.size, 0);
 
       if (size !== 0) {
         return {
@@ -54,7 +48,7 @@ class PositionSimulator {
   }
 
   addLegs(legs) {
-    return (0, _flatMap.default)(legs, leg => this.addLeg(leg));
+    return legs.flatMap(leg => this.addLeg(leg));
   }
 
   addLeg(leg) {
@@ -81,7 +75,7 @@ class PositionSimulator {
         changedBy: leg,
         change: Change.Opened,
         changeAmount: leg.size,
-        totalSize: (0, _sumBy.default)(existing, 'size'),
+        totalSize: existing.reduce((acc, val) => acc + val.size, 0),
         created: true,
         pnl: 0
       }];
@@ -90,10 +84,11 @@ class PositionSimulator {
 
     let result = [];
     let newExisting = [];
-    let totalSize = (0, _sumBy.default)(existing, 'size') + leg.size;
+    let totalSize = existing.reduce((acc, val) => acc + val.size, leg.size);
     let remaining = leg.size;
     let absRemaining = Math.abs(remaining);
-    (0, _each.default)(existing, el => {
+
+    for (let el of existing) {
       let absSize = Math.abs(el.size);
 
       if (absSize <= absRemaining) {
@@ -140,7 +135,7 @@ class PositionSimulator {
         // No effect since the new leg has already been applied fully.
         newExisting.push(el);
       }
-    });
+    }
 
     if (absRemaining > 0) {
       // This leg not only closed some positions, but opened new ones.

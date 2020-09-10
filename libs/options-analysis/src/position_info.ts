@@ -1,4 +1,3 @@
-import { Dictionary } from 'lodash';
 import { Position, Trade, PositionLegInfo } from './types';
 
 export default function positionInfo<T extends Position<TR>, TR extends Trade>(
@@ -8,7 +7,7 @@ export default function positionInfo<T extends Position<TR>, TR extends Trade>(
   let openTotalBasis = 0;
   let maxTotalBasis = 0;
 
-  let legData: Dictionary<PositionLegInfo> = {};
+  let legData: { [key: string]: PositionLegInfo } = {};
 
   position.trades.forEach((trade) => {
     trade.legs.forEach((leg) => {

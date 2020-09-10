@@ -1,7 +1,3 @@
-import sumBy from 'lodash/sumBy';
-import each from 'lodash/each';
-import map from 'lodash/map';
-import flatMap from 'lodash/flatMap';
 export let Change;
 
 (function (Change) {
@@ -14,7 +10,8 @@ export let Change;
 export class PositionSimulator {
   constructor(initial) {
     this.legs = {};
-    each(initial, leg => {
+
+    for (let leg of initial || []) {
       let symbol = leg.symbol;
       let list = this.legs[symbol];
 
@@ -23,12 +20,16 @@ export class PositionSimulator {
       } else {
         this.legs[symbol] = [leg];
       }
-    });
+    }
   }
 
   getFlattenedList() {
-    return map(this.legs, (legs, symbol) => {
-      let size = sumBy(legs, 'size');
+    return Object.entries(this.legs).map(([symbol, legs]) => {
+      if (!legs) {
+        return;
+      }
+
+      let size = legs.reduce((acc, val) => acc + val.size, 0);
 
       if (size !== 0) {
         return {
@@ -40,7 +41,7 @@ export class PositionSimulator {
   }
 
   addLegs(legs) {
-    return flatMap(legs, leg => this.addLeg(leg));
+    return legs.flatMap(leg => this.addLeg(leg));
   }
 
   addLeg(leg) {
@@ -67,7 +68,7 @@ export class PositionSimulator {
         changedBy: leg,
         change: Change.Opened,
         changeAmount: leg.size,
-        totalSize: sumBy(existing, 'size'),
+        totalSize: existing.reduce((acc, val) => acc + val.size, 0),
         created: true,
         pnl: 0
       }];
@@ -76,10 +77,11 @@ export class PositionSimulator {
 
     let result = [];
     let newExisting = [];
-    let totalSize = sumBy(existing, 'size') + leg.size;
+    let totalSize = existing.reduce((acc, val) => acc + val.size, leg.size);
     let remaining = leg.size;
     let absRemaining = Math.abs(remaining);
-    each(existing, el => {
+
+    for (let el of existing) {
       let absSize = Math.abs(el.size);
 
       if (absSize <= absRemaining) {
@@ -126,7 +128,7 @@ export class PositionSimulator {
         // No effect since the new leg has already been applied fully.
         newExisting.push(el);
       }
-    });
+    }
 
     if (absRemaining > 0) {
       // This leg not only closed some positions, but opened new ones.

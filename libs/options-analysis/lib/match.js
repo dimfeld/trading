@@ -5,7 +5,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.matchPositions = matchPositions;
 
-var _orderBy = _interopRequireDefault(require("lodash/orderBy"));
+var _sorters = _interopRequireDefault(require("sorters"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -26,7 +26,10 @@ function matchPositions(trade, positions) {
       overlapping,
       position
     };
-  }).filter(x => x.score > 0);
-  return (0, _orderBy.default)(matched, x => x.score, 'desc');
+  }).filter(x => x.score > 0).sort((0, _sorters.default)({
+    value: 'score',
+    descending: true
+  }));
+  return matched;
 }
 //# sourceMappingURL=match.js.map

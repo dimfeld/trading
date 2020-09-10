@@ -1,4 +1,4 @@
-import orderBy from 'lodash/orderBy';
+import sorter from 'sorters';
 export function matchPositions(trade, positions) {
   let legs = trade.legs;
   let matched = positions.map(position => {
@@ -16,7 +16,10 @@ export function matchPositions(trade, positions) {
       overlapping,
       position
     };
-  }).filter(x => x.score > 0);
-  return orderBy(matched, x => x.score, 'desc');
+  }).filter(x => x.score > 0).sort(sorter({
+    value: 'score',
+    descending: true
+  }));
+  return matched;
 }
 //# sourceMappingURL=match.js.map
