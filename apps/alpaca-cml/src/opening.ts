@@ -161,8 +161,6 @@ async function run() {
     };
   }
 
-  console.dir(dayBars);
-
   let results = trades
     .map((trade) => {
       let data = dayBars.get(trade.symbol)?.[0];
