@@ -68,3 +68,4 @@ alpaca_auth.json
 alpaca_auth_paper.json
 db_backup
 tsconfig.tsbuildinfo
+.vscode
