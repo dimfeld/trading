@@ -39,6 +39,7 @@ export enum OrderDuration {
 
 export interface Order {
   id: string;
+  broker: BrokerChoice;
   status: OrderStatus;
   traded: Date;
   price: number;

@@ -80,6 +80,7 @@ function convertAlpacaOrder(trade) {
 
   return {
     id: trade.id,
+    broker: BrokerChoice.alpaca,
     status: statusMap[trade.status],
     traded: new Date(
       trade.filled_at ||

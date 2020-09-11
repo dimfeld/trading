@@ -36,6 +36,7 @@ export function get_trades(lines: string): UnderlyingWithTrade[] {
 
     return {
       trade: output_trade,
+      broker: null,
       underlying: trade['Underlying Symbol'],
     };
   });

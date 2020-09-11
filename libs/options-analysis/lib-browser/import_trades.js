@@ -1,6 +1,33 @@
 import { PositionSimulator } from './position_simulator';
 import debugMod from 'debug';
 const debug = debugMod('options-analysis:import_trades');
+export function orderGross(order) {
+  return order.legs.reduce((acc, leg) => {
+    let multiplier = leg.symbol.length > 6 ? 100 : 1;
+    return acc + -leg.size * leg.price * multiplier;
+  }, 0);
+}
+export function orderToDbTrade(order) {
+  let trade = {
+    id: order.id,
+    commissions: order.commissions,
+    traded: order.traded,
+    gross: orderGross(order),
+    tags: [],
+    legs: order.legs.map(leg => {
+      return { ...leg,
+        price: leg.price ?? null
+      };
+    }),
+    price_each: order.price
+  };
+  let underlying = order.legs[0].symbol.slice(0, 6).trim();
+  return {
+    underlying,
+    trade,
+    broker: order.broker
+  };
+}
 export function applyTradeToPosition(position, trade) {
   let simulator = new PositionSimulator(position.legs);
   let result = simulator.addLegs(trade.legs);

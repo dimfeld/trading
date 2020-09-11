@@ -1,3 +1,5 @@
+import { BrokerChoice, Order } from './orders';
+
 export interface DbTag {
   id: number;
   name: string;
@@ -57,7 +59,7 @@ export interface Algorithm {
 export interface DbPosition {
   id: string;
   tags: number[];
-  broker: string;
+  broker: BrokerChoice;
   symbol: string;
   strategy: number;
   open_date: Date;

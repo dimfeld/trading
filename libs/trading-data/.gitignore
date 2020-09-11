@@ -61,4 +61,4 @@ typings/
 .vscode
 tda_auth.json
 yarn.lock
-lib/tsconfig.tsbuildinfo
+lib

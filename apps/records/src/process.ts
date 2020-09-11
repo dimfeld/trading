@@ -46,7 +46,7 @@ export async function match_trades(
 
     let trade = t.trade;
     debug('Matching', trade, symbol_positions);
-    let matches = matchPositions(trade, symbol_positions);
+    let matches = matchPositions(t.broker, trade, symbol_positions);
 
     let position = await position_for_unmatched_trade(
       { matches, ...t },

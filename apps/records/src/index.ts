@@ -3,6 +3,7 @@ import { pgp, loadDb } from 'trading-data';
 import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as dashdash from 'dashdash';
+import { orderToDbTrade } from 'options-analysis';
 
 import {
   parse_tw_emails,
@@ -14,6 +15,7 @@ import {
 import { UnderlyingWithTrade } from './ui';
 import { process_trades } from './process';
 import { check_active } from './check_active';
+import { Order } from 'types';
 
 function parse_cmd_line() {
   let options = [
@@ -41,6 +43,11 @@ function parse_cmd_line() {
       names: ['tos'],
       type: 'string',
       help: 'Path to file containing TOS trade information',
+    },
+    {
+      names: ['trades'],
+      type: 'string',
+      help: 'Path to file containing trades in my custom format',
     },
     {
       names: ['manual'],
@@ -137,7 +144,11 @@ async function main() {
   }
 
   let data: UnderlyingWithTrade[];
-  if (args.tw_email) {
+  if (args.trades) {
+    data = JSON.parse(fs.readFileSync(args.trades).toString()).map((o: Order) =>
+      orderToDbTrade(o)
+    );
+  } else if (args.tw_email) {
     let lines = fs.readFileSync(args.tw_email);
     data = parse_tw_emails(lines.toString());
   } else if (args.tw_csv) {

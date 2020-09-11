@@ -1,7 +1,7 @@
 import sorter from 'sorters';
-export function matchPositions(trade, positions) {
+export function matchPositions(broker, trade, positions) {
   let legs = trade.legs;
-  let matched = positions.map(position => {
+  let matched = positions.filter(p => p.broker === broker || !p.broker).map(position => {
     let overlapping = legs.reduce((acc, leg) => {
       let found_leg = position.legs.find(p_leg => p_leg.symbol === leg.symbol);
 

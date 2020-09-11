@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as debugMod from 'debug';
-import { DbTrade } from 'types';
+import { BrokerChoice, DbTrade } from 'types';
 import { UnderlyingWithTrade } from '../ui';
 
 const debug = debugMod('tos');
@@ -43,6 +43,7 @@ function parseTrade(trade: TosTrade): UnderlyingWithTrade {
 
   return {
     underlying,
+    broker: BrokerChoice.tda,
     trade: result,
   };
 }

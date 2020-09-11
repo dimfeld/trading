@@ -1,4 +1,4 @@
-import { DbPosition, DbTrade, DbTradeAndPosition } from 'types';
+import { DbPosition, DbTrade, DbTradeAndPosition, Order } from 'types';
 import { Change, PositionSimulator } from './position_simulator';
 import debugMod from 'debug';
 
@@ -6,6 +6,37 @@ const debug = debugMod('options-analysis:import_trades');
 
 export interface PositionChange extends DbTradeAndPosition {
   change: Change;
+}
+
+export function orderGross(order: Order) {
+  return order.legs.reduce((acc, leg) => {
+    let multiplier = leg.symbol.length > 6 ? 100 : 1;
+    return acc + -leg.size * leg.price * multiplier;
+  }, 0);
+}
+
+export function orderToDbTrade(order: Order) {
+  let trade: DbTrade = {
+    id: order.id,
+    commissions: order.commissions,
+    traded: order.traded,
+    gross: orderGross(order),
+    tags: [],
+    legs: order.legs.map((leg) => {
+      return {
+        ...leg,
+        price: leg.price ?? null,
+      };
+    }),
+    price_each: order.price,
+  };
+
+  let underlying = order.legs[0].symbol.slice(0, 6).trim();
+  return {
+    underlying,
+    trade,
+    broker: order.broker,
+  };
 }
 
 export function applyTradeToPosition(

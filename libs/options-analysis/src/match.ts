@@ -1,8 +1,13 @@
 import sorter from 'sorters';
+import { BrokerChoice } from 'types';
 import { OptionLeg } from './types';
 
 export interface HasOptionLegs {
   legs: OptionLeg[];
+}
+
+export interface HasOptionLegsAndBroker extends HasOptionLegs {
+  broker: BrokerChoice;
 }
 
 export interface MatchingPositionScore<T> {
@@ -11,13 +16,15 @@ export interface MatchingPositionScore<T> {
   position: T;
 }
 
-export function matchPositions<T extends HasOptionLegs>(
+export function matchPositions<T extends HasOptionLegsAndBroker>(
+  broker: BrokerChoice,
   trade: HasOptionLegs,
   positions: T[]
 ): Array<MatchingPositionScore<T>> {
   let legs = trade.legs;
 
   let matched = positions
+    .filter((p) => p.broker === broker || !p.broker)
     .map((position) => {
       let overlapping = legs.reduce((acc, leg) => {
         let found_leg = position.legs.find(

@@ -108,6 +108,7 @@ function consolidate_legs(
 
   return {
     underlying: parsed[0].symbol,
+    broker: null,
     trade,
   };
 }

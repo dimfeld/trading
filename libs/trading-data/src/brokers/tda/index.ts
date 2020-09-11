@@ -483,6 +483,7 @@ export class Api implements Broker {
 
       return {
         id: trade.orderId,
+        broker: BrokerChoice.tda,
         status: statusMap[trade.status],
         traded: trade.closeTime || latestExecution,
         price: trade.price,
@@ -496,6 +497,7 @@ export class Api implements Broker {
     throw new Error('not yet supported');
     return {
       id: null,
+      broker: BrokerChoice.tda,
       commissions: 0,
       legs: [],
       price: null,

@@ -127,6 +127,7 @@ export function get_trades(input: string) {
 
       return {
         underlying: parsed.symbol,
+        broker: null,
         trade,
       };
     })

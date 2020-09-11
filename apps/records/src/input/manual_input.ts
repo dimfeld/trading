@@ -44,7 +44,7 @@ export async function get_trades() {
       legs: [{ symbol: data.symbol, size, price }],
     };
 
-    trades.push({ underlying: data.symbol, trade: t });
+    trades.push({ underlying: data.symbol, broker: null, trade: t });
 
     if (!data.another) {
       break;

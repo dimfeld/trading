@@ -8,7 +8,13 @@ import {
   PositionChange,
   optionInfoFromSymbol,
 } from 'options-analysis';
-import { DbTrade, DbStrategy, DbStrategies, DbOptionLeg } from 'types';
+import {
+  DbTrade,
+  DbStrategy,
+  DbStrategies,
+  DbOptionLeg,
+  BrokerChoice,
+} from 'types';
 
 import * as autocomplete from 'inquirer-autocomplete-prompt';
 import * as fuzzy from 'fuzzy';
@@ -19,6 +25,7 @@ import { DbPosition, DbData } from 'types';
 
 export interface UnderlyingWithTrade {
   underlying: string;
+  broker: BrokerChoice;
   trade: DbTrade;
 }
 
