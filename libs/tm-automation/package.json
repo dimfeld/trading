@@ -9,7 +9,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "run-s clean && tsc",
-    "dev": "run-s clean && tsc -w"
+    "dev": "tsc -w"
   },
   "dependencies": {
     "csv-stringify": "^3.1.1",

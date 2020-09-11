@@ -9,7 +9,7 @@
   "scripts": {
     "clean": "rimraf lib",
     "build": "run-s clean && tsc",
-    "dev": "run-s clean && tsc -w",
+    "dev": "tsc -w",
     "test": "mocha --opts mocha.opts"
   },
   "devDependencies": {

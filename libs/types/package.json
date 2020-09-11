@@ -8,7 +8,7 @@
   "scripts": {
     "clean": "rimraf lib",
     "build": "run-s clean && tsc",
-    "dev": "run-s clean && tsc -w"
+    "dev": "tsc -w"
   },
   "devDependencies": {
     "typescript": "^4",
