@@ -100,7 +100,7 @@ export function technicalCalculator(
   let total20Yesterday = total19 + pricesWithoutToday[19];
   let ma20Yesterday = total20Yesterday / 20;
 
-  const lastRsiDay = Math.min(250, prices.length - 2);
+  const lastRsiDay = Math.min(250, pricesWithoutToday.length - 2);
   const numRsiDays = 20;
   // These start from the end of the series.
   let gainsByDay = new Array(numRsiDays);
@@ -124,12 +124,12 @@ export function technicalCalculator(
   }
 
   let avgGain14 = gainsByDay[13] / 14;
-  let avgLoss14 = gainsByDay[13] / 14;
+  let avgLoss14 = lossesByDay[13] / 14;
   let avgGain20 = gainsByDay[19] / 20;
-  let avgLoss20 = gainsByDay[19] / 20;
+  let avgLoss20 = lossesByDay[19] / 20;
 
-  for (let i = lastRsiDay - numRsiDays; i >= 0; --i) {
-    let change = prices[i] - prices[i - 1];
+  for (let i = lastRsiDay - numRsiDays - 1; i >= 0; --i) {
+    let change = pricesWithoutToday[i] - pricesWithoutToday[i + 1];
     let gain;
     let loss;
     if (change > 0) {
@@ -187,11 +187,11 @@ export function technicalCalculator(
     let rsi20;
     let change = latest - pricesWithoutToday[0];
     if (change > 0) {
-      rsi14 = rsi((avgGain14 * 13 + change) / 14, avgLoss14);
-      rsi20 = rsi((avgGain20 * 19 + change) / 20, avgLoss20);
+      rsi14 = rsi(avgGain14 * 13 + change, avgLoss14 * 13);
+      rsi20 = rsi(avgGain20 * 19 + change, avgLoss20 * 19);
     } else {
-      rsi14 = rsi(avgGain14, (avgLoss14 * 13 - change) / 14);
-      rsi20 = rsi(avgGain20, (avgLoss20 * 19 - change) / 20);
+      rsi14 = rsi(avgGain14 * 13, avgLoss14 * 13 - change);
+      rsi20 = rsi(avgGain20 * 19, avgLoss20 * 19 - change);
     }
 
     return {
@@ -229,13 +229,6 @@ export function technicalCalculator(
     latest: calculateLatest,
   };
 }
-
-// TODO This needs the following changes:
-// Return a set of TechnicalCalculator objects that are preloaded with averages for the historical data
-// and can then return the proper values given today's quote for a symbol.
-// These objects should be serializable as well so that they can be calculated in the API and then transferred to the client.
-// Move this file into a new package that can be used from both the browser
-// and the API.
 
 export function createTechnicalCalculators(history: Map<string, Bar[]>) {
   let output = new Map<string, TechnicalCalculator>();

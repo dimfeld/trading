@@ -51,11 +51,11 @@ test('ma200', () => {
 });
 
 test('rsi14', () => {
-  closeTo(latestCalc.rsi14, correctNumbers.rsi14);
+  closeTo(latestCalc.rsi14, correctNumbers.rsi14); // 42.11 from TOS
 });
 
 test('rsi20', () => {
-  closeTo(latestCalc.rsi20, correctNumbers.rsi);
+  closeTo(latestCalc.rsi20, correctNumbers.rsi); // 45.27 from TOS
 });
 
 test.run();
