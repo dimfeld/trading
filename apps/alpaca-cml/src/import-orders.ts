@@ -47,7 +47,7 @@ async function run() {
         `DB has multiple open Alpaca positions for symbol ${pos.symbol}`
       );
     }
-
+    
     positions[pos.symbol] = {
       db: pos,
       broker: null,
@@ -75,75 +75,6 @@ async function run() {
   let totalValue = 0;
   let totalPL = 0;
   let totalPLToday = 0;
-
-  let orderIds = [];
-  for (let pos of Object.values(positions).sort(sorter('db.symbol'))) {
-    if (!pos.broker) {
-      console.error(
-        `WARNING: DB Position ${pos.db.id} for symbol ${pos.db.symbol} has no match in Broker`
-      );
-      continue;
-    }
-
-    let closeAfter = pos.db.structure?.conditions?.closing?.after_days;
-    if (!closeAfter) {
-      console.error(
-        `WARNING: Position ${pos.db.id} for symbol ${pos.db.symbol} has no "close after" time`
-      );
-      continue;
-    }
-
-    let price = quotes[pos.broker.symbol].mark;
-    let costBasis = pos.broker.size * pos.broker.price;
-    let marketValue = pos.broker.size * price;
-    let unrealizedPl = marketValue - costBasis;
-    let unrealizedPlPct = (unrealizedPl / costBasis) * 100;
-
-    let todayPl = pos.broker.size * quotes[pos.broker.symbol].netChange;
-    let todayPlPct = (todayPl / (marketValue - todayPl)) * 100;
-
-    console.dir(pos, { depth: null });
-    totalCostBasis += costBasis;
-    totalValue += marketValue;
-    totalPL += unrealizedPl;
-    totalPLToday += todayPl;
-
-    let closeDate = date.addDays(new Date(pos.db.open_date), closeAfter);
-    let closeDateText = date.isToday(closeDate)
-      ? 'today'
-      : `in ${date.formatDistanceToNow(closeDate)}`;
-    console.log(
-      `${pos.broker.symbol.padEnd(5, ' ')} -- P/L $${format(
-        unrealizedPl
-      )} (${format(unrealizedPlPct, 1)}%), Today $${format(todayPl)} (${format(
-        todayPlPct,
-        1
-      )}%), Value $${format(marketValue)} from $${format(
-        costBasis
-      )}. Close ${closeDateText}`
-    );
-
-    if (date.isToday(closeDate) || date.isPast(closeDate)) {
-      console.log(
-        `${chalk.green('Closing position')} ${pos.db.id}: ${
-          pos.broker.size
-        } shares of ${pos.broker.symbol}`
-      );
-
-      if (!dryRun) {
-        let order = await api.createOrder(BrokerChoice.alpaca, {
-          type: OrderType.market,
-          legs: [
-            {
-              symbol: pos.broker.symbol,
-              size: -pos.broker.size,
-            },
-          ],
-        });
-        orderIds.push(order.id);
-      }
-    }
-  }
 
   let doneOrders = await api.getOrders(BrokerChoice.alpaca, {
     filled: true,

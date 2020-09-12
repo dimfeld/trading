@@ -22,7 +22,8 @@
     "sorters": "^0.0.3",
     "types": "~1.0.0",
     "trading-data": "~1.0.1",
-    "source-map-support": "~0.5.19"
+    "source-map-support": "~0.5.19",
+    "options-analysis": "~1.6.2"
   },
   "devDependencies": {
     "@types/node": "^14.6.2",

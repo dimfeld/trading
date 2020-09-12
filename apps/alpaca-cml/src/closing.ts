@@ -102,7 +102,7 @@ async function run() {
     let todayPl = pos.broker.size * quotes[pos.broker.symbol].netChange;
     let todayPlPct = (todayPl / (marketValue - todayPl)) * 100;
 
-    console.dir(pos, { depth: null });
+    //console.dir(pos, { depth: null });
     totalCostBasis += costBasis;
     totalValue += marketValue;
     totalPL += unrealizedPl;

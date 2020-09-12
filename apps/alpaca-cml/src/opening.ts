@@ -15,7 +15,6 @@ import {
 import * as uniq from 'just-unique';
 import sorter from 'sorters';
 import * as hyperidMod from 'hyperid';
-import got from 'got';
 import {
   createBrokers,
   defaultAlpacaAuth,
@@ -24,6 +23,11 @@ import {
   db,
   Brokers,
 } from 'trading-data';
+import {
+  LatestTechnicals,
+  TechnicalCalculator,
+  technicalCalculator,
+} from 'options-analysis';
 const hyperid = hyperidMod();
 
 interface OpeningTrade {
@@ -35,137 +39,152 @@ interface OpeningTrade {
 
 const dryRun = Boolean(process.env.DRY_RUN);
 
+interface Technicals extends LatestTechnicals {
+  yesterdayClose: number;
+  priceChange: number;
+}
+
+function macdCrossoverUp(technicals: Technicals) {
+  // TODO Need to calculate EMA9 of MACD line.
+  let current = technicals.ema12 - technicals.ema26 - technicals.ema9 > 0;
+  let yesterday =
+    technicals.yesterday.ema12 - technicals.ema26 - technicals.yesterday.ema9 >
+    0;
+  return current && !yesterday;
+}
+
 // These need to be updated for the real values.
-const filters = {
+const filters: {
+  [strategy: string]: (t: Technicals) => { value: boolean; desc: string };
+} = {
   PreEarnings7DaysWithTechnicals: (data) => ({
-    value: data.price > data.ma50,
-    desc: `Price > MA50: ${data.price.toFixed(2)} > ${data.ma50.toFixed(2)}`,
+    value: data.latest > data.ma50,
+    desc: `Price > MA50: ${data.latest.toFixed(2)} > ${data.ma50.toFixed(2)}`,
   }),
   PreEarnings14DaysWithTechnicals: (data) => ({
-    value: data.price > data.ma50,
-    desc: `Price > MA50: ${data.price.toFixed(2)} > ${data.ma50.toFixed(2)}`,
+    value: data.latest > data.ma50,
+    desc: `Price > MA50: ${data.latest.toFixed(2)} > ${data.ma50.toFixed(2)}`,
   }),
   BigBollingerRecoveryBreakout: (data) => ({
-    value: false,
-    desc: 'price crosses above above 3SD bollinger',
+    value:
+      data.yesterdayClose <= data.yesterday.bollinger.lower3SD &&
+      data.latest > data.bollinger.lower3SD,
+    desc: `price ${data.latest.toFixed(
+      2
+    )} crosses above lower 3SD bollinger ${data.bollinger.upper3SD.toFixed(2)}`,
   }),
   SmallBollingerRecoveryBreakout: (data) => ({
-    value: false,
-    desc: 'price crosses above lower 2SD bollinger',
+    value:
+      data.yesterdayClose <= data.yesterday.bollinger.lower2SD &&
+      data.latest > data.bollinger.lower2SD,
+    desc: `price ${data.latest.toFixed(
+      2
+    )} crosses above lower 2SD bollinger ${data.bollinger.lower2SD.toFixed(2)}`,
   }),
   SmallBollingerUpsideBreakout: (data) => ({
-    value: false, //data.price < data.ma200,
-    desc: `Price < MA200: ${data.price.toFixed(2)} < ${data.ma200.toFixed(
+    value:
+      data.latest < data.ma200 &&
+      data.yesterdayClose < data.yesterday.bollinger.upper2SD &&
+      data.latest > data.bollinger.upper2SD,
+    desc: `Price < MA200: ${data.latest.toFixed(2)} < ${data.ma200.toFixed(
       2
-    )}, price above 2SD bollinger`,
+    )}, price above 2SD bollinger ${data.bollinger.upper2SD}`,
   }),
   ClassicOversold: (data) => ({
     value: data.rsi14 < 30,
     desc: `RSI14: ${data.rsi14.toFixed(2)} < 30`,
   }),
   CMLOversold: (data) => ({
-    value: data.rsi14 < 25 && data.PriceChange < 0,
+    value: data.rsi14 < 25 && data.priceChange < 0,
     desc: `RSI14: ${data.rsi14.toFixed(
       2
-    )} < 25, Price Change Negative: ${data.PriceChange.toFixed(2)}`,
+    )} < 25, Price Change Negative: ${data.priceChange.toFixed(2)}`,
   }),
   MACDBreakout: (data) => ({
     value: false,
-    desc: 'MACD crosses up, price below upper Bollinger band',
+    // data.latest < data.ma200 &&
+    // data.latest < data.bollinger.upper2SD &&
+    // macdCrossoverUp(data),
+    desc: `(disabled) price (${
+      data.latest
+    }) below upper Bollinger band (${data.bollinger.upper2SD.toFixed(
+      2
+    )}) and ma200 (${data.ma200.toFixed(
+      2
+    )}), MACD crosses up (ema26 ${data.ema26.toFixed(
+      2
+    )}, ema12 ${data.ema12.toFixed(2)})`,
   }),
   ThreeInsideUpWithRSI: (data) => {
     return {
-      value: data.PriceChange > 0 && data.rsi14 < 60 && data.price < data.ma21,
-      desc: `Price Change Positive: ${data.PriceChange.toFixed(
+      value:
+        data.priceChange > 0 && data.rsi14 < 60 && data.latest < data.ema21,
+      desc: `Price Change Positive: ${data.priceChange.toFixed(
         2
       )}, RSI14: ${data.rsi14.toFixed(
         2
-      )} < 60, Price < MA21: ${data.price.toFixed(2)} < ${data.ma21.toFixed(
+      )} < 60, Price < MA21: ${data.latest.toFixed(2)} < ${data.ema21.toFixed(
         2
       )},`,
     };
   },
 };
 
-async function getTechnicals(symbols: string[]) {
-  let getIt = () =>
-    got({
-      url: 'https://webservice.cmlviz.com/GetLiveTechnicals',
-      timeout: 15000,
-      searchParams: {
-        auth: 'DEV1_nr82759gjRJ9Qm59FJbnqpeotr',
-        tickers: symbols.join(','),
-      },
-      headers: {
-        accept: 'application/json, text/javascript, */*; q=0.01',
-        'accept-language': 'en-US,en;q=0.9',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-site',
-        origin: 'https://www.cmlviz.com',
-        referer: 'https://www.cmlviz.com/',
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36',
-      },
-    }).json<any[]>();
-
-  console.log('fetching technicals');
-  let data = await getIt();
-  console.log('done');
-
-  if (data.some((d) => d.statusMessage)) {
-    // Need to fetch again
-    console.log('refetching technicals');
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    data = await getIt();
-  }
-
-  return data;
-}
-
 let api: Brokers;
 async function run() {
-  let trades: OpeningTrade[] = require('./trades.json');
+  let trades: OpeningTrade[] = require('../trades.json');
   let symbols: string[] = uniq(trades.map((t) => t.symbol));
 
   api = await createBrokers({
     alpaca: defaultAlpacaAuth(),
   });
 
-  let [[account], positions, dayBars, data, maData] = await Promise.all([
+  let [[account], positions, dayBars, data] = await Promise.all([
     api.getAccount(BrokerChoice.alpaca),
     api.getPositions(BrokerChoice.alpaca),
     api.getBars({
       symbols,
       timeframe: BarTimeframe.day,
-      start: new Date(),
-      end: new Date(),
     }),
     api.getQuotes(symbols),
-    getTechnicals(symbols),
   ]);
 
-  let maDataBySymbol = {};
-  for (let data of maData) {
-    maDataBySymbol[data.Ticker] = data;
+  let quotes = new Map<string, Technicals>();
+  for (let symbol of symbols) {
+    let bars = dayBars.get(symbol);
+    if (!bars) {
+      console.error(`No daily bars for symbol ${symbol}`);
+      continue;
+    }
+
+    let quote = data[symbol];
+    if (!quote) {
+      console.error(`No quote for symbol ${symbol}`);
+      continue;
+    }
+
+    if (bars.length < 200) {
+      console.error(`Skipping ${symbol} because it has < 200 bars`);
+      continue;
+    }
+
+    let calc = technicalCalculator(symbol, bars);
+    let price = quote.mark || quote.lastPrice;
+    let technicals = calc.latest(price);
+    quotes.set(symbol, {
+      priceChange: quote.netChange,
+      yesterdayClose: price - quote.netChange,
+      ...technicals,
+    });
   }
 
   let openSymbols = new Set(positions.map((p) => p.symbol));
 
-  let quotes = {};
-  for (let [symbol, quote] of Object.entries(data)) {
-    quotes[symbol] = {
-      ...maDataBySymbol[symbol],
-      ...quote,
-      price: quote.mark,
-    };
-  }
-
   let results = trades
     .map((trade) => {
-      let data = dayBars.get(trade.symbol)?.[0];
+      let data = quotes.get(trade.symbol);
       if (!data) {
-        console.log(`No day bar for ${trade.symbol}`);
+        console.log(`No data for ${trade.symbol}`);
         return null;
       }
 
@@ -177,7 +196,8 @@ async function run() {
         return null;
       }
 
-      let filterResult = filter(quotes[trade.symbol]);
+      // console.dir(data);
+      let filterResult = filter(data);
       console.log(
         `Checking ${trade.symbol} criteria for ${trade.type}: ${filterResult.desc}`
       );
@@ -192,12 +212,12 @@ async function run() {
         trade.closeAfter = 13;
       }
 
-      let quote = quotes[trade.symbol];
       // Rough dollar-weighted volume from yesterday. Better would be to get broken-out bars but this is ok for now just to see if a symbol is liquid or not.
-      let dwVol = ((data.high + data.low) / 2) * data.volume;
+      let bar = data.prices[0];
+      let dwVol = ((bar.high + bar.low) / 2) * bar.volume;
       return {
         ...trade,
-        price: quote.price,
+        price: data.latest,
         dwVol,
       };
     })
