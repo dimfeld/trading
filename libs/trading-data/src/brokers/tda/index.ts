@@ -2,6 +2,7 @@ import * as _ from 'lodash';
 import got = require('got');
 import * as querystring from 'querystring';
 import * as debugMod from 'debug';
+import * as date from 'date-fns';
 
 import { Broker, GetBarsOptions, GetOrderOptions } from '../broker_interface';
 import { Account, Bar, BarTimeframe, BrokerChoice, Position } from 'types';
@@ -410,8 +411,12 @@ export class Api implements Broker {
   async getOrders(options: GetOrderOptions = {}): Promise<Order[]> {
     let url = `${HOST}/v1/accounts/${this.accountId}/orders`;
     let qs = {
-      fromEnteredTime: options.startDate,
-      toEnteredTime: options.endDate,
+      fromEnteredTime: options.startDate
+        ? date.format(options.startDate, 'yyyy-MM-dd')
+        : undefined,
+      toEnteredTime: options.endDate
+        ? date.format(options.endDate, 'yyyy-MM-dd')
+        : undefined,
     };
 
     let results = await this.request(url, qs);
