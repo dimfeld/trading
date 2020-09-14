@@ -1,5 +1,6 @@
 import * as _ from 'lodash';
-import got = require('got');
+import got from 'got';
+import * as splitArray from 'just-split';
 import * as querystring from 'querystring';
 import * as debugMod from 'debug';
 import * as date from 'date-fns';
@@ -160,8 +161,7 @@ export class Api implements Broker {
     try {
       let body = await got(`${HOST}/v1/oauth2/token`, {
         method: 'POST',
-        form: true,
-        body: {
+        form: {
           grant_type: 'refresh_token',
           refresh_token: this.auth.refresh_token,
           client_id: this.auth.client_id,
@@ -200,15 +200,14 @@ export class Api implements Broker {
     }
   }
 
-  private request(url: string, qs?) {
-    let qsStr = qs ? '?' + querystring.stringify(qs) : '';
-    return got(url + qsStr, {
+  private request<T = any>(url: string, qs?): Promise<T> {
+    return got(url, {
       method: 'GET',
-      json: true,
+      searchParams: qs,
       headers: {
         authorization: 'Bearer ' + this.access_token,
       },
-    }).then((res) => res.body);
+    }).json<T>();
   }
 
   async getOptionChain(options: GetOptionChainOptions): Promise<OptionChain> {
@@ -263,29 +262,32 @@ export class Api implements Broker {
   ): Promise<{ [symbol: string]: Quote }> {
     let url = `${HOST}/v1/marketdata/quotes`;
 
-    let symbol_list = _.isArray(symbols) ? symbols : [symbols];
-    let formatted_symbols = _.transform(
-      symbol_list,
-      (acc: { [s: string]: string }, s) => {
-        let tda_symbol = occToTdaSymbol(s);
-        acc[tda_symbol] = s;
-      },
-      {}
+    let symbolList = _.isArray(symbols) ? symbols : [symbols];
+    let formattedSymbols: { [key: string]: string } = {};
+    for (let s of symbolList) {
+      let tdaSymbol = occToTdaSymbol(s);
+      formattedSymbols[tdaSymbol] = s;
+    }
+
+    let inputSymbols = Object.keys(formattedSymbols);
+    let symbolChunks: string[][] = splitArray(inputSymbols, 100);
+
+    let output: { [key: string]: Quote } = {};
+    await Promise.all(
+      symbolChunks.map(async (chunk) => {
+        let qs = {
+          symbol: chunk.join(','),
+        };
+
+        let results = await this.request<{ [symbol: string]: Quote }>(url, qs);
+        for (let [tdaSymbol, quote] of Object.entries(results)) {
+          let occSymbol = formattedSymbols[tdaSymbol];
+          output[occSymbol] = quote;
+        }
+      })
     );
 
-    let qs = {
-      symbol: _.keys(formatted_symbols).join(','),
-    };
-
-    let results = await this.request(url, qs);
-    return _.transform(
-      results,
-      (acc, result: Quote, tda_symbol) => {
-        let occ_symbol = formatted_symbols[tda_symbol];
-        acc[occ_symbol] = result;
-      },
-      {}
-    );
+    return output;
   }
 
   async getBars(options: GetBarsOptions) {

@@ -15,7 +15,7 @@
     "@alpacahq/alpaca-trade-api": "^1.4.1",
     "chalk": "^4.1.0",
     "date-fns": "~2.16.1",
-    "got": "~11.5.2",
+    "got": "~11.6.2",
     "hyperid": "^2.0.5",
     "just-unique": "^3.2.0",
     "pg-promise": "~10.6.1",

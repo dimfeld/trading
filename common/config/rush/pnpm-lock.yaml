@@ -55,12 +55,14 @@ dependencies:
   fastify-helmet: 3.0.2
   find-up: 5.0.0
   fuzzy: 0.1.3
+  got: 11.6.2
   immer: 5.3.6
   inquirer: 5.2.0
   inquirer-autocomplete-prompt: 0.12.2
   jest-fetch-mock: 2.1.2
   just-is-empty: 2.0.1
   just-pick: 2.1.0
+  just-split: 2.1.0
   just-unique: 3.2.0
   ky: 0.15.0
   ky-universal: 0.3.0_ky@0.15.0
@@ -1562,12 +1564,6 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-9NET910DNaIPngYnLLPeg+Ogzqsi9uM4mSboU5y6p8S5DzMTVEsJZrawi+BoDNUVBa2DhJqQYUFvMDfgU062LQ==
-  /@sindresorhus/is/2.1.1:
-    dev: false
-    engines:
-      node: '>=10'
-    resolution:
-      integrity: sha512-/aPsuoj/1Dw/kzhkgz+ES6TxG0zfTMGLwuK2ZG00k/iJzYHTLCE8mVU8EPqEOp/lmxPoq1C1C9RYToRKb2KEfg==
   /@sindresorhus/is/3.1.2:
     dev: false
     engines:
@@ -1649,7 +1645,7 @@ packages:
     dependencies:
       '@types/http-cache-semantics': 4.0.0
       '@types/keyv': 3.1.1
-      '@types/node': 14.6.4
+      '@types/node': 14.10.0
       '@types/responselike': 1.0.0
     dev: false
     resolution:
@@ -1756,7 +1752,7 @@ packages:
       integrity: sha512-Fb38HkXSVA4L8fGKEZ6le5bB8r6MRWlOCZbVuWZcmOMSCd2wCYOwN1ibj8daIoV9naq7aaOZjrLCoCMptKU/4Q==
   /@types/keyv/3.1.1:
     dependencies:
-      '@types/node': 14.6.4
+      '@types/node': 14.10.0
     dev: false
     resolution:
       integrity: sha512-MPtoySlAZQ37VoLaPcTHCu1RWJ4llDkULYZIzOYxlhxBqYPB0RsRlmMU0R6tahtFe27mIdkHV+551ZWV4PLmVw==
@@ -1821,7 +1817,7 @@ packages:
       integrity: sha512-auApPaJf3NPfe18hSoJkp8EbZzer2ISk7o8mCC3M9he/a04+gbMF97NkpD2S8riMGvm4BMRI59/SZQSaLTKpsQ==
   /@types/responselike/1.0.0:
     dependencies:
-      '@types/node': 14.6.4
+      '@types/node': 14.10.0
     dev: false
     resolution:
       integrity: sha512-85Y2BjiufFzaMIlvJDvTTB8Fxl2xfLo4HgmHzVBz08w4wDePCTjYw66PdrolO0kzli3yam/YCgRufyo1DdQVTA==
@@ -2514,15 +2510,6 @@ packages:
       node: '>=0.10.0'
     resolution:
       integrity: sha512-AKcdTnFSWATd5/GCPRxr2ChwIJ85CeyrEyjRHlKxQ56d4XJMGym0uAiKn0xbLOGOl3+yRpOTi484dVCEc5AUzQ==
-  /cacheable-lookup/2.0.1:
-    dependencies:
-      '@types/keyv': 3.1.1
-      keyv: 4.0.1
-    dev: false
-    engines:
-      node: '>=10'
-    resolution:
-      integrity: sha512-EMMbsiOTcdngM/K6gV/OxF2x0t07+vMOWxZNSCRQMjO2MY2nhZQ6OYhOOpyQrbhqsgtvKGI7hcq6xjnA92USjg==
   /cacheable-lookup/5.0.3:
     dev: false
     engines:
@@ -3306,14 +3293,6 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-gKTdMjdIOEv6JICDYirt7Jgq3/M=
-  /decompress-response/5.0.0:
-    dependencies:
-      mimic-response: 2.1.0
-    dev: false
-    engines:
-      node: '>=10'
-    resolution:
-      integrity: sha512-TLZWWybuxWgoW7Lykv+gq9xvzOsUjQ9tF09Tj6NSTYGMTCHNXzrPnD6Hi+TgZq19PyTAGH4Ll/NIM/eTGglnMw==
   /decompress-response/6.0.0:
     dependencies:
       mimic-response: 3.1.0
@@ -4382,29 +4361,7 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-ollPHROa5mcxDEkwg6bPt3QbEf4pDQSNtd6JPL1YvOvAo/7/0VAm9TccUeoTmarjPw4pfUthSCqcyfNB1I3ZSg==
-  /got/10.7.0:
-    dependencies:
-      '@sindresorhus/is': 2.1.1
-      '@szmarczak/http-timer': 4.0.5
-      '@types/cacheable-request': 6.0.1
-      cacheable-lookup: 2.0.1
-      cacheable-request: 7.0.1
-      decompress-response: 5.0.0
-      duplexer3: 0.1.4
-      get-stream: 5.2.0
-      lowercase-keys: 2.0.0
-      mimic-response: 2.1.0
-      p-cancelable: 2.0.0
-      p-event: 4.2.0
-      responselike: 2.0.0
-      to-readable-stream: 2.1.0
-      type-fest: 0.10.0
-    dev: false
-    engines:
-      node: '>=10'
-    resolution:
-      integrity: sha512-aWTDeNw9g+XqEZNcTjMMZSy7B7yE9toWOFYip7ofFTLleJhvZwUxxTxkTpKvF+p1SAA4VHmuEy7PiHTHyq8tJg==
-  /got/11.5.2:
+  /got/11.6.2:
     dependencies:
       '@sindresorhus/is': 3.1.2
       '@szmarczak/http-timer': 4.0.5
@@ -4421,7 +4378,7 @@ packages:
     engines:
       node: '>=10.19.0'
     resolution:
-      integrity: sha512-yUhpEDLeuGiGJjRSzEq3kvt4zJtAcjKmhIiwNp/eUs75tRlXfWcHo5tcBaMQtnjHWC7nQYT5HkY/l0QOQTkVww==
+      integrity: sha512-/21qgUePCeus29Jk7MEti8cgQUNXFSWfIevNIk4H7u1wmXNDrGPKPY6YsPY+o9CIT/a2DjCjRz0x1nM9FtS2/A==
   /got/9.6.0:
     dependencies:
       '@sindresorhus/is': 0.14.0
@@ -5792,6 +5749,10 @@ packages:
     dev: false
     resolution:
       integrity: sha512-C1PuyjBfPOqv8mHxva3tcEG/BuZfyTjeNpFbg7/R9c/+/YVqVQd/tECZ7l4QX4vhONSRiOlJ6NyTbBJLMRw0wg==
+  /just-split/2.1.0:
+    dev: false
+    resolution:
+      integrity: sha512-nCO24iOS6X8iZA6iVxEEOvXLMju5ebL0WuQVpiXANJH5UxQ3G4sxvc2fxSpLqEF4IoY+bAPgFKkjkLFrDbX6nw==
   /just-unique/3.2.0:
     dev: false
     resolution:
@@ -6179,12 +6140,6 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha512-j5EctnkH7amfV/q5Hgmoal1g2QHFJRraOtmx0JpIqkxhBhI/lJSl1nMpQ45hVarwNETOoWEimndZ4QK0RHxuxQ==
-  /mimic-response/2.1.0:
-    dev: false
-    engines:
-      node: '>=8'
-    resolution:
-      integrity: sha512-wXqjST+SLt7R009ySCglWBCFpjUygmCIfD790/kVbiGmUgfYGuB14PiTd5DwVxSV4NcYHjzMkoj5LjQZwTQLEA==
   /mimic-response/3.1.0:
     dev: false
     engines:
@@ -6665,14 +6620,6 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha1-kw89Et0fUOdDRFeiLNbwSsatf3E=
-  /p-event/4.2.0:
-    dependencies:
-      p-timeout: 3.2.0
-    dev: false
-    engines:
-      node: '>=8'
-    resolution:
-      integrity: sha512-KXatOjCRXXkSePPb1Nbi0p0m+gQAwdlbhi4wQKJPI1HsMQS9g+Sqp2o+QHziPr7eYJyOZet836KoHEVM1mwOrQ==
   /p-finally/1.0.0:
     dev: false
     engines:
@@ -9103,12 +9050,6 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-Iq25XBt6zD5npPhlLVXGFN3/gyR2/qODcKNNyTMd4vbm39HUaOiAM4PMq0eMVC/Tkxz+Zjdsc55g9yyz+Yq00Q==
-  /to-readable-stream/2.1.0:
-    dev: false
-    engines:
-      node: '>=8'
-    resolution:
-      integrity: sha512-o3Qa6DGg1CEXshSdvWNX2sN4QHqg03SPq7U6jPXRahlQdl5dK8oXjkU/2/sGrnOZKeGV1zLSO8qPwyKklPPE7w==
   /to-regex-range/2.1.1:
     dependencies:
       is-number: 3.0.0
@@ -9295,12 +9236,6 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==
-  /type-fest/0.10.0:
-    dev: false
-    engines:
-      node: '>=8'
-    resolution:
-      integrity: sha512-EUV9jo4sffrwlg8s0zDhP0T2WD3pru5Xi0+HTE3zTUmBaZNhfkite9PdSJwdXLwPVW0jnAHT56pZHIOYckPEiw==
   /type-fest/0.11.0:
     dev: false
     engines:
@@ -9759,7 +9694,7 @@ packages:
       '@types/node': 14.6.4
       chalk: 4.1.0
       date-fns: 2.16.1
-      got: 11.5.2
+      got: 11.6.2
       hyperid: 2.0.5
       just-unique: 3.2.0
       npm-run-all: 4.1.5
@@ -9772,7 +9707,7 @@ packages:
     dev: false
     name: '@rush-temp/alpaca-cml'
     resolution:
-      integrity: sha512-4+hv4kDHejYo0GSY/StxgQ/JFXVOAuaEImWRHQ7oI4Zt2P3SMN7xDhtZTPVH1kLTlta40ielblsY+hId6iNZHg==
+      integrity: sha512-snD4c85MgUdygqEyE2wz+VqarLtT06TobMsTQL3l1tFXtXy9U0bXHSCkB6D1S0+LhHP5ncq9kQ3WkIiaHNNFsw==
       tarball: 'file:projects/alpaca-cml.tgz'
     version: 0.0.0
   'file:projects/options-analysis.tgz':
@@ -9909,7 +9844,7 @@ packages:
       eventsourcemock: 2.0.0
       fastify: 2.15.3
       fastify-helmet: 3.0.2
-      got: 10.7.0
+      got: 11.6.2
       hyperid: 2.0.5
       immer: 5.3.6
       jest-fetch-mock: 2.1.2
@@ -9950,7 +9885,7 @@ packages:
     dev: false
     name: '@rush-temp/stakes'
     resolution:
-      integrity: sha512-B7xTLbpm6pp7nIFyFl+aYixoJyegXEXf3FqxaKPwvpwGaS3MFN9vSI4fbGu8USMt6X2el+e5GvS9GI002XdlUw==
+      integrity: sha512-V069W6mqy4gEg1fdt+4vJgeoCHFnR7W+EXFQThN7KZP00tCH+KcxP5XZ3JfUAIPDVB08IfXqiQ/Uzfumyfz7Jw==
       tarball: 'file:projects/stakes.tgz'
     version: 0.0.0
   'file:projects/tm-automation.tgz':
@@ -9983,8 +9918,9 @@ packages:
       date-fns: 2.16.1
       debug: 3.2.6
       find-up: 5.0.0
-      got: 9.6.0
+      got: 11.6.2
       hyperid: 1.4.1
+      just-split: 2.1.0
       lodash: 4.17.20
       npm-run-all: 4.1.5
       options-analysis: github.com/dimfeld/options-analysis/8e8e01d201c43e5a6662ed0ca81970c01f8e6dc9
@@ -9997,7 +9933,7 @@ packages:
     dev: false
     name: '@rush-temp/trading-data'
     resolution:
-      integrity: sha512-GJbipIbslsQrvZRZ7ir6GNp2qS8nWNRZlzyRrYnK+nAfcw2BeTCKBDig2ks/K4F8HWpl2oj1YQejw6sGcmroXg==
+      integrity: sha512-BqQ3atQ0ifrt8onD2lVjL8GKyQtuXYnP3CH9fV10lFCvOYQLNWYqSYA14mjvkYO/Y7ePJu2JEh5XK2XxaADLww==
       tarball: 'file:projects/trading-data.tgz'
     version: 0.0.0
   'file:projects/types.tgz':
@@ -10111,12 +10047,14 @@ specifiers:
   fastify-helmet: ^3.0.2
   find-up: ~5.0.0
   fuzzy: ^0.1.3
+  got: ~11.6.2
   immer: ^5.0.0
   inquirer: ^5.2.0
   inquirer-autocomplete-prompt: ^0.12.2
   jest-fetch-mock: ^2.1.2
   just-is-empty: ~2.0.1
   just-pick: ~2.1.0
+  just-split: ~2.1.0
   just-unique: ^3.2.0
   ky: ^0.15.0
   ky-universal: ^0.3.0
