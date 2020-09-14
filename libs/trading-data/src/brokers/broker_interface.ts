@@ -16,6 +16,9 @@ export interface GetBarsOptions {
   symbols: string[];
   timeframe: BarTimeframe;
 
+  /** True to sort bars ascending by time. Defaults to sorting descending */
+  ascending?: boolean;
+
   /** Number of days to retrieve, if start is omitted.
    * Defaults to 2 years worth for day timeframe and 1 day for minute timeframes */
   numBars?: number;

@@ -1,5 +1,6 @@
 import * as tda from './tda';
 import * as alpaca from './alpaca';
+import sorter from 'sorters';
 import { GetBarsOptions } from './broker_interface';
 import {
   Account,
@@ -57,8 +58,14 @@ export class Brokers {
     );
   }
 
-  getBars(options: GetBarsOptions): Promise<Map<string, Bar[]>> {
-    return this.tda.getBars(options);
+  async getBars(options: GetBarsOptions): Promise<Map<string, Bar[]>> {
+    let result = await this.tda.getBars(options);
+    for (let bars of result.values()) {
+      bars.sort(
+        sorter<Bar>({ value: (b) => b.time, descending: !options.ascending })
+      );
+    }
+    return result;
   }
 
   async getPositions(broker?: BrokerChoice): Promise<Position[]> {
