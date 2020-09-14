@@ -130,14 +130,14 @@ const filters: {
   },
 };
 
-let api: Brokers;
 async function run() {
+  let untradable = new Set(['SPX', 'SPXW', 'SPXC', 'XSP']);
   let trades: OpeningTrade[] = require('../trades.json');
-  let symbols: string[] = uniq(trades.map((t) => t.symbol));
+  let symbols: string[] = uniq(
+    trades.map((t) => t.symbol).filter((s) => !untradable.has(s))
+  );
 
-  api = await createBrokers({
-    alpaca: defaultAlpacaAuth(),
-  });
+  let api = await createBrokers();
 
   let [[account], positions, dayBars, data] = await Promise.all([
     api.getAccount(BrokerChoice.alpaca),
@@ -359,12 +359,13 @@ async function run() {
       await writePositions(positionDb, orderDb, tx);
     });
   }
+
+  return api.end();
 }
 
 run()
   .then(() => {
     pgp.end();
-    return api?.end();
   })
   .catch((e) => {
     console.error(e);
