@@ -293,8 +293,8 @@ async function run() {
   let doneOrders = await api.waitForOrders(BrokerChoice.alpaca, {
     orderIds,
     after: currDate,
-    progress: ({ statusCounts }) => {
-      console.log(statusCounts);
+    progress: ({ message }) => {
+      console.log(message);
     },
   });
 
