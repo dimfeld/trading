@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import * as fs from 'fs';
 import pgPromise from 'pg-promise';
-import { Api as TdaApi } from 'tda-api';
+import { createBrokers, Brokers } from 'trading-data';
 
 const pgUrl =
   process.env.PG_URL || 'postgres://postgres@localhost:5432/trading';
@@ -12,4 +12,9 @@ export const db = pgp(pgUrl);
 let authData = JSON.parse(
   fs.readFileSync(process.env.TDA_AUTH || 'tda_auth.json').toString()
 );
-export const tdaApi = new TdaApi(authData, true);
+
+export var brokers: Brokers;
+
+export async function init() {
+  brokers = await createBrokers();
+}

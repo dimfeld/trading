@@ -1,16 +1,17 @@
 import { Dictionary } from 'lodash';
 import { FastifyInstance } from 'fastify';
-import { tdaApi } from './services';
+import { brokers } from './services';
 import got from 'got';
 import { GetOptionChainOptions } from 'trading-data';
 import addDays from 'date-fns/addDays';
+import { BarTimeframe } from '../../../../libs/trading-data/node_modules/types/lib';
 
 export default function (server: FastifyInstance, opts: any, next: () => void) {
   server.route({
     url: '/quotes',
     method: 'POST',
     handler: (req, res) => {
-      return tdaApi.getQuotes(req.body.symbols);
+      return brokers.getQuotes(req.body.symbols);
     },
   });
 
@@ -37,6 +38,23 @@ export default function (server: FastifyInstance, opts: any, next: () => void) {
   });
 
   server.route({
+    url: '/bars',
+    method: 'POST',
+    handler: async (req, res) => {
+      let {
+        symbols,
+        timeframe,
+      }: { symbols: string[]; timeframe?: BarTimeframe } = req.body;
+      let bars = await brokers.getBars({
+        symbols,
+        timeframe: timeframe || BarTimeframe.day,
+      });
+
+      return Object.fromEntries(bars.entries());
+    },
+  });
+
+  server.route({
     url: '/chain/:symbol',
     method: 'POST',
     handler: async (req, res) => {
@@ -53,7 +71,7 @@ export default function (server: FastifyInstance, opts: any, next: () => void) {
         to_date: addDays(new Date(), dte),
       };
 
-      return tdaApi.getOptionChain(options);
+      return brokers.getOptionChain(options);
     },
   });
 

@@ -8,7 +8,7 @@ import './tailwind.css';
 import dataController from './api/dataController';
 import tradingData from './api/tradingData';
 
-import { tdaApi } from './api/services';
+import { init } from './api/services';
 
 const { PORT, NODE_ENV } = process.env;
 const dev = NODE_ENV === 'development';
@@ -24,7 +24,7 @@ function sapperMiddleware() {
 }
 
 async function start() {
-  await tdaApi.init();
+  await init();
 
   const fastify = fastifyBuilder({ logger: true });
 
