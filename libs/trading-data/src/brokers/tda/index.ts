@@ -4,6 +4,7 @@ import * as splitArray from 'just-split';
 import * as querystring from 'querystring';
 import * as debugMod from 'debug';
 import * as date from 'date-fns';
+import { format as formatDate, utcToZonedTime } from 'date-fns-tz';
 
 import { Broker, GetBarsOptions, GetOrderOptions } from '../broker_interface';
 import { Account, Bar, BarTimeframe, BrokerChoice, Position } from 'types';
@@ -16,6 +17,7 @@ import {
   ExpirationDateMap,
 } from 'types';
 import { CreateOrderOptions } from '../orders';
+import { localTimeZone } from '../../services';
 
 const debug = debugMod('tda_api');
 
@@ -414,10 +416,20 @@ export class Api implements Broker {
     let url = `${HOST}/v1/accounts/${this.accountId}/orders`;
     let qs = {
       fromEnteredTime: options.startDate
-        ? date.format(options.startDate, 'yyyy-MM-dd')
+        ? formatDate(
+            utcToZonedTime(options.startDate, localTimeZone),
+            'yyyy-MM-dd',
+            {
+              timeZone: localTimeZone,
+            }
+          )
         : undefined,
       toEnteredTime: options.endDate
-        ? date.format(options.endDate, 'yyyy-MM-dd')
+        ? formatDate(
+            utcToZonedTime(options.endDate, localTimeZone),
+            'yyyy-MM-dd',
+            { timeZone: localTimeZone }
+          )
         : undefined,
     };
 

@@ -35,6 +35,7 @@
     "sorters": "~0.0.3",
     "@alpacahq/alpaca-trade-api": "~1.4.1",
     "types": "~1.0.0",
-    "just-split": "~2.1.0"
+    "just-split": "~2.1.0",
+    "date-fns-tz": "~1.0.10"
   }
 }
