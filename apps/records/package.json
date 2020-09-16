@@ -55,6 +55,7 @@
     "strip-ansi": "^4.0.0",
     "syncthrough": "^0.5.0",
     "types": "~1.0.0",
-    "trading-data": "~1.0.1"
+    "trading-data": "~1.0.1",
+    "date-fns": "~2.16.1"
   }
 }

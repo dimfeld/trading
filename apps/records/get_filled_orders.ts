@@ -1,5 +1,6 @@
 #!/usr/bin/env ts-node
 import * as _ from 'lodash';
+import * as date from 'date-fns';
 import { createBrokers } from 'trading-data';
 import { BrokerChoice } from 'types';
 
@@ -9,9 +10,7 @@ import { BrokerChoice } from 'types';
   nextMonth.setDate(nextMonth.getDate() + 15);
 
   let startDate = new Date();
-  let endDate = new Date(startDate);
-  startDate.setHours(0);
-  endDate.setHours(23);
+  let endDate = date.addDays(new Date(startDate), 1);
 
   let data = await api.getOrders(BrokerChoice.tda, {
     startDate,
