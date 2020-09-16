@@ -1,5 +1,6 @@
 import * as tda from './tda';
 import * as alpaca from './alpaca';
+import * as date from 'date-fns';
 import sorter from 'sorters';
 import { GetBarsOptions } from './broker_interface';
 import {
@@ -9,6 +10,7 @@ import {
   MarketCalendar,
   Position,
   BrokerChoice,
+  MarketCalendarDate,
 } from 'types';
 import {
   waitForOrders,
@@ -91,8 +93,24 @@ export class Brokers {
   /** Return market dates starting with the next business day and going back 300 business days.
    * This equates to roughly
    */
-  marketCalendar(): Promise<MarketCalendar> {
-    return this.alpaca.marketCalendar();
+  async marketCalendar(): Promise<MarketCalendar> {
+    let values = await this.alpaca.marketCalendar();
+
+    values.sort(
+      sorter<MarketCalendarDate>({
+        value: (c) => c.date.valueOf(),
+        descending: false,
+      })
+    );
+
+    let closestToToday = values.findIndex(
+      (v) => date.isToday(v.date) || date.isFuture(v.date)
+    );
+
+    return {
+      next: values.slice(closestToToday),
+      past: values.slice(0, closestToToday).reverse(),
+    };
   }
 
   private resolveBrokerChoice(choice: BrokerChoice) {

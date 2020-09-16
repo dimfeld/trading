@@ -12,6 +12,7 @@ import {
   Account,
   Bar,
 } from 'types';
+import * as date from 'date-fns';
 import * as uniq from 'just-unique';
 import sorter from 'sorters';
 import * as hyperidMod from 'hyperid';
@@ -139,7 +140,7 @@ async function run() {
 
   let api = await createBrokers();
 
-  let [[account], positions, dayBars, data] = await Promise.all([
+  let [[account], positions, dayBars, data, calendar] = await Promise.all([
     api.getAccount(BrokerChoice.alpaca),
     api.getPositions(BrokerChoice.alpaca),
     api.getBars({
@@ -147,6 +148,7 @@ async function run() {
       timeframe: BarTimeframe.day,
     }),
     api.getQuotes(symbols),
+    api.marketCalendar(),
   ]);
 
   let quotes = new Map<string, Technicals>();
@@ -210,6 +212,10 @@ async function run() {
         trade.closeAfter = 6;
       } else if (trade.type === 'PreEarnings14DaysWithTechnicals') {
         trade.closeAfter = 13;
+      } else {
+        // Figure out the number of trading days.
+        let closeDate = calendar.next[trade.closeAfter].date;
+        trade.closeAfter = date.differenceInCalendarDays(closeDate, new Date());
       }
 
       // Rough dollar-weighted volume from yesterday. Better would be to get broken-out bars but this is ok for now just to see if a symbol is liquid or not.

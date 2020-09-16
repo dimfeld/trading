@@ -211,43 +211,21 @@ export class Api implements Broker {
     };
   }
 
-  async marketCalendar(): Promise<MarketCalendar> {
+  async marketCalendar(): Promise<MarketCalendarDate[]> {
     let data = await request(() =>
       this.api.getCalendar({
         start: date.subBusinessDays(new Date(), 300),
-        end: date.addBusinessDays(new Date(), 1),
+        end: date.addBusinessDays(new Date(), 90),
       })
     );
 
-    let values: MarketCalendarDate[] = data
-      .map((c) => {
-        return {
-          date: new Date(c.date),
-          open: c.open,
-          close: c.close,
-        } as MarketCalendarDate;
-      })
-      .sort(
-        sorter<MarketCalendarDate>({
-          value: (c) => c.date.valueOf(),
-          descending: true,
-        })
-      );
-
-    let mostRecentOrToday = values.findIndex(
-      (v) => date.isToday(v.date) || date.isPast(v.date)
-    );
-    if (mostRecentOrToday > 0) {
+    return data.map((c) => {
       return {
-        next: values[mostRecentOrToday - 1],
-        current: values.slice(mostRecentOrToday || 0),
-      };
-    } else {
-      return {
-        next: null,
-        current: values,
-      };
-    }
+        date: new Date(c.date),
+        open: c.open,
+        close: c.close,
+      } as MarketCalendarDate;
+    });
   }
 
   async getOrders(options: GetOrderOptions = {}): Promise<Order[]> {

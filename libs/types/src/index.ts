@@ -16,8 +16,9 @@ export interface MarketCalendarDate {
 }
 
 export interface MarketCalendar {
-  current: MarketCalendarDate[];
-  next: MarketCalendarDate | null;
+  /** Next market days, including today if it was open */
+  next: MarketCalendarDate[];
+  past: MarketCalendarDate[];
 }
 
 export interface Account {
