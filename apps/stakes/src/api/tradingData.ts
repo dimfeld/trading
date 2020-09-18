@@ -16,28 +16,6 @@ export default function (server: FastifyInstance, opts: any, next: () => void) {
   });
 
   server.route({
-    url: '/ma',
-    method: 'POST',
-    handler: async (req, res) => {
-      let { symbols } = req.body;
-      let qs = {
-        auth: 'DEV1_nr82759gjRJ9Qm59FJbnqpeotr',
-        tickers: symbols.join(','),
-      };
-      let data: any[] = await got({
-        url: `https://webservice.cmlviz.com/GetLiveTechnicals`,
-        searchParams: qs,
-      }).json();
-
-      let result: Dictionary<any> = {};
-      for (let item of data) {
-        result[item.Ticker] = item;
-      }
-      return result;
-    },
-  });
-
-  server.route({
     url: '/bars',
     method: 'POST',
     handler: async (req, res) => {

@@ -8,11 +8,13 @@ import {
 import { derived, Readable, writable } from 'svelte/store';
 import { QuoteData } from './quotes';
 
+export type TechnicalsStore = Readable<LatestTechnicals | null>;
+
 export function technicalsStore(
   quotes: Readable<Map<string, QuoteData>>,
-  bars: Readable<Bar[]>,
+  bars: Readable<Bar[]  |  null>,
   symbol: string
-) {
+): TechnicalsStore {
   let calc: TechnicalCalculator;
   let lastBars: Bar[];
   let lastQuote = 0;
@@ -23,7 +25,7 @@ export function technicalsStore(
       let quote = $quotes.get(symbol);
       if (!quote || (!$bars && !calc)) {
         return;
-      } else if (lastBars !== $bars) {
+      } else if ($bars && lastBars !== $bars) {
         calc = technicalCalculator(symbol, $bars);
         lastBars = $bars;
       }
@@ -38,11 +40,29 @@ export function technicalsStore(
   );
 }
 
+function getBars(symbols: string[], timeframe: BarTimeframe) {
+  return ky('api/bars', {
+    method: 'POST',
+    json: {
+      symbols,
+      timeframe,
+    },
+  }).then((r) => r.json());
+}
+
+const barsStoreCache = new Map<string, Readable<Bar[] | null>>();
+
 export function barsStore(
   symbol: string,
   timeframe: BarTimeframe,
   autoupdate = false
 ) {
+  let cacheKey = symbol + timeframe;
+  let cached = barsStoreCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   let store = writable(null as Bar[] | null, (set) => {
     update();
     if (autoupdate) {
@@ -52,14 +72,7 @@ export function barsStore(
   });
 
   async function update() {
-    let bars = await ky('api/bars', {
-      method: 'POST',
-      json: {
-        symbols: [symbol],
-        timeframe,
-      },
-    }).then((r) => r.json());
-
+    let bars = await getBars([symbol], timeframe);
     let result = bars[symbol];
     if (result) {
       store.set(result);
@@ -67,6 +80,8 @@ export function barsStore(
   }
 
   function startAutorefresh() {
+    // This doesn't really make sense, as it should instead try to predict when a new bar
+    // will be available. But good enough to start, and a websocket connection would be better for that anyway.
     let updateIntervalMinutes: number;
     switch (timeframe) {
       case BarTimeframe.day:
@@ -93,8 +108,12 @@ export function barsStore(
     return setInterval(update, updateIntervalMinutes * 60000);
   }
 
-  return {
+  let result = {
     subscribe: store.subscribe,
     refresh: update,
   };
+
+  barsStoreCache.set(cacheKey, result);
+
+  return result;
 }

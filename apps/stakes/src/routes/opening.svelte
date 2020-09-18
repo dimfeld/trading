@@ -8,13 +8,13 @@
   }
 </script>
 
-<script>
+<script lang="typescript">
   import debugMod from 'debug';
   import { getContext, onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
-  import { getStructureField } from '../positions.ts';
-  import { quoteLabel } from '../quotes.ts';
-  import { analyzeSide, optionInfoFromSymbol } from 'options-analysis';
+  import { getStructureField } from '../positions';
+  import { quoteLabel, QuotesStore } from '../quotes';
+  import { analyzeSide, LatestTechnicals, optionInfoFromSymbol } from 'options-analysis';
   import endOfDay from 'date-fns/endOfDay';
   import shortid from 'shortid';
   import { faAngleDown, faAngleRight } from '@fortawesome/free-solid-svg-icons';
@@ -32,6 +32,8 @@
   import toUpper from 'lodash/toUpper';
   import sortBy from 'lodash/sortBy';
   import orderBy from 'lodash/orderBy';
+  import { barsStore, technicalsStore, TechnicalsStore } from '../technicals';
+  import { BarTimeframe } from 'types';
 
   const debug = debugMod('opening');
 
@@ -52,6 +54,14 @@
     collapsed = JSON.parse(window.localStorage.getItem(collapsedKey)) || {};
     selectedLegs = JSON.parse(window.localStorage.getItem(selectedKey)) || {};
     each(chains, (chain) => updateByLegChain(chain));
+
+    let chainInterval = setInterval(getChains, 120000);
+    return () => {
+      clearInterval(chainInterval);
+      for(let v of technicalsUnsub.values()) {
+        v();
+      }
+    };
   });
 
   $: mounted && window.sessionStorage.setItem(maStorageKey, JSON.stringify(ma));
@@ -64,7 +74,7 @@
 
   export let initialOpening = {};
 
-  let quotesStore = getContext('quotes');
+  let quotesStore : QuotesStore = getContext('quotes');
   let strategies = getContext('strategies');
 
   $: console.dir($quotesStore);
@@ -97,11 +107,13 @@
 
   let positionSymbols = new Set();
   $: {
-    positionSymbols = new Set(
-      map($potentialPositions, (pos) => pos && pos.symbol).filter(Boolean)
-    );
+    let symbols = map($potentialPositions, (pos) => pos && pos.symbol).filter(Boolean);
+    positionSymbols = new Set(symbols);
+
     if (mounted) {
-      getMa(true);
+      for(let s of symbols) {
+        createTechnicalsStore(s);
+      }
       getChains(true);
     }
   }
@@ -117,21 +129,20 @@
     return neededSymbols;
   }
 
-  async function getMa(newOnly = false) {
-    let symbols = newOnly ? missingSymbolData(ma) : Array.from(positionSymbols);
-    if (!symbols.length) {
+  let technicalsValues = new Map<string, LatestTechnicals>();
+  let technicalsUnsub = new Map<string, () => void>();
+  function createTechnicalsStore(symbol: string) {
+    if(technicalsUnsub.has(symbol)) {
       return;
     }
 
-    let data = await ky('api/ma', {
-      method: 'POST',
-      json: { symbols },
-    }).then((r) => r.json());
-    debug('ma data', data);
-    ma = {
-      ...ma,
-      ...data,
-    };
+    let tStore = technicalsStore(quotesStore, barsStore(symbol, BarTimeframe.day), symbol);
+    let unsub = tStore.subscribe((latest) => {
+      if(latest) {
+        technicalsValues.set(symbol, latest);
+      }
+    });
+    technicalsUnsub.set(symbol, unsub);
   }
 
   // Generate a direct lookup from symbol to contract info.
@@ -177,16 +188,7 @@
     }
   }
 
-  onMount(() => {
-    let chainInterval = setInterval(getChains, 120000);
-    let maInterval = setInterval(getMa, 60000);
-    onDestroy(() => {
-      clearInterval(maInterval);
-      clearInterval(chainInterval);
-    });
-  });
-
-  function maValue(symbol, item, maData, quotes) {
+  function maValue(symbol: string, item, maData, quotes) {
     if (typeof item === 'string') {
       let value;
       if (item === 'stock_price') {
