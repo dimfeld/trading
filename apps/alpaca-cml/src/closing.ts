@@ -111,7 +111,7 @@ async function run() {
     let closeDate = date.addDays(new Date(pos.db.open_date), closeAfter);
     let closeDateText = date.isToday(closeDate)
       ? 'today'
-      : `in ${date.formatDistanceToNow(closeDate)}`;
+      : `in ${date.formatDistanceToNowStrict(closeDate)}`;
     console.log(
       `${pos.broker.symbol.padEnd(5, ' ')} -- P/L $${format(
         unrealizedPl

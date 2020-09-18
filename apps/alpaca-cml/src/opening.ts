@@ -230,7 +230,7 @@ async function run() {
     .filter((t) => t)
     .sort(sorter({ value: 'efficiencyScore', descending: true }));
 
-  const MAX_TRADES = 5;
+  const MAX_TRADES = 4;
 
   console.dir(account);
   let riskPerTrade = Math.min(
