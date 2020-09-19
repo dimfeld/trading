@@ -36,6 +36,7 @@
     "@alpacahq/alpaca-trade-api": "~1.4.1",
     "types": "~1.0.0",
     "just-split": "~2.1.0",
-    "date-fns-tz": "~1.0.10"
+    "date-fns-tz": "~1.0.10",
+    "just-partition": "~1.1.0"
   }
 }

@@ -11,6 +11,7 @@ import {
   Position,
   BrokerChoice,
   MarketCalendarDate,
+  BarTimeframe,
 } from 'types';
 import {
   waitForOrders,
@@ -19,6 +20,7 @@ import {
 } from './orders';
 import { defaultTdaAuth, defaultAlpacaAuth } from './default_auth';
 import { GetOrderOptions } from '..';
+import { TimeCache, timeCache } from '../time_cache';
 
 export { GetBarsOptions, GetOrderOptions } from './broker_interface';
 export { GetOptionChainOptions, AuthData as TdaAuthData } from './tda';
@@ -34,16 +36,34 @@ export interface BrokerOptions {
   alpaca?: alpaca.AlpacaBrokerOptions;
 }
 
+interface OneBarOption {
+  symbol: string;
+  numBars?: number;
+  start?: Date;
+  end?: Date;
+  unadjusted?: boolean;
+}
+
+// This ignores BarTimeframe since we only use it for day bars.
+function oneBarOptionKey(o: OneBarOption) {
+  return [o.symbol, o.numBars, o.start, o.end, o.unadjusted].join(';');
+}
+
 /** A class that arbitrates requests through multiple brokers */
 export class Brokers {
   tda?: tda.Api;
   alpaca?: alpaca.Api;
+
+  barsCache: TimeCache<Bar[]>;
+  calendarCache: TimeCache<MarketCalendar>;
 
   constructor({ tda: tdaOptions, alpaca: alpacaOptions }: BrokerOptions = {}) {
     tdaOptions = tdaOptions ?? { auth: defaultTdaAuth(), autorefresh: true };
     alpacaOptions = alpacaOptions ?? defaultAlpacaAuth();
     this.tda = new tda.Api(tdaOptions.auth, tdaOptions.autorefresh ?? true);
     this.alpaca = new alpaca.Api(alpacaOptions);
+    this.barsCache = timeCache(3600 * 1000);
+    this.calendarCache = timeCache(3600 * 1000);
   }
 
   init() {
@@ -61,12 +81,49 @@ export class Brokers {
   }
 
   async getBars(options: GetBarsOptions): Promise<Map<string, Bar[]>> {
-    let result = await this.tda.getBars(options);
-    for (let bars of result.values()) {
+    let cached = new Map<string, Bar[]>();
+    let cacheKeys = new Map<string, string>();
+    let neededSymbols: string[];
+
+    if (options.timeframe === BarTimeframe.day) {
+      neededSymbols = [];
+      for (let s of options.symbols) {
+        let key = oneBarOptionKey({
+          symbol: s,
+          numBars: options.numBars,
+          end: options.end,
+          start: options.start,
+          unadjusted: options.unadjusted,
+        });
+        let cachedResult = this.barsCache.get(key);
+        if (cachedResult) {
+          cached.set(s, cachedResult);
+        } else {
+          neededSymbols.push(s);
+          cacheKeys.set(s, key);
+        }
+      }
+    } else {
+      neededSymbols = options.symbols;
+    }
+
+    let result = await this.tda.getBars({
+      ...options,
+      symbols: neededSymbols,
+    });
+
+    for (let [symbol, bars] of result.entries()) {
       bars.sort(
         sorter<Bar>({ value: (b) => b.time, descending: !options.ascending })
       );
+
+      this.barsCache.set(cacheKeys.get(symbol), bars);
     }
+
+    for (let [symbol, bars] of cached.entries()) {
+      result.set(symbol, bars);
+    }
+
     return result;
   }
 
@@ -94,6 +151,11 @@ export class Brokers {
    * This equates to roughly
    */
   async marketCalendar(): Promise<MarketCalendar> {
+    let cached = this.calendarCache.get('cal');
+    if (cached) {
+      return cached;
+    }
+
     let values = await this.alpaca.marketCalendar();
 
     values.sort(
@@ -107,10 +169,13 @@ export class Brokers {
       (v) => date.isToday(v.date) || date.isFuture(v.date)
     );
 
-    return {
+    let result = {
       next: values.slice(closestToToday),
       past: values.slice(0, closestToToday).reverse(),
     };
+
+    this.calendarCache.set('cal', result);
+    return result;
   }
 
   private resolveBrokerChoice(choice: BrokerChoice) {
