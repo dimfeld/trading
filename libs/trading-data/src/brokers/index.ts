@@ -1,6 +1,7 @@
 import * as tda from './tda';
 import * as alpaca from './alpaca';
 import * as date from 'date-fns';
+import * as debugMod from 'debug';
 import sorter from 'sorters';
 import { GetBarsOptions } from './broker_interface';
 import {
@@ -27,6 +28,8 @@ export { GetOptionChainOptions, AuthData as TdaAuthData } from './tda';
 
 export * from './default_auth';
 
+const debug = debugMod('brokers');
+
 export interface BrokerOptions {
   tda?: {
     auth: tda.AuthData;
@@ -45,8 +48,8 @@ interface OneBarOption {
 }
 
 // This ignores BarTimeframe since we only use it for day bars.
-function oneBarOptionKey(o: OneBarOption) {
-  return [o.symbol, o.numBars, o.start, o.end, o.unadjusted].join(';');
+function oneBarOptionKey(symbol: string, o: GetBarsOptions) {
+  return [symbol, o.numBars, o.start, o.end, o.unadjusted].join(';');
 }
 
 /** A class that arbitrates requests through multiple brokers */
@@ -62,7 +65,7 @@ export class Brokers {
     alpacaOptions = alpacaOptions ?? defaultAlpacaAuth();
     this.tda = new tda.Api(tdaOptions.auth, tdaOptions.autorefresh ?? true);
     this.alpaca = new alpaca.Api(alpacaOptions);
-    this.barsCache = timeCache(3600 * 1000);
+    this.barsCache = timeCache(3600 * 4 * 1000);
     this.calendarCache = timeCache(3600 * 1000);
   }
 
@@ -75,12 +78,17 @@ export class Brokers {
   }
 
   getAccount(broker?: BrokerChoice): Promise<Account[]> {
+    debug('getAccount', broker);
     return Promise.all(
       this.resolveMaybeBrokerChoice(broker).map((api) => api.getAccount())
     );
   }
 
   async getBars(options: GetBarsOptions): Promise<Map<string, Bar[]>> {
+    debug('getBars', options);
+    // A more complex system will compare the requested bars with what we have in
+    // Postgres or something and shape the queries to just get what we need.
+    // This simple cache is more than sufficient for now.
     let cached = new Map<string, Bar[]>();
     let cacheKeys = new Map<string, string>();
     let neededSymbols: string[];
@@ -88,13 +96,7 @@ export class Brokers {
     if (options.timeframe === BarTimeframe.day) {
       neededSymbols = [];
       for (let s of options.symbols) {
-        let key = oneBarOptionKey({
-          symbol: s,
-          numBars: options.numBars,
-          end: options.end,
-          start: options.start,
-          unadjusted: options.unadjusted,
-        });
+        let key = oneBarOptionKey(s, options);
         let cachedResult = this.barsCache.get(key);
         if (cachedResult) {
           cached.set(s, cachedResult);
@@ -128,6 +130,7 @@ export class Brokers {
   }
 
   async getPositions(broker?: BrokerChoice): Promise<Position[]> {
+    debug('getPositions', broker);
     let pos = await Promise.all(
       this.resolveMaybeBrokerChoice(broker).map((api) => api.getPositions())
     );
@@ -136,14 +139,17 @@ export class Brokers {
   }
 
   getQuotes(symbols: string[]) {
+    debug('getQuotes', symbols);
     return this.tda.getQuotes(symbols);
   }
 
   getOptionChain(options: tda.GetOptionChainOptions) {
+    debug('getOptionsChain', options);
     return this.tda.getOptionChain(options);
   }
 
   marketStatus(): Promise<MarketStatus> {
+    debug('marketStatus');
     return this.alpaca.marketStatus();
   }
 
@@ -151,6 +157,7 @@ export class Brokers {
    * This equates to roughly
    */
   async marketCalendar(): Promise<MarketCalendar> {
+    debug('marketCalendar');
     let cached = this.calendarCache.get('cal');
     if (cached) {
       return cached;
@@ -194,16 +201,19 @@ export class Brokers {
   }
 
   createOrder(broker: BrokerChoice, options: CreateOrderOptions) {
+    debug('createOrder', broker, options);
     let api = this.resolveBrokerChoice(broker);
     return api.createOrder(options);
   }
 
   getOrders(broker: BrokerChoice, options?: GetOrderOptions) {
+    debug('getOrders', broker, options);
     let api = this.resolveBrokerChoice(broker);
     return api.getOrders(options);
   }
 
   waitForOrders(broker: BrokerChoice, options: WaitForOrdersOptions) {
+    debug('waitForOrders', broker, options);
     let api = this.resolveBrokerChoice(broker);
     return waitForOrders(api, options);
   }

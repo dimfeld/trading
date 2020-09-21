@@ -20,6 +20,7 @@ import { CreateOrderOptions } from '../orders';
 import { localTimeZone } from '../../services';
 
 const debug = debugMod('tda_api');
+const requestDebug = debugMod('tda_api:request');
 
 const HOST = 'https://api.tdameritrade.com';
 
@@ -180,7 +181,8 @@ export class Api implements Broker {
         );
       }
     } catch (e) {
-      console.error(e);
+      console.error('OAuth2 Token error');
+      console.dir(e.response);
       if (this.autorefresh) {
         this.refreshTimer = setTimeout(() => this.refreshAuth(), 60000);
       } else {
@@ -202,14 +204,22 @@ export class Api implements Broker {
     }
   }
 
-  private request<T = any>(url: string, qs?): Promise<T> {
-    return got(url, {
-      method: 'GET',
-      searchParams: qs,
-      headers: {
-        authorization: 'Bearer ' + this.access_token,
-      },
-    }).json<T>();
+  private async request<T = any>(url: string, qs?): Promise<T> {
+    try {
+      requestDebug(url, qs);
+      let result = await got(url, {
+        method: 'GET',
+        searchParams: qs,
+        headers: {
+          authorization: 'Bearer ' + this.access_token,
+        },
+      }).json<T>();
+
+      return result;
+    } catch (e) {
+      console.error('TDA Request error', e);
+      throw e;
+    }
   }
 
   async getOptionChain(options: GetOptionChainOptions): Promise<OptionChain> {

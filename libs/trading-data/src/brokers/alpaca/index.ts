@@ -1,5 +1,6 @@
 import * as Alpaca from '@alpacahq/alpaca-trade-api';
 import sorter from 'sorters';
+import * as debugMod from 'debug';
 import * as date from 'date-fns';
 import { Broker, GetBarsOptions, GetOrderOptions } from '../broker_interface';
 import {
@@ -16,6 +17,8 @@ import {
   BarTimeframe,
 } from 'types';
 import { CreateOrderOptions } from '../orders';
+
+const debug = debugMod('alpaca');
 
 export interface AlpacaBrokerOptions {
   key: string;
@@ -60,6 +63,7 @@ function request<T = any>(fn: () => Promise<T>): Promise<T> {
       fn()
         .then(resolve)
         .catch((e) => {
+          console.dir(e, { depth: null });
           if (e.response?.statusCode === 429) {
             // Try again
             setTimeout(tryIt, 1000);
@@ -121,6 +125,7 @@ export class Api implements Broker {
   async refreshAuth() {}
 
   async getAccount(): Promise<Account> {
+    debug('getAccount');
     let data: any = await request(() => this.api.getAccount());
     return {
       id: data.id,
@@ -135,6 +140,7 @@ export class Api implements Broker {
   }
 
   async getBars(options: GetBarsOptions) {
+    debug('getBars', options);
     /* This polygon integration doesn't work correctly... it seems to omit every Friday */
     let multiplier = 1;
     let timeframe;
@@ -203,6 +209,7 @@ export class Api implements Broker {
   }
 
   async marketStatus() {
+    debug('marketStatus');
     let data: any = await request(() => this.api.getClock());
     return {
       open: data.open,
@@ -212,6 +219,7 @@ export class Api implements Broker {
   }
 
   async marketCalendar(): Promise<MarketCalendarDate[]> {
+    debug('marketCalendar');
     let data = await request(() =>
       this.api.getCalendar({
         start: date.subBusinessDays(new Date(), 300),
@@ -229,6 +237,7 @@ export class Api implements Broker {
   }
 
   async getOrders(options: GetOrderOptions = {}): Promise<Order[]> {
+    debug('getOrders', options);
     let reqOptions = {
       status: options.filled ? 'closed' : 'all',
       after: options.startDate,
@@ -249,6 +258,7 @@ export class Api implements Broker {
   }
 
   async getPositions(): Promise<Position[]> {
+    debug('getPositions');
     let pos = await this.api.getPositions();
     return pos.map((p) => {
       return {
@@ -261,6 +271,7 @@ export class Api implements Broker {
   }
 
   async createOrder(order: CreateOrderOptions): Promise<Order> {
+    debug('createOrder', order);
     if (order.legs.length !== 1) {
       // May be able to relax this at some point?
       throw new Error('Alpaca orders must have only one leg');
