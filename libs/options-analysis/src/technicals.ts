@@ -86,6 +86,7 @@ export function technicalCalculator(
 
   let total200Yesterday = total199 + pricesWithoutToday[199];
 
+  let ema5Yesterday = ema(pricesWithoutToday, 5);
   let ema9Yesterday = ema(pricesWithoutToday, 9);
   let ema10Yesterday = ema(pricesWithoutToday, 10);
   let ema12Yesterday = ema(pricesWithoutToday, 12);
@@ -159,6 +160,7 @@ export function technicalCalculator(
 
   let yesterday = {
     prices: pricesWithoutToday,
+    ema5: ema5Yesterday,
     ema9: ema9Yesterday,
     ema10: ema10Yesterday,
     ema12: ema12Yesterday,
@@ -203,6 +205,7 @@ export function technicalCalculator(
       ma20,
       ma50: (total49 + latest) / 50,
       ma200: (total199 + latest) / 200,
+      ema5: ema5Yesterday + emaMultiplier(5) * (latest - ema5Yesterday),
       ema9: ema9Yesterday + emaMultiplier(9) * (latest - ema9Yesterday),
       ema10: ema10Yesterday + emaMultiplier(10) * (latest - ema10Yesterday),
       ema12: ema12Yesterday + emaMultiplier(12) * (latest - ema12Yesterday),
