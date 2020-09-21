@@ -1,5 +1,5 @@
-<script context="module">
-  import ky from '../ssr-ky.ts';
+<script context="module" lang="typescript">
+  import ky from '../ssr-ky';
   export async function preload() {
     let data = await ky('api/entities?potential_positions=*').then((r) =>
       r.json()
@@ -13,11 +13,13 @@
   import { getContext, onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { getStructureField } from '../positions';
-  import { quoteLabel, QuotesStore } from '../quotes';
-  import { analyzeSide, LatestTechnicals, optionInfoFromSymbol } from 'options-analysis';
+  import type { QuotesData, QuotesStore } from '../quotes';
+  import type { LatestTechnicals } from 'options-analysis';
+  import { analyzeSide, optionInfoFromSymbol } from 'options-analysis';
   import endOfDay from 'date-fns/endOfDay';
   import shortid from 'shortid';
-  import { faAngleDown, faAngleRight } from '@fortawesome/free-solid-svg-icons';
+  import { faAngleDown } from '@fortawesome/free-solid-svg-icons/faAngleDown';
+  import { faAngleRight } from '@fortawesome/free-solid-svg-icons/faAngleRight';
   import Icon from 'svelte-awesome';
   import Select from 'svelte-select';
   import capitalize from 'lodash/capitalize';
@@ -32,7 +34,22 @@
   import toUpper from 'lodash/toUpper';
   import sortBy from 'lodash/sortBy';
   import orderBy from 'lodash/orderBy';
-  import { barsStore, technicalsStore, TechnicalsStore } from '../technicals';
+  import type {
+    TechnicalsMap,
+    TechnicalsConditionOp,
+    TechnicalsConditionValue,
+    TechnicalsCondition,
+  } from '../technicals';
+  import {
+    barsStore,
+    technicalsStore,
+    legacyMaKeyTranslator,
+    maValue,
+    maValueText,
+    maValueLabel,
+    maItemClass,
+    conditionFields,
+  } from '../technicals';
   import { BarTimeframe } from 'types';
 
   const debug = debugMod('opening');
@@ -42,29 +59,26 @@
   const collapsedKey = 'opening:collapsed';
   const selectedKey = 'opening:selected';
   let collapsed = {};
-  let ma = {};
   let chains = {};
   let selectedLegs = {};
   let mounted = false;
 
   onMount(() => {
     mounted = true;
-    ma = JSON.parse(window.sessionStorage.getItem(maStorageKey)) || {};
-    chains = JSON.parse(window.sessionStorage.getItem(chainStorageKey)) || {};
-    collapsed = JSON.parse(window.localStorage.getItem(collapsedKey)) || {};
-    selectedLegs = JSON.parse(window.localStorage.getItem(selectedKey)) || {};
+    chains = JSON.parse(window.sessionStorage.getItem(chainStorageKey) || '{}');
+    collapsed = JSON.parse(window.localStorage.getItem(collapsedKey) || '{}');
+    selectedLegs = JSON.parse(window.localStorage.getItem(selectedKey) || '{}');
     each(chains, (chain) => updateByLegChain(chain));
 
     let chainInterval = setInterval(getChains, 120000);
     return () => {
       clearInterval(chainInterval);
-      for(let v of technicalsUnsub.values()) {
+      for (let v of technicalsUnsub.values()) {
         v();
       }
     };
   });
 
-  $: mounted && window.sessionStorage.setItem(maStorageKey, JSON.stringify(ma));
   $: mounted &&
     window.sessionStorage.setItem(chainStorageKey, JSON.stringify(chains));
   $: mounted &&
@@ -74,7 +88,7 @@
 
   export let initialOpening = {};
 
-  let quotesStore : QuotesStore = getContext('quotes');
+  let quotesStore: QuotesStore = getContext('quotes');
   let strategies = getContext('strategies');
 
   $: console.dir($quotesStore);
@@ -105,15 +119,26 @@
 
   $: collapsed = pick(collapsed, Object.keys($potentialPositions));
 
-  let positionSymbols = new Set();
+  let positionSymbols = new Set<string>();
   $: {
-    let symbols = map($potentialPositions, (pos) => pos && pos.symbol).filter(Boolean);
+    let symbols = map($potentialPositions, (pos) => pos?.symbol).filter(
+      Boolean
+    );
     positionSymbols = new Set(symbols);
 
     if (mounted) {
-      for(let s of symbols) {
+      for (let s of symbols) {
         createTechnicalsStore(s);
       }
+
+      for (let [symbol, unsub] of technicalsUnsub.entries()) {
+        if (!positionSymbols.has(symbol)) {
+          unsub();
+          technicalsUnsub.delete(symbol);
+          technicalsValues.delete(symbol);
+        }
+      }
+
       getChains(true);
     }
   }
@@ -129,17 +154,23 @@
     return neededSymbols;
   }
 
-  let technicalsValues = new Map<string, LatestTechnicals>();
+  let technicalsValues: TechnicalsMap = new Map();
   let technicalsUnsub = new Map<string, () => void>();
   function createTechnicalsStore(symbol: string) {
-    if(technicalsUnsub.has(symbol)) {
+    if (technicalsUnsub.has(symbol)) {
       return;
     }
 
-    let tStore = technicalsStore(quotesStore, barsStore(symbol, BarTimeframe.day), symbol);
+    let tStore = technicalsStore(
+      quotesStore,
+      barsStore(symbol, BarTimeframe.day),
+      symbol
+    );
     let unsub = tStore.subscribe((latest) => {
-      if(latest) {
+      if (latest) {
+        console.log('Got latest technicals data', { symbol, latest });
         technicalsValues.set(symbol, latest);
+        technicalsValues = technicalsValues;
       }
     });
     technicalsUnsub.set(symbol, unsub);
@@ -186,89 +217,6 @@
         [symbol]: symbolChain,
       };
     }
-  }
-
-  function maValue(symbol: string, item, maData, quotes) {
-    if (typeof item === 'string') {
-      let value;
-      if (item === 'stock_price') {
-        let quoteData = quotes.get(symbol);
-        return quoteData && (quoteData.mark || quoteData.lastPrice);
-      } else {
-        return get(maData, [symbol, item]);
-      }
-    } else {
-      return item;
-    }
-  }
-
-  function maValueText(symbol, item, maData, quotes) {
-    if (item === 'stock_price') {
-      return quoteLabel(quotes.get(symbol));
-    }
-
-    let value = maValue(symbol, item, maData);
-    return typeof value === 'number' ? value.toFixed(2) : value;
-  }
-
-  const maValueLabels = {
-    stock_price: 'Stock',
-  };
-
-  function maValueLabel(field) {
-    return maValueLabels[field] || toUpper(field);
-  }
-
-  function maItemClass(symbol, condition, maData, quotes) {
-    let left = maValue(symbol, condition.l, maData, quotes);
-    let right = maValue(symbol, condition.r, maData, quotes);
-
-    if (!left || !right) {
-      return '';
-    }
-
-    let met = false;
-    switch (condition.op) {
-      case '>':
-        met = left > right;
-        break;
-
-      case '>=':
-        met = left >= right;
-        break;
-
-      case '<':
-        met = left < right;
-        break;
-
-      case '<=':
-        met = left <= right;
-        break;
-    }
-
-    return met ? 'bg-green-200' : 'bg-red-200';
-  }
-
-  let allConditionFields = [
-    'stock_price',
-    'ma5',
-    'ma10',
-    'ma21',
-    'ma50',
-    'ma200',
-    'rsi',
-    'rsi14',
-  ];
-  function conditionFields(position) {
-    let fields = new Set(
-      flatMap(position.conditions || [], (condition) => {
-        return [condition.l, condition.r].filter(
-          (val) => typeof val === 'string'
-        );
-      })
-    );
-
-    return allConditionFields.filter((f) => fields.has(f));
   }
 
   $: mounted && quotesStore.registerInterest('opening', positionSymbols);
@@ -483,7 +431,6 @@
 </style>
 
 <div class="flex flex-row items-stretch mt-4 pb-4 spacing-2">
-
   <div>
     <label for="new-symbols" class="sr-only">New Symbols</label>
     <div class="relative rounded-md shadow-sm">
@@ -517,13 +464,13 @@
         <button class="ml-auto" on:click={() => remove(position.id)}>
           Remove
         </button>
-
       </div>
       <div class="flex flex-row spacing-4">
         {#each position.conditions as condition}
           <span
-            class="rounded-lg py-1 px-3 {maItemClass(position.symbol, condition, ma, $quotesStore)}">
-            {maValueLabel(condition.l)} {condition.op}
+            class="rounded-lg py-1 px-3 {maItemClass(position.symbol, condition, technicalsValues, $quotesStore)}">
+            {maValueLabel(condition.l)}
+            {condition.op}
             {maValueLabel(condition.r)}
           </span>
         {/each}
@@ -533,7 +480,7 @@
           <div class="px-2">
             <span>{maValueLabel(field)}</span>
             <span class="text-gray-700">
-              {maValueText(position.symbol, field, ma, $quotesStore) || '...'}
+              {maValueText(position.symbol, field, technicalsValues, $quotesStore) || '...'}
             </span>
           </div>
         {/each}
@@ -558,12 +505,11 @@
                 <div class="flex flex-col w-full px-2 spacing-2">
                   {#each dateLegs as match}
                     <div class="w-full">
-
                       <table class="w-full pl-2 lg:w-4/6">
                         <thead>
                           <th class="text-left">
-                            {match.legDesc.size} {match.legDesc.dte}DTE {match.legDesc.delta}
-                            Delta {capitalize(match.legDesc.type)}
+                            {match.legDesc.size}
+                            {match.legDesc.dte}DTE {match.legDesc.delta} Delta {capitalize(match.legDesc.type)}
                           </th>
                           <th class="w-1/6 text-right">D</th>
                           <th class="w-1/3 text-right sm:w-1/6">B/A</th>
@@ -603,11 +549,8 @@
           </div>
           <div
             class="flex flex-col pl-2 border-l-0 border-gray-700 sm:border-l
-            spacing-2">
-            Position
-            <span>
-              {position.totals.bid.toFixed(2)} - {position.totals.ask.toFixed(2)}
-            </span>
+              spacing-2">
+            Position <span> {position.totals.bid.toFixed(2)} - {position.totals.ask.toFixed(2)} </span>
             {#each position.legStructure as leg}
               <span>
                 {#if leg.selected}{leg.selected.symbol}{/if}

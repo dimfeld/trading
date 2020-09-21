@@ -1,14 +1,14 @@
 import { Dictionary } from 'lodash';
 import isNil from 'lodash/isNil';
 import { writable, Readable } from 'svelte/store';
+import { Quote } from 'types';
 import ky from './ssr-ky';
 import debugMod from 'debug';
 
 const debug = debugMod('quotes');
 
-export type QuoteData = any;
-
-export interface QuotesStore extends Readable<Map<string, QuoteData>> {
+export type QuotesData = Map<string, Quote>;
+export interface QuotesStore extends Readable<QuotesData> {
   registerInterest: (
     key: string,
     symbols: string[] | Set<string>
@@ -17,12 +17,12 @@ export interface QuotesStore extends Readable<Map<string, QuoteData>> {
 }
 
 export default function quotesStore(
-  initialData?: Map<string, QuoteData>
+  initialData?: Map<string, Quote>
 ): QuotesStore {
   let interest = new Map<string, string[] | Set<string>>();
   let refreshSymbols = new Set<string>();
 
-  let store = writable(initialData || new Map<string, QuoteData>(), () => {
+  let store = writable(initialData || new Map<string, Quote>(), () => {
     doRequest();
     let interval = setInterval(() => doRequest(), 60000);
     return () => clearInterval(interval);
@@ -35,7 +35,7 @@ export default function quotesStore(
       return;
     }
 
-    let result: Dictionary<QuoteData> = await ky('api/quotes', {
+    let result: Dictionary<Quote> = await ky('api/quotes', {
       method: 'POST',
       json: { symbols },
     }).then((r) => r.json());
@@ -89,7 +89,7 @@ export default function quotesStore(
   };
 }
 
-export function quoteLabel(quoteData: QuoteData) {
+export function quoteLabel(quoteData: Quote | undefined) {
   console.dir(quoteData);
   if (!quoteData) {
     return null;

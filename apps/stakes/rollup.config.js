@@ -3,7 +3,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import commonjs from '@rollup/plugin-commonjs';
 import svelte from 'rollup-plugin-svelte';
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
 import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
 import { terser } from 'rollup-plugin-terser';
@@ -53,7 +53,6 @@ const babelServerConfig = {
 
 const babelClientConfig = {
   ...babelServerConfig,
-  runtimeHelpers: !dev,
   presets: [
     [
       '@babel/preset-env',
@@ -95,7 +94,7 @@ export default {
 
       resolve({
         browser: true,
-        extensions: ['.mjs', '.js', '.json', '.ts'],
+        extensions: ['.mjs', '.js', '.ts'],
         dedupe,
       }),
       commonjs(),
@@ -106,6 +105,7 @@ export default {
         }),
     ],
 
+    preserveEntrySignatures: false,
     onwarn,
   },
 
@@ -132,7 +132,7 @@ export default {
 
       commonjs(),
       postcss({
-        extract: path.resolve(__dirname, './static/global.css'),
+        extract: 'global.css',
         plugins: require('./postcss.config').plugins,
       }),
     ],
@@ -141,6 +141,7 @@ export default {
         Object.keys(process.binding('natives'))
     ),
 
+    preserveEntrySignatures: 'strict',
     onwarn,
   },
 

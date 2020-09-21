@@ -6,9 +6,10 @@
     "preserveConstEnums": true,
     "strict": true,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "noEmit": true,
     "allowJs": true,
-    "module": "commonjs"
+    "module": "es2020"
   },
   "include": ["src/**/*.ts"]
 }

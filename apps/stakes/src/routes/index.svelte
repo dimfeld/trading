@@ -13,7 +13,8 @@
 
   import { onDestroy, onMount } from 'svelte';
   import { goto } from '@sapper/app';
-  import { faAngleUp, faAngleDown } from '@fortawesome/free-solid-svg-icons';
+  import { faAngleUp } from '@fortawesome/free-solid-svg-icons/faAngleUp';
+  import { faAngleDown } from '@fortawesome/free-solid-svg-icons/faAngleDown';
   import Select from 'svelte-select';
   import Icon from 'svelte-awesome';
   import ButtonRow from '../components/ButtonRow.svelte';
@@ -312,12 +313,10 @@
 
 <div class="flex flex-col spacing-2 mt-4">
   <div class="flex flex-col sm:inline spacing-2">
-
     <div class="flex flex-col justify-start sm:flex-row">
-
       <div
         class="flex flex-row items-center justify-center w-full pl-2 sm:w-auto
-        sm:justify-start sm:p-0">
+          sm:justify-start sm:p-0">
         <div class="hidden mr-2 sm:inline">Sort:</div>
         <ButtonRow
           items={sortItems}
@@ -339,7 +338,7 @@
 
       <div
         class="flex flex-row items-center flex-grow pl-2 mt-4 spacing-2 sm:mt-0
-        sm:ml-4">
+          sm:ml-4">
         <input type="checkbox" bind:checked={closingOnly} id="closing_only" />
         <label class="flex-grow" for="closing_only">Closing Only</label>
       </div>
@@ -362,12 +361,11 @@
           <a
             href="positions/{position.id}"
             class="block hover:bg-gray-50 focus:outline-none focus:bg-gray-50
-            transition duration-150 ease-in-out {indicatorClass(position)}">
-
+              transition duration-150 ease-in-out {indicatorClass(position)}">
             <div class="px-4 py-2 sm:py-4 sm:px-6">
               <div
                 class="flex flex-col sm:flex-row items-start sm:items-center
-                sm:items-baseline sm:justify-between">
+                  sm:items-baseline sm:justify-between">
                 <div
                   class="text-sm leading-5 font-medium text-indigo-600 truncate">
                   {position.symbol}
@@ -376,7 +374,7 @@
                   </span>
                   <span
                     class="ml-auto text-right text-gray-700 sm:pl-2 sm:ml-2
-                    sm:border-l sm:border-gray-700 sm:text-left">
+                      sm:border-l sm:border-gray-700 sm:text-left">
                     {#if position.strategyInfo.short_name}
                       <span class="hidden sm:inline">
                         {position.strategyInfo.name}
@@ -402,21 +400,18 @@
                       class:text-red-900={position.info.totalPlPct < -1}>
                       {formatMoney(position.info.totalRealized + position.info.unrealized)}
                       = {formatPct(position.info.totalPlPct)}
-                    </strong>
-                    from {formatCostBasis(position.info.totalBasis)}
+                    </strong> from {formatCostBasis(position.info.totalBasis)}
                   </div>
                 </div>
                 <div
                   class="mt-2 items-center text-sm leading-5 text-gray-500
-                  hidden sm:flex sm:mt-0">
+                    hidden sm:flex sm:mt-0">
                   <span class="inline">
-                    Open
-                    <strong
+                    Open <strong
                       class:text-green-900={position.info.openPlPct > 1}
                       class:text-red-900={position.info.openPlPct < -1}>
                       {formatMoney(position.info.unrealized)} = {formatPct(position.info.openPlPct)}
-                    </strong>
-                    from {formatCostBasis(position.info.openBasis)}
+                    </strong> from {formatCostBasis(position.info.openBasis)}
                   </span>
                 </div>
               </div>
@@ -426,5 +421,4 @@
       {/each}
     </ul>
   </div>
-
 </div>
