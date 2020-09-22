@@ -113,7 +113,7 @@ const filters: {
       data.latest < data.ma200 &&
       data.latest < data.bollinger.upper2SD &&
       macdCrossoverUp(data),
-    desc: `(disabled) price (${
+    desc: `price (${
       data.latest
     }) below upper Bollinger band (${data.bollinger.upper2SD.toFixed(
       2
