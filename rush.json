@@ -402,6 +402,11 @@
     {
       "packageName": "tm-automation",
       "projectFolder": "libs/tm-automation"
+    },
+
+    {
+      "packageName": "rush-tool",
+      "projectFolder": "tools/rush-tool"
     }
     // {
     //   /**
