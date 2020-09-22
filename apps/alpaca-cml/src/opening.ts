@@ -25,6 +25,7 @@ import {
   Brokers,
 } from 'trading-data';
 import {
+  ema,
   LatestTechnicals,
   TechnicalCalculator,
   technicalCalculator,
@@ -46,11 +47,17 @@ interface Technicals extends LatestTechnicals {
 }
 
 function macdCrossoverUp(technicals: Technicals) {
-  // TODO Need to calculate EMA9 of MACD line.
-  let current = technicals.ema12 - technicals.ema26 - technicals.ema9 > 0;
-  let yesterday =
-    technicals.yesterday.ema12 - technicals.ema26 - technicals.yesterday.ema9 >
-    0;
+  let ema12 = [technicals.ema12, ...technicals.previous.ema12];
+  let ema26 = [technicals.ema26, ...technicals.previous.ema26];
+  let diff = new Array(Math.min(ema12.length, ema26.length));
+  for (let i = 0; i < diff.length; ++i) {
+    diff[i] = ema12[i] - ema26[i];
+  }
+
+  let emaDiff = ema(diff, 9);
+
+  let current = diff[0] - emaDiff[0] > 0;
+  let yesterday = diff[1] - emaDiff[1] > 0;
   return current && !yesterday;
 }
 
@@ -68,7 +75,7 @@ const filters: {
   }),
   BigBollingerRecoveryBreakout: (data) => ({
     value:
-      data.yesterdayClose <= data.yesterday.bollinger.lower3SD &&
+      data.yesterdayClose <= data.previous.bollinger.lower3SD &&
       data.latest > data.bollinger.lower3SD,
     desc: `price ${data.latest.toFixed(
       2
@@ -76,7 +83,7 @@ const filters: {
   }),
   SmallBollingerRecoveryBreakout: (data) => ({
     value:
-      data.yesterdayClose <= data.yesterday.bollinger.lower2SD &&
+      data.yesterdayClose <= data.previous.bollinger.lower2SD &&
       data.latest > data.bollinger.lower2SD,
     desc: `price ${data.latest.toFixed(
       2
@@ -85,7 +92,7 @@ const filters: {
   SmallBollingerUpsideBreakout: (data) => ({
     value:
       data.latest < data.ma200 &&
-      data.yesterdayClose < data.yesterday.bollinger.upper2SD &&
+      data.yesterdayClose < data.previous.bollinger.upper2SD &&
       data.latest > data.bollinger.upper2SD,
     desc: `Price < MA200: ${data.latest.toFixed(2)} < ${data.ma200.toFixed(
       2
@@ -102,10 +109,10 @@ const filters: {
     )} < 25, Price Change Negative: ${data.priceChange.toFixed(2)}`,
   }),
   MACDBreakout: (data) => ({
-    value: false,
-    // data.latest < data.ma200 &&
-    // data.latest < data.bollinger.upper2SD &&
-    // macdCrossoverUp(data),
+    value:
+      data.latest < data.ma200 &&
+      data.latest < data.bollinger.upper2SD &&
+      macdCrossoverUp(data),
     desc: `(disabled) price (${
       data.latest
     }) below upper Bollinger band (${data.bollinger.upper2SD.toFixed(
@@ -227,7 +234,7 @@ async function run() {
         dwVol,
       };
     })
-    .filter((t) => t)
+    .filter((t) => t && t.efficiencyScore >= 1)
     .sort(sorter({ value: 'efficiencyScore', descending: true }));
 
   const MAX_TRADES = 4;

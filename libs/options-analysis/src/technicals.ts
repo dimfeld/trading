@@ -2,6 +2,8 @@ import * as _ from 'lodash';
 import { Bar } from 'types';
 import * as date from 'date-fns';
 
+const MA_LENGTH = 50;
+
 function totalForDays(prices: number[], days: number) {
   let result = 0;
   for (let i = 0; i < days; i += 1) {
@@ -14,7 +16,11 @@ function emaMultiplier(days: number) {
   return 2 / (days + 1);
 }
 
-function ema(prices: number[], days: number) {
+export function ema(
+  prices: number[],
+  days: number,
+  maxLength = MA_LENGTH
+): number[] {
   if (prices.length < days) {
     return null;
   }
@@ -23,15 +29,42 @@ function ema(prices: number[], days: number) {
 
   let k = emaMultiplier(days);
   let maxDate = Math.min(250, prices.length - 1);
-  let value = prices[maxDate];
+  let values = new Array(maxDate + 1);
+  values[maxDate] = prices[maxDate];
   for (let i = maxDate - 1; i >= 0; i--) {
-    value = value + k * (prices[i] - value);
+    values[i] = values[i + 1] + k * (prices[i] - values[i + 1]);
   }
 
-  return value;
+  return values.slice(0, maxLength);
 }
 
-export interface Technicals {
+export interface PreviousTechnicals {
+  ma50: number[];
+  ma200: number[];
+  ema9: number[];
+  ema10: number[];
+  ema12: number[];
+  ema21: number[];
+  ema26: number[];
+  rsi14: number;
+  rsi20: number;
+  bollinger: {
+    upper1SD: number;
+    lower1SD: number;
+    upper2SD: number;
+    lower2SD: number;
+    upper3SD: number;
+    lower3SD: number;
+  };
+}
+
+export interface LatestTechnicals {
+  symbol: string;
+  prices: Bar[];
+  fullDayToday: boolean;
+  previous: PreviousTechnicals;
+  latest: number;
+
   ma50: number;
   ma200: number;
   ema9: number;
@@ -51,19 +84,11 @@ export interface Technicals {
   };
 }
 
-export interface LatestTechnicals extends Technicals {
-  symbol: string;
-  prices: Bar[];
-  fullDayToday: boolean;
-  yesterday: Technicals;
-  latest: number;
-}
-
 export interface TechnicalCalculator {
   symbol: string;
   prices: Bar[];
   fullDayToday: boolean;
-  yesterday: Technicals;
+  previous: PreviousTechnicals;
   latest(latestPrice: number): LatestTechnicals;
 }
 
@@ -77,14 +102,26 @@ export function technicalCalculator(
   let fullDayToday = excludeToday && date.isToday(bars[0].time);
   let pricesWithoutToday = fullDayToday ? prices.slice(1) : prices;
 
-  let total49 = totalForDays(pricesWithoutToday, 49);
-  let total50Yesterday = total49 + pricesWithoutToday[49];
+  let firstTotal49 = totalForDays(pricesWithoutToday, 49);
+  let total50 = firstTotal49 + pricesWithoutToday[49];
+  let firstTotal199 = total50 + totalForDays(pricesWithoutToday.slice(50), 149);
+  let total200 = firstTotal199 + pricesWithoutToday[199];
 
-  let total199 = pricesWithoutToday
-    .slice(50, 199)
-    .reduce((acc, val) => acc + val, total50Yesterday);
+  let ma50 = new Array(Math.min(MA_LENGTH, bars.length - 50));
+  let ma200 = new Array(Math.min(MA_LENGTH, bars.length - 200));
 
-  let total200Yesterday = total199 + pricesWithoutToday[199];
+  ma50[0] = total50 / 50;
+  for (let i = 1; i < ma50.length; ++i) {
+    total50 = total50 - pricesWithoutToday[i - 1] + pricesWithoutToday[49 + i];
+    ma50[i] = total50 / 50;
+  }
+
+  ma200[0] = total200 / 50;
+  for (let i = 1; i < ma200.length; ++i) {
+    total200 =
+      total200 - pricesWithoutToday[i - 1] + pricesWithoutToday[199 + i];
+    ma50[i] = total200 / 200;
+  }
 
   let ema5Yesterday = ema(pricesWithoutToday, 5);
   let ema9Yesterday = ema(pricesWithoutToday, 9);
@@ -92,8 +129,6 @@ export function technicalCalculator(
   let ema12Yesterday = ema(pricesWithoutToday, 12);
   let ema21Yesterday = ema(pricesWithoutToday, 21);
   let ema26Yesterday = ema(pricesWithoutToday, 26);
-  let ma50Yesterday = total50Yesterday / 50;
-  let ma200Yesterday = total200Yesterday / 200;
 
   // Bollinger bands calculations
   let total19 = totalForDays(pricesWithoutToday, 19);
@@ -158,7 +193,7 @@ export function technicalCalculator(
   let variance20Yesterday = variance(0, ma20Yesterday, 20) / 20;
   let stddev20Yesterday = Math.sqrt(variance20Yesterday);
 
-  let yesterday = {
+  let previous = {
     prices: pricesWithoutToday,
     ema5: ema5Yesterday,
     ema9: ema9Yesterday,
@@ -166,8 +201,8 @@ export function technicalCalculator(
     ema12: ema12Yesterday,
     ema21: ema21Yesterday,
     ema26: ema26Yesterday,
-    ma50: ma50Yesterday,
-    ma200: ma200Yesterday,
+    ma50,
+    ma200,
     rsi14: rsi(avgGain14, avgLoss14),
     rsi20: rsi(avgGain20, avgLoss20),
     bollinger: {
@@ -200,17 +235,21 @@ export function technicalCalculator(
       symbol,
       prices: bars,
       fullDayToday,
-      yesterday,
+      previous,
       latest,
       ma20,
-      ma50: (total49 + latest) / 50,
-      ma200: (total199 + latest) / 200,
-      ema5: ema5Yesterday + emaMultiplier(5) * (latest - ema5Yesterday),
-      ema9: ema9Yesterday + emaMultiplier(9) * (latest - ema9Yesterday),
-      ema10: ema10Yesterday + emaMultiplier(10) * (latest - ema10Yesterday),
-      ema12: ema12Yesterday + emaMultiplier(12) * (latest - ema12Yesterday),
-      ema21: ema21Yesterday + emaMultiplier(21) * (latest - ema21Yesterday),
-      ema26: ema26Yesterday + emaMultiplier(26) * (latest - ema26Yesterday),
+      ma50: (firstTotal49 + latest) / 50,
+      ma200: (firstTotal199 + latest) / 200,
+      ema5: ema5Yesterday[0] + emaMultiplier(5) * (latest - ema5Yesterday[0]),
+      ema9: ema9Yesterday[0] + emaMultiplier(9) * (latest - ema9Yesterday[0]),
+      ema10:
+        ema10Yesterday[0] + emaMultiplier(10) * (latest - ema10Yesterday[0]),
+      ema12:
+        ema12Yesterday[0] + emaMultiplier(12) * (latest - ema12Yesterday[0]),
+      ema21:
+        ema21Yesterday[0] + emaMultiplier(21) * (latest - ema21Yesterday[0]),
+      ema26:
+        ema26Yesterday[0] + emaMultiplier(26) * (latest - ema26Yesterday[0]),
       rsi14,
       rsi20,
       bollinger: {
@@ -228,7 +267,7 @@ export function technicalCalculator(
     symbol,
     prices: bars,
     fullDayToday,
-    yesterday,
+    previous,
     latest: calculateLatest,
   };
 }
