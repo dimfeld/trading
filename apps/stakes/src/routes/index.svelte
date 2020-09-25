@@ -311,8 +311,8 @@
   <title>Stakes - Positions</title>
 </svelte:head>
 
-<div class="flex flex-col spacing-2 mt-4">
-  <div class="flex flex-col sm:inline spacing-2">
+<div class="flex flex-col space-y-2 mt-4">
+  <div class="flex flex-col sm:inline space-y-2">
     <div class="flex flex-col justify-start sm:flex-row">
       <div
         class="flex flex-row items-center justify-center w-full pl-2 sm:w-auto
@@ -337,7 +337,7 @@
       </div>
 
       <div
-        class="flex flex-row items-center flex-grow pl-2 mt-4 spacing-2 sm:mt-0
+        class="flex flex-row items-center flex-grow pl-2 mt-4 space-x-2 sm:mt-0
           sm:ml-4">
         <input type="checkbox" bind:checked={closingOnly} id="closing_only" />
         <label class="flex-grow" for="closing_only">Closing Only</label>

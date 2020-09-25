@@ -21,7 +21,10 @@
     };
   });
 
-  $: quotes.registerInterest('orderEntry', legs.map((l) => l.symbol));
+  $: quotes.registerInterest(
+    'orderEntry',
+    legs.map((l) => l.symbol)
+  );
   onDestroy(() => quotes.unregisterInterest('orderEntry'));
 
   $: total = legList.reduce(
@@ -43,8 +46,8 @@
 <Modal>
   <span slot="header">Order Entry</span>
 
-  <div class="flex flex-col spacing-4">
-    <div class="flex flex-row spacing-2">
+  <div class="flex flex-col space-y-4">
+    <div class="flex flex-row space-x-2">
       <div>
         <label for="budget">Budget</label>
         <input id="budget" type="number" bind:value={budget} />
@@ -53,7 +56,7 @@
       <span>{totalOrderPrice}</span>
     </div>
 
-    <div class="flex flex-row spacing-2">
+    <div class="flex flex-row space-x-2">
       <span>{total.bid.toFixed(0)} - {total.ask.toFixed(0)}</span>
       <div>
         <label for="price">Price</label>
@@ -72,9 +75,11 @@
       </div>
     </div>
 
-    <div class="flex flex-col spacing-2">
+    <div class="flex flex-col space-y-2">
       {#each legs as leg (leg.symbol)}
-        {leg.size} {leg.symbol} {leg.quote.bid}-{leg.quote.ask}
+        {leg.size}
+        {leg.symbol}
+        {leg.quote.bid}-{leg.quote.ask}
       {/each}
     </div>
   </div>

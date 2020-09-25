@@ -74,6 +74,7 @@ dependencies:
   just-safe-get: 2.0.0
   just-split: 2.1.0
   just-unique: 3.2.0
+  kleur: 4.1.1
   ky: 0.15.0
   ky-universal: 0.3.0_ky@0.15.0
   mocha: 5.2.0
@@ -10585,6 +10586,7 @@ packages:
       immer: 5.3.6
       jest-fetch-mock: 2.1.2
       just-safe-get: 2.0.0
+      kleur: 4.1.1
       ky: 0.15.0
       ky-universal: 0.3.0_ky@0.15.0
       lodash: 4.17.20
@@ -10622,7 +10624,7 @@ packages:
     dev: false
     name: '@rush-temp/stakes'
     resolution:
-      integrity: sha512-J4e30F6L6IS6qz1FQLqCSJQLM61Z5yiutRTVxUFPBYfbqMR5y++bk+UIYKGQmwR8ShjBCluU78CjYRCy1UkAFw==
+      integrity: sha512-6u/P2elM0D8fBuqjs7nu0s7Gfwzpa8/7RbHvP2vYdy4dSBueViHNJe5mU+QKKLuAjxHVSEjSZNoA+U/eEFh9Qg==
       tarball: 'file:projects/stakes.tgz'
     version: 0.0.0
   'file:projects/tm-automation.tgz':
@@ -10805,6 +10807,7 @@ specifiers:
   just-safe-get: ~2.0.0
   just-split: ~2.1.0
   just-unique: ^3.2.0
+  kleur: ~4.1.1
   ky: ^0.15.0
   ky-universal: ^0.3.0
   mocha: ^5.1.1

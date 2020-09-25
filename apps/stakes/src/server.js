@@ -3,7 +3,6 @@ import fastifyHelmet from 'fastify-helmet';
 import sirv from 'sirv';
 import compression from 'compression';
 import * as sapper from '@sapper/server';
-import './tailwind.css';
 
 import dataController from './api/dataController';
 import tradingData from './api/tradingData';

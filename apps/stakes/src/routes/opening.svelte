@@ -196,26 +196,91 @@
     };
   }
 
-  async function getChains(newOnly = false) {
+  enum GetChainState {
+    idle,
+    scheduled,
+    loading,
+    loadingWithPendingNew,
+    loadingWithPendingAll,
+  }
+
+  let getChainState = GetChainState.idle;
+
+  let scheduledAll = false;
+  async function getChains(newOnly = false, fromScheduled = false) {
+    switch (getChainState) {
+      case GetChainState.scheduled:
+        if (!fromScheduled) {
+          // This is another request, but there's one just about to run, so skip this one.
+          if (!newOnly) {
+            scheduledAll = true;
+          }
+          return;
+        }
+
+        break;
+      case GetChainState.loading:
+      case GetChainState.loadingWithPendingNew:
+        getChainState = newOnly
+          ? GetChainState.loadingWithPendingNew
+          : GetChainState.loadingWithPendingAll;
+        return;
+
+      case GetChainState.loadingWithPendingAll:
+        return;
+    }
+
     let symbols = newOnly
       ? missingSymbolData(chains)
       : Array.from(positionSymbols);
     if (!symbols.length) {
+      getChainState = GetChainState.idle;
       return;
     }
 
-    for (let symbol of symbols) {
-      let symbolChain = await ky(`api/chain/${symbol}`, {
-        method: 'POST',
-        json: {},
-      }).then((r) => r.json());
+    if (scheduledAll) {
+      newOnly = false;
+    }
 
-      updateByLegChain(symbolChain);
+    // If we get here, then the state is idle, so start loading.
+    getChainState = GetChainState.loading;
 
-      chains = {
-        ...chains,
-        [symbol]: symbolChain,
-      };
+    try {
+      for (let symbol of symbols) {
+        let symbolChain = await ky(`api/chain/${symbol}`, {
+          method: 'POST',
+          json: {},
+        }).then((r) => r.json());
+
+        updateByLegChain(symbolChain);
+
+        chains = {
+          ...chains,
+          [symbol]: symbolChain,
+        };
+      }
+    } finally {
+      scheduledAll = false;
+      switch (getChainState) {
+        // TS flags these since it sees the above assignment and assumes it must be loading,
+        // but this could happen if the state changes while awaiting the chain requests.
+        // @ts-ignore;
+        case GetChainState.loadingWithPendingAll:
+        // @ts-ignore;
+        case GetChainState.loadingWithPendingNew:
+          let nextNewOnly =
+            getChainState === GetChainState.loadingWithPendingNew;
+          getChainState = GetChainState.scheduled;
+          setTimeout(() => {
+            getChainState = GetChainState.idle;
+            getChains(nextNewOnly, true);
+          }, 0);
+
+        default:
+          // All done loading, and nothing is pending
+          getChainState = GetChainState.idle;
+          break;
+      }
     }
   }
 
@@ -430,7 +495,7 @@
   }
 </style>
 
-<div class="flex flex-row items-stretch mt-4 pb-4 spacing-2">
+<div class="flex flex-row items-stretch mt-4 pb-4 space-x-2">
   <div>
     <label for="new-symbols" class="sr-only">New Symbols</label>
     <div class="relative rounded-md shadow-sm">
@@ -456,7 +521,7 @@
 
 {#each positionsWithData as position (position.id)}
   <div class="flex flex-row flex-grow py-4" in:slide|local>
-    <div class="flex flex-col w-full spacing-2">
+    <div class="flex flex-col w-full space-y-2">
       <div class="flex flex-row w-full">
         {position.symbol}
         <span class="ml-2 text-gray-700">{position.strategyInfo.name}</span>
@@ -465,7 +530,7 @@
           Remove
         </button>
       </div>
-      <div class="flex flex-row spacing-4">
+      <div class="flex flex-row space-x-4">
         {#each position.conditions as condition}
           <span
             class="rounded-lg py-1 px-3 {maItemClass(position.symbol, condition, technicalsValues, $quotesStore)}">
@@ -495,14 +560,16 @@
         </div>
       </div>
       {#if !collapsed[position.id]}
-        <div transition:slide|local class="flex flex-col sm:flex-row spacing-4">
-          <div class="flex flex-col w-full ml-2 spacing-4">
+        <div
+          transition:slide|local
+          class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+          <div class="flex flex-col w-full ml-2 space-y-4">
             {#each position.legTargets as dateLegs}
               <div class="flex flex-col w-full">
                 <span>
                   {dateLegs[0].expiration} ({matchDteText(dateLegs[0])})
                 </span>
-                <div class="flex flex-col w-full px-2 spacing-2">
+                <div class="flex flex-col w-full px-2 space-y-2">
                   {#each dateLegs as match}
                     <div class="w-full">
                       <table class="w-full pl-2 lg:w-4/6">
@@ -549,7 +616,7 @@
           </div>
           <div
             class="flex flex-col pl-2 border-l-0 border-gray-700 sm:border-l
-              spacing-2">
+              space-y-2">
             Position <span> {position.totals.bid.toFixed(2)} - {position.totals.ask.toFixed(2)} </span>
             {#each position.legStructure as leg}
               <span>

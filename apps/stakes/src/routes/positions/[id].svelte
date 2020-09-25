@@ -151,13 +151,12 @@
   }
 </script>
 
-<div class="flex flex-col m-2 spacing-1">
+<div class="flex flex-col m-2 space-y-1">
   <a href="/">&lt; Back</a>
 
   <p>{position.symbol}</p>
 
   <div class="flex flex-col sm:flex-row">
-
     <div class="flex flex-col">
       <table style="max-width:800px">
         <thead>
@@ -191,12 +190,12 @@
                           on:click={() => toggleExerciseDropdown(leg)}
                           type="button"
                           class="inline-flex justify-center w-full rounded-md
-                          border border-gray-300 px-4 py-2 bg-white text-sm
-                          leading-5 font-medium text-gray-700
-                          hover:text-gray-500 focus:outline-none
-                          focus:border-blue-300 focus:shadow-outline-blue
-                          active:bg-gray-50 active:text-gray-800 transition
-                          ease-in-out duration-150">
+                            border border-gray-300 px-4 py-2 bg-white text-sm
+                            leading-5 font-medium text-gray-700
+                            hover:text-gray-500 focus:outline-none
+                            focus:border-blue-300 focus:shadow-outline-blue
+                            active:bg-gray-50 active:text-gray-800 transition
+                            ease-in-out duration-150">
                           {leg.size < 0 ? 'Assigned' : 'Exercised'}
                           <svg
                             class="-mr-1 ml-2 h-5 w-5"
@@ -218,9 +217,8 @@
                         out:scale={{ duration: 75, start: 0.95, easing: cubicIn }}
                         style="width:max-content"
                         class="origin-top-right absolute right-0 mt-2 rounded-md
-                        shadow-lg z-20">
+                          shadow-lg z-20">
                         <div class="rounded-md bg-white shadow-xs p-2">
-
                           <div class="px-4 py-5 sm:p-6">
                             <h3
                               class="text-lg leading-6 font-medium text-gray-900">
@@ -237,30 +235,30 @@
                                     type="number"
                                     step="1"
                                     class="form-input block w-full sm:text-sm
-                                    sm:leading-5"
+                                      sm:leading-5"
                                     bind:value={exercisedNumContracts} />
                                 </div>
                               </div>
                               <span
                                 class="mt-3 w-full inline-flex rounded-md
-                                shadow-sm sm:mt-0 sm:ml-3 sm:w-auto">
+                                  shadow-sm sm:mt-0 sm:ml-3 sm:w-auto">
                                 <button
                                   type="button"
                                   on:click={() => applyExercise(leg)}
                                   class="w-full inline-flex items-center
-                                  justify-center px-4 py-2 border
-                                  border-transparent font-medium rounded-md
-                                  text-white bg-indigo-600 hover:bg-indigo-500
-                                  focus:outline-none focus:border-indigo-700
-                                  focus:shadow-outline-indigo
-                                  active:bg-indigo-700 transition ease-in-out
-                                  duration-150 sm:w-auto sm:text-sm sm:leading-5">
+                                    justify-center px-4 py-2 border
+                                    border-transparent font-medium rounded-md
+                                    text-white bg-indigo-600 hover:bg-indigo-500
+                                    focus:outline-none focus:border-indigo-700
+                                    focus:shadow-outline-indigo
+                                    active:bg-indigo-700 transition ease-in-out
+                                    duration-150 sm:w-auto sm:text-sm
+                                    sm:leading-5">
                                   Apply
                                 </button>
                               </span>
                             </div>
                           </div>
-
                         </div>
                       </div>
                     {/if}
@@ -276,10 +274,10 @@
         Trades
         <table class="w-full">
           <thead>
-            <th class="text-left p-1 pr-2 ">Leg</th>
-            <th class="text-right p-1 pr-2 ">Size</th>
-            <th class="text-right p-1 pr-2 ">Price</th>
-            <th class="text-left p-1 pr-2 ">Date</th>
+            <th class="text-left p-1 pr-2">Leg</th>
+            <th class="text-right p-1 pr-2">Size</th>
+            <th class="text-right p-1 pr-2">Price</th>
+            <th class="text-left p-1 pr-2">Date</th>
           </thead>
           <tbody>
             {#each position.trades as trade (trade.id)}
@@ -299,13 +297,11 @@
       </div>
     </div>
 
-    <div class="flex flex-col mt-2 sm:ml-8 sm:mt-0 spacing-2">
+    <div class="flex flex-col mt-2 sm:ml-8 sm:mt-0 space-y-2">
       <button on:click={toggleCloseDate}>
         Mark {position.close_date ? 'Open' : 'Closed'}
       </button>
       <button>Submit Closing Position</button>
     </div>
-
   </div>
-
 </div>
