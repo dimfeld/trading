@@ -67,6 +67,14 @@ allDataSameTest('ma200', () => {
   closeTo(sameDataCalc.ma200, 100);
 });
 
+allDataSameTest('rsi14', () => {
+  closeTo(sameDataCalc.rsi14, 50);
+});
+
+allDataSameTest('rsi20', () => {
+  closeTo(sameDataCalc.rsi20, 50);
+});
+
 allDataSameTest.run();
 
 let realDataTest = suite('real data');
