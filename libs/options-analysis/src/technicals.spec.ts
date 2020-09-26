@@ -1,5 +1,6 @@
 #!/usr/bin/env ts-node
 import sorter from 'sorters';
+import * as date from 'date-fns';
 import { test, suite } from 'uvu';
 import * as assert from 'uvu/assert';
 import { technicalCalculator } from './technicals';
@@ -34,31 +35,67 @@ function closeTo(actual, expected) {
   }
 }
 
-test('ema10', () => {
+const sameDataBars = new Array(500).fill(0).map((_, index) => {
+  return {
+    open: 100,
+    close: 100,
+    low: 100,
+    high: 100,
+    volume: 100,
+    time: date.subBusinessDays(new Date(), index),
+  };
+});
+
+let allDataSameTest = suite('all data the same');
+
+const sameDataCalcBase = technicalCalculator('MSFT', sameDataBars);
+const sameDataCalc = sameDataCalcBase.latest(100);
+
+allDataSameTest('ema10', () => {
+  closeTo(sameDataCalc.ema10, 100);
+});
+
+allDataSameTest('ema21', () => {
+  closeTo(sameDataCalc.ema21, 100);
+});
+
+allDataSameTest('ma50', () => {
+  closeTo(sameDataCalc.ma50, 100);
+});
+
+allDataSameTest('ma200', () => {
+  closeTo(sameDataCalc.ma200, 100);
+});
+
+allDataSameTest.run();
+
+let realDataTest = suite('real data');
+
+realDataTest('ema10', () => {
   closeTo(latestCalc.ema10, 214.27);
 });
 
-test('ema21', () => {
+realDataTest('ema21', () => {
   closeTo(latestCalc.ema21, 214.71);
 });
 
-test('ma50', () => {
+realDataTest('ma50', () => {
   closeTo(latestCalc.ma50, 211.34);
 });
 
-test('ma200', () => {
+realDataTest('ma200', () => {
   closeTo(latestCalc.ma200, 180.22);
 });
 
-test('rsi14', () => {
+realDataTest('rsi14', () => {
   closeTo(latestCalc.rsi14, correctNumbers.rsi14); // 42.11 from TOS
 });
 
-test('rsi20', () => {
+realDataTest('rsi20', () => {
   closeTo(latestCalc.rsi20, correctNumbers.rsi); // 45.27 from TOS
 });
 
-test.run();
+realDataTest.run();
 
 let bollinger = suite('bollinger bands');
 
