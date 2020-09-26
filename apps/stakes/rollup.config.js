@@ -43,7 +43,7 @@ const dedupe = (importee) =>
 const babelServerConfig = {
   extensions: ['.js', '.mjs', '.html', '.svelte', '.ts'],
   exclude: ['node_modules/@babel/**'],
-  runtimeHelpers: 'bundled',
+  babelHelpers: 'bundled',
   presets: [
     [
       '@babel/preset-env',
@@ -68,7 +68,7 @@ const babelClientConfig = {
     [
       '@babel/preset-env',
       {
-        targets: { chrome: 78 }, // dev ? { chrome: 78 } : '> 0.25%, not dead',
+        targets: { chrome: 85, safari: 14 }, // dev ? { chrome: 78 } : '> 0.25%, not dead',
       },
     ],
     '@babel/preset-typescript',
