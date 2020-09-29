@@ -151,8 +151,14 @@ export default {
                   }) ${colors.gray(`(${elapsed}ms)`)}`
                 );
               } else if (code !== null) {
-                console.error(`global css builder exited with code ${code}`);
-                console.log(colors.bold().red('✗ global css'));
+                if (dev) {
+                  console.error(`global css builder exited with code ${code}`);
+                  console.log(colors.bold().red('✗ global css'));
+                } else {
+                  throw new Error(
+                    `global css builder exited with code ${code}`
+                  );
+                }
               }
 
               builder = undefined;
