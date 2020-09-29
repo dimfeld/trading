@@ -237,15 +237,20 @@ async function run() {
     .filter((t) => t && t.efficiencyScore >= 1)
     .sort(sorter({ value: 'efficiencyScore', descending: true }));
 
-  const MAX_TRADES = 4;
+  const MAX_TRADES = 5;
 
   console.dir(account);
+  let maxRiskPerTrade = account.portfolioValue * 0.02;
+  let maxTrades = Math.min(
+    MAX_TRADES,
+    Math.floor(account.cash / maxRiskPerTrade)
+  );
   let riskPerTrade = Math.min(
-    account.portfolioValue * 0.02,
-    (account.cash / Math.min(results.length, MAX_TRADES)) * 0.95
+    maxRiskPerTrade,
+    (account.cash / Math.min(results.length, maxTrades)) * 0.95
   );
 
-  console.log(`Max risk ${riskPerTrade.toFixed(2)}`);
+  console.log(`Max risk ${riskPerTrade.toFixed(2)} for ${maxTrades} trades`);
   // console.dir(results);
 
   let orderIds = new Set<string>();
@@ -297,8 +302,8 @@ async function run() {
     seenSymbols.set(trade.symbol, trade);
 
     openedTrades++;
-    if (openedTrades === MAX_TRADES) {
-      console.log(`Exiting at max of ${MAX_TRADES} per day`);
+    if (openedTrades === maxTrades) {
+      console.log(`Exiting at max of ${maxTrades} per day`);
       break;
     }
   }
