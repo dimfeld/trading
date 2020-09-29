@@ -15,7 +15,7 @@ export function defaultTdaAuth(): TdaAuthData {
   };
 }
 
-export function defaultAlpacaAuth(paper = true): AlpacaBrokerOptions {
+export function defaultAlpacaAuth(paper = false): AlpacaBrokerOptions {
   let path = paper ? 'alpaca_auth_paper.json' : 'alpaca_auth.json';
   let file = findUp.sync(path);
   debug('Found Alpaca auth at %s', file);
