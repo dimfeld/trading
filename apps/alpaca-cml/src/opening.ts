@@ -197,6 +197,13 @@ async function run() {
         return null;
       }
 
+      if (trade.efficiencyScore < 1) {
+        console.log(
+          `Skipping ${trade.symbol} ${trade.type} because efficiency score ${trade.efficiencyScore} < 1`
+        );
+        return null;
+      }
+
       let filter = filters[trade.type];
       if (!filter) {
         console.log(
@@ -234,7 +241,7 @@ async function run() {
         dwVol,
       };
     })
-    .filter((t) => t && t.efficiencyScore >= 1)
+    .filter(Boolean)
     .sort(sorter({ value: 'efficiencyScore', descending: true }));
 
   const MAX_TRADES = 5;
