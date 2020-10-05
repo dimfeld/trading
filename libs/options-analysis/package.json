@@ -6,7 +6,7 @@
   "module": "lib-browser/index.js",
   "typings": "types/index.d.ts",
   "scripts": {
-    "test": "uvu -r ts-node/register",
+    "test": "uvu -r ts-node/register/transpile-only",
     "test:watch": "watchlist src -- rushx test",
     "clean": "rimraf types lib lib-browser",
     "build-types": "tsc --emitDeclarationOnly",
