@@ -82,6 +82,13 @@ function convertAlpacaOrder(trade) {
     trade.filled_avg_price || trade.limit_price || trade.stop_price
   );
 
+  let size = +trade.qty;
+  let filled = +trade.filled_qty;
+  if (trade.side === 'sell') {
+    size = -size;
+    filled = -filled;
+  }
+
   return {
     id: trade.id,
     broker: BrokerChoice.alpaca,
@@ -100,8 +107,8 @@ function convertAlpacaOrder(trade) {
       {
         symbol: trade.symbol,
         price,
-        size: +trade.qty,
-        filled: +trade.filled_qty,
+        size,
+        filled,
       },
     ],
   };
