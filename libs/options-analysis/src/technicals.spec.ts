@@ -12,16 +12,15 @@ const correctNumbers = {
   UnadjustedClose: 205.31,
 };
 
-const bars = require('./test-bars.json')
+const barData: any[] = require('./test-bars.json');
+const bars = barData
   .map((c) => {
     return {
       ...c,
       time: new Date(c.time),
     };
   })
-  .sort(
-    sorter<any>({ value: (d) => d.time.valueOf(), descending: true })
-  );
+  .sort(sorter({ value: (d) => d.time.valueOf(), descending: true }));
 
 const calc = technicalCalculator('MSFT', bars);
 const latestQuote = 205.31;

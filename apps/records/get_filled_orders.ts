@@ -9,7 +9,8 @@ import { BrokerChoice } from 'types';
   let nextMonth = new Date();
   nextMonth.setDate(nextMonth.getDate() + 15);
 
-  let startDate = new Date();
+  let startDate = date.setHours(new Date(), 23);
+  //startDate = date.subBusinessDays(startDate, 2);
   let endDate = date.addDays(new Date(startDate), 1);
 
   let data = await api.getOrders(BrokerChoice.tda, {

@@ -116,7 +116,7 @@ export class Brokers {
 
     for (let [symbol, bars] of result.entries()) {
       bars.sort(
-        sorter<Bar>({ value: (b) => b.time, descending: !options.ascending })
+        sorter({ value: (b) => b.time, descending: !options.ascending })
       );
 
       this.barsCache.set(cacheKeys.get(symbol), bars);
@@ -166,7 +166,7 @@ export class Brokers {
     let values = await this.alpaca.marketCalendar();
 
     values.sort(
-      sorter<MarketCalendarDate>({
+      sorter({
         value: (c) => c.date.valueOf(),
         descending: false,
       })

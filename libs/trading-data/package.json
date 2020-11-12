@@ -32,7 +32,7 @@
     "lodash": "^4.17.10",
     "options-analysis": "~1.6.2",
     "pg-promise": "~10.6.1",
-    "sorters": "~0.0.3",
+    "sorters": "~0.0.4",
     "@alpacahq/alpaca-trade-api": "~1.4.1",
     "types": "~1.0.0",
     "just-split": "~2.1.0",

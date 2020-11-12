@@ -97,13 +97,14 @@ dependencies:
   sapper: 0.28.7_svelte@3.28.0
   shortid: 2.2.15
   sirv: 0.4.6
+  sorters: 0.0.4
   source-map-support: 0.5.19
   split2: 2.2.0
   strip-ansi: 4.0.0
   svelte: 3.28.0
   svelte-awesome: 2.3.0
   svelte-notifications: 0.9.9
-  svelte-preprocess: 4.3.0_33fd0efd1dfb18084854bdd880945291
+  svelte-preprocess: 4.3.0_0e9669baf46278d39d6725c1e028932c
   svelte-preprocess-postcss: 1.1.1_postcss@7.0.32
   svelte-select: 3.11.1
   syncthrough: 0.5.0
@@ -115,7 +116,6 @@ dependencies:
   uuid: 3.4.0
   uvu: 0.3.3
   watchlist: 0.2.3
-  whatwg-fetch: 3.4.0
   xstate: 4.13.0
   yargs: 16.0.3
 lockfileVersion: 5.1
@@ -8938,10 +8938,10 @@ packages:
       node: '>=8'
     resolution:
       integrity: sha512-hlJLzrn/VN49uyNkZ8+9b+0q9DjmmYcYOnbMQtpkLrYpPwRApDPZfmqbUfJnAA3sb/nRib+nDot7Zi/1ER1fuA==
-  /sorters/0.0.3:
+  /sorters/0.0.4:
     dev: false
     resolution:
-      integrity: sha512-B+F9KmOMaQoswyt8iJx+IYIceede7DQmAv4zLpHSuvj+/FdvHDvRyS2Qm3RFW9+zJHQ9ilSspwU/nWxAy90M4Q==
+      integrity: sha512-7OxOqOJwN2CZpKWVcps0K5UwnU6cjnGWwWuU9AnTCswIYM6HmwmQgdDy/mzt/OpYbOWhNp3YAPPWibbHPUcEaQ==
   /source-map-resolve/0.5.3:
     dependencies:
       atob: 2.1.2
@@ -9325,7 +9325,7 @@ packages:
       postcss: 7.x || 6.x
     resolution:
       integrity: sha512-zNrd8VC0695H2j/UhrAsDVsYOsMK7DrvB9nXguho9C/D8ZtoN4IJl9PGZ/1UC/ABUG6kmOanh2Z4uCRjYCwitw==
-  /svelte-preprocess/4.3.0_33fd0efd1dfb18084854bdd880945291:
+  /svelte-preprocess/4.3.0_0e9669baf46278d39d6725c1e028932c:
     dependencies:
       '@babel/core': 7.11.6
       '@types/pug': 2.0.4
@@ -9333,7 +9333,6 @@ packages:
       detect-indent: 6.0.0
       postcss: 7.0.32
       strip-indent: 3.0.0
-      svelte: 3.28.0
     dev: false
     engines:
       node: '>= 9.11.2'
@@ -10418,14 +10417,14 @@ packages:
       npm-run-all: 4.1.5
       pg-promise: 10.6.1
       rimraf: 3.0.2
-      sorters: 0.0.3
+      sorters: 0.0.4
       source-map-support: 0.5.19
       ts-node: 9.0.0_typescript@4.0.2
       typescript: 4.0.2
     dev: false
     name: '@rush-temp/alpaca-cml'
     resolution:
-      integrity: sha512-snD4c85MgUdygqEyE2wz+VqarLtT06TobMsTQL3l1tFXtXy9U0bXHSCkB6D1S0+LhHP5ncq9kQ3WkIiaHNNFsw==
+      integrity: sha512-dvbUkQk1kTZ60jo0LalKpjG7tq/+P3Cm51ED6cG/2A48Yaj//oi4j0cF77B74xGnN//wkOMBWpqkeuhv465Viw==
       tarball: 'file:projects/alpaca-cml.tgz'
     version: 0.0.0
   'file:projects/options-analysis.tgz':
@@ -10450,7 +10449,7 @@ packages:
       lodash: 4.17.20
       npm-run-all: 4.1.5
       rimraf: 3.0.2
-      sorters: 0.0.3
+      sorters: 0.0.4
       tda-api: github.com/dimfeld/node-tda-api/e2bad38d38a9798b27daffb3342f57b72347530d
       ts-node: 9.0.0_typescript@4.0.2
       typescript: 4.0.2
@@ -10459,7 +10458,7 @@ packages:
     dev: false
     name: '@rush-temp/options-analysis'
     resolution:
-      integrity: sha512-qWSQC0aFO9q7JtPvkiey+GZ7Ku7VNDe+6KXy0ZmH19KZ6oqBevHSDsoxSjNCCoOpSPyEDMvzBw7EmFRXHOLu1A==
+      integrity: sha512-A23j5if5OzCsQeA/h0BlgyR2vNZ2Jm/wYw9hXMrGLAIpMjpt4BHq+BKKPcWtw+Da0JjmM6JAJhNT8SM46kitxQ==
       tarball: 'file:projects/options-analysis.tgz'
     version: 0.0.0
   'file:projects/options-liquidity.tgz':
@@ -10622,7 +10621,7 @@ packages:
     dev: false
     name: '@rush-temp/stakes'
     resolution:
-      integrity: sha512-EVzV6hLnlWFjedDKmx+y4ftnsMSPa9kB4mC4e/X7OGpnf2UtBAXzi0it6n7NAa/ZvFqlnlS0hf7RicjqT5BNZQ==
+      integrity: sha512-MyYXGHF/iA/DrkJFakXnp2S64PfvJBH5gYc7wcQmq1qp929wQ2/PeDzPx9vRbKFK16N91cCZw2Y8iobY7S2Zbg==
       tarball: 'file:projects/stakes.tgz'
     version: 0.0.0
   'file:projects/tm-automation.tgz':
@@ -10665,14 +10664,14 @@ packages:
       options-analysis: github.com/dimfeld/options-analysis/8e8e01d201c43e5a6662ed0ca81970c01f8e6dc9
       pg-promise: 10.6.1
       rimraf: 3.0.2
-      sorters: 0.0.3
+      sorters: 0.0.4
       tda-api: github.com/dimfeld/node-tda-api/b7ed9757aed44d52295c55b3772423b2c271e58f
       ts-node: 9.0.0_typescript@4.0.2
       typescript: 4.0.2
     dev: false
     name: '@rush-temp/trading-data'
     resolution:
-      integrity: sha512-kJW0ZsYIi0M6z81pQvUdRQKo6a9oqfjx1yHQ8PSFUh8F1zOfYU4jqJrVlkeSdNKQ2fKvnhLr58Roe3tIXbOixQ==
+      integrity: sha512-ivcORNJSBmwOIfz8YGpvrN6gzgwvHVWqsv5eL65ssBzMWfpKFYM+DOkEUBDqveKbMtWG6+CbJikLTJWgro/YJw==
       tarball: 'file:projects/trading-data.tgz'
     version: 0.0.0
   'file:projects/types.tgz':
@@ -10828,6 +10827,7 @@ specifiers:
   sapper: ~0.28.7
   shortid: ^2.2.15
   sirv: ^0.4.2
+  sorters: ~0.0.4
   source-map-support: ~0.5.19
   split2: ^2.2.0
   strip-ansi: ^4.0.0
@@ -10846,6 +10846,5 @@ specifiers:
   uuid: ^3.3.3
   uvu: ~0.3.3
   watchlist: ~0.2.3
-  whatwg-fetch: ^3.0.0
   xstate: ^4.7.0-rc6
   yargs: ~16.0.3
