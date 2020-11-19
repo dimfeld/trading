@@ -70,3 +70,4 @@ alphavantage.json
 db_backup
 tsconfig.tsbuildinfo
 .vscode
+refresh_tda_auth.md
