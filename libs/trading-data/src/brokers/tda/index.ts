@@ -101,7 +101,7 @@ export function tdaToOccSymbol(tda: string) {
     return occ;
   }
 
-  let m = /^([a-zA-Z]+)(?:_(\d\d)(\d\d)(\d\d)([C|P])(\d*)(?:\.(\d+))?)?$/.exec(
+  let m = /^([a-zA-Z]+\d?)(?:_(\d\d)(\d\d)(\d\d)([C|P])(\d*)(?:\.(\d+))?)?$/.exec(
     tda
   );
   if (!m) {
