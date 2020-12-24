@@ -4,6 +4,7 @@
   "description": "Tool for helping with common Rush development scenarios",
   "main": "index.js",
   "scripts": {
+    "build": "true",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
