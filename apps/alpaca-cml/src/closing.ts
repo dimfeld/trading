@@ -12,7 +12,14 @@ import {
   defaultTdaAuth,
   Brokers,
 } from 'trading-data';
-import { Position, BrokerChoice, OrderType, DbPosition, Order } from 'types';
+import {
+  Position,
+  BrokerChoice,
+  OrderType,
+  DbPosition,
+  Order,
+  OrderStatus,
+} from 'types';
 
 const dryRun = Boolean(process.env.DRY_RUN);
 
@@ -93,7 +100,11 @@ async function run() {
       continue;
     }
 
-    let price = quotes[pos.broker.symbol].mark;
+    let price = quotes[pos.broker.symbol]?.mark;
+    if(price === undefined) {
+      console.error(`WARNING: Position ${pos.broker.symbol} has no quote`);
+      continue;
+    }
     let costBasis = pos.broker.size * pos.broker.price;
     let marketValue = pos.broker.size * price;
     let unrealizedPl = marketValue - costBasis;
@@ -178,14 +189,20 @@ async function run() {
     // We know there's only one leg for these trades.
     let leg = order.legs[0];
     let position = positions[leg.symbol];
-    let gross = +leg.filled * +order.price;
+    let gross = -leg.filled * +order.price;
     let tradeDate = new Date(order.traded);
+
+    if (order.status !== OrderStatus.filled) {
+      console.log(`Order for ${leg.symbol} was rejected. Skipping...`);
+      continue;
+    }
+
     orderDb.push({
       id: order.id,
       position: position.db.id,
       legs: [
         {
-          size: -leg.filled,
+          size: leg.filled,
           price: leg.price,
           symbol: leg.symbol,
         },
