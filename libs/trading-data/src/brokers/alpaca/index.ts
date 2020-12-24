@@ -85,8 +85,10 @@ function convertAlpacaOrder(trade) {
   let size = +trade.qty;
   let filled = +trade.filled_qty;
   if (trade.side === 'sell') {
-    size = -size;
-    filled = -filled;
+    // Seems like this got switched around at some point, so now make absolutely
+    // sure that they are negative for sell orders.
+    size = -Math.abs(size);
+    filled = -Math.abs(filled);
   }
 
   return {
