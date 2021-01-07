@@ -254,10 +254,17 @@ async function run() {
   );
   let riskPerTrade = Math.min(
     maxRiskPerTrade,
-    (account.cash / Math.min(results.length, maxTrades)) * 0.95
+    (account.cash / Math.min(results.length, maxTrades || 1)) * 0.95
   );
 
   console.log(`Max risk ${riskPerTrade.toFixed(2)} for ${maxTrades} trades`);
+  if(!maxTrades) {
+    if(riskPerTrade > 50) {
+      maxTrades = 1;
+    } else {
+      return;
+    }
+  }
   // console.dir(results);
 
   let orderIds = new Set<string>();
