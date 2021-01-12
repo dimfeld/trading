@@ -25,6 +25,7 @@ export function orderToDbTrade(order: Order) {
     legs: order.legs.map((leg) => {
       return {
         ...leg,
+        size: leg.filled ?? leg.size,
         price: leg.price ?? null,
       };
     }),
