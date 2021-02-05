@@ -38,8 +38,8 @@ export default function (server: FastifyInstance, opts: any, next: () => void) {
     handler: async (req, res) => {
       let body = req.body || {};
 
-      // Always get at least 60 days out.
-      let dte = Math.min(body.dte || 60, 60);
+      // Always get at least 100 days out.
+      let dte = Math.max(body.dte || 100, 100);
 
       let options: GetOptionChainOptions = {
         symbol: req.params.symbol,
