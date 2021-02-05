@@ -122,13 +122,15 @@ export function analyzeSide(
   }
 
   let expirations = closestAfterDte(allExpirations, config.dte);
-  let result = expirations.map((expiration) => {
-    let deltas = closestDeltas(expiration.strikes, config.delta);
-    return {
-      deltas,
-      ...expiration,
-    };
-  });
+  let result = expirations
+    .filter((expiration) => expiration.expiration)
+    .map((expiration) => {
+      let deltas = closestDeltas(expiration.strikes, config.delta);
+      return {
+        deltas,
+        ...expiration,
+      };
+    });
 
   return result;
 }
