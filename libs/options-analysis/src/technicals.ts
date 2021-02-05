@@ -107,8 +107,8 @@ export function technicalCalculator(
   let firstTotal199 = total50 + totalForDays(pricesWithoutToday.slice(50), 149);
   let total200 = firstTotal199 + pricesWithoutToday[199];
 
-  let ma50 = new Array(Math.min(MA_LENGTH, bars.length - 50));
-  let ma200 = new Array(Math.min(MA_LENGTH, bars.length - 200));
+  let ma50 = new Array(Math.max(Math.min(MA_LENGTH, bars.length - 50), 1));
+  let ma200 = new Array(Math.max(Math.min(MA_LENGTH, bars.length - 200), 1));
 
   ma50[0] = total50 / 50;
   for (let i = 1; i < ma50.length; ++i) {
@@ -116,11 +116,11 @@ export function technicalCalculator(
     ma50[i] = total50 / 50;
   }
 
-  ma200[0] = total200 / 50;
+  ma200[0] = total200 / 200;
   for (let i = 1; i < ma200.length; ++i) {
     total200 =
       total200 - pricesWithoutToday[i - 1] + pricesWithoutToday[199 + i];
-    ma50[i] = total200 / 200;
+    ma200[i] = total200 / 200;
   }
 
   let ema5Yesterday = ema(pricesWithoutToday, 5);
