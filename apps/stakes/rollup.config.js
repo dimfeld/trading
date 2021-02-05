@@ -73,15 +73,6 @@ const babelClientConfig = {
     ],
     '@babel/preset-typescript',
   ],
-  plugins: [
-    ...babelServerConfig.plugins,
-    legacy && [
-      '@babel/plugin-transform-runtime',
-      {
-        useESModules: true,
-      },
-    ],
-  ].filter(Boolean),
 };
 
 export default {
@@ -110,10 +101,10 @@ export default {
       }),
       commonjs(),
 
-      !dev &&
-        terser({
-          module: true,
-        }),
+      // !dev &&
+      //   terser({
+      //     module: true,
+      //   }),
 
       // From https://github.com/babichjacob/sapper-postcss-template/blob/main/rollup.config.js
       (() => {
