@@ -39,7 +39,8 @@
     "types": "~1.0.0",
     "trading-data": "~1.0.1",
     "just-safe-get": "~2.0.0",
-    "@sveltestack/svelte-query": "~1.0.6"
+    "@sveltestack/svelte-query": "~1.0.6",
+    "uid": "~2.0.0"
   },
   "devDependencies": {
     "@babel/core": "~7.11.6",
@@ -86,7 +87,7 @@
     "tailwindcss": "~1.8.10",
     "tslib": "^1.10.0",
     "tslint": "^5.20.0",
-    "typescript": "^4",
+    "typescript": "~4.1.3",
     "rimraf": "~3.0.2",
     "@rollup/plugin-babel": "~5.2.1",
     "kleur": "~4.1.1"

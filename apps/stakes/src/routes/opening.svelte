@@ -1,14 +1,13 @@
 <script context="module" lang="typescript">
   import ky from '../ssr-ky';
   export async function preload() {
-    let data = await ky('api/entities?potential_positions=*').then((r) =>
-      r.json()
-    );
+    let data = await ky('api/potential_positions').then((r) => r.json());
     return { initialOpening: data.potential_positions };
   }
 </script>
 
 <script lang="typescript">
+  import type { UseQueryStoreResult } from '@sveltestack/svelte-query';
   import { useQuery } from '@sveltestack/svelte-query';
   import debugMod from 'debug';
   import { getContext, onMount, onDestroy } from 'svelte';
@@ -18,7 +17,7 @@
   import type { LatestTechnicals } from 'options-analysis';
   import { analyzeSide, optionInfoFromSymbol } from 'options-analysis';
   import endOfDay from 'date-fns/endOfDay';
-  import shortid from 'shortid';
+  import { uid } from 'uid/secure';
   import { faAngleDown } from '@fortawesome/free-solid-svg-icons/faAngleDown';
   import { faAngleRight } from '@fortawesome/free-solid-svg-icons/faAngleRight';
   import Icon from 'svelte-awesome';
@@ -66,7 +65,6 @@
 
   onMount(() => {
     mounted = true;
-    chains = JSON.parse(window.sessionStorage.getItem(chainStorageKey) || '{}');
     collapsed = JSON.parse(window.localStorage.getItem(collapsedKey) || '{}');
     selectedLegs = JSON.parse(window.localStorage.getItem(selectedKey) || '{}');
     each(chains, (chain) => updateByLegChain(chain));
@@ -81,8 +79,6 @@
   });
 
   $: mounted &&
-    window.sessionStorage.setItem(chainStorageKey, JSON.stringify(chains));
-  $: mounted &&
     window.localStorage.setItem(collapsedKey, JSON.stringify(collapsed));
   $: mounted &&
     window.localStorage.setItem(selectedKey, JSON.stringify(selectedLegs));
@@ -90,7 +86,8 @@
   export let initialOpening = {};
 
   let quotesStore: QuotesStore = getContext('quotes');
-  let strategies = getContext('strategies');
+  let strategiesQuery = getContext<UseQueryStoreResult>('strategies');
+  $: strategies = $strategiesQuery.data;
 
   $: console.dir($quotesStore);
 
@@ -107,16 +104,9 @@
     ['desc', 'asc']
   );
 
-  let potentialPositions = getContext('potential_positions');
-  potentialPositions.update(
-    (values) => {
-      return {
-        ...values,
-        ...initialOpening,
-      };
-    },
-    { sync: false, undo: false }
-  );
+  let potentialPositions = useQuery('potential_positions', {
+    initialData: initialOpening,
+  });
 
   $: collapsed = pick(collapsed, Object.keys($potentialPositions));
 
@@ -428,7 +418,7 @@
 
         potentialPositions.update((values) => {
           let pos = {
-            id: shortid.generate(),
+            id: uid(),
             symbol,
             strategy,
             source,

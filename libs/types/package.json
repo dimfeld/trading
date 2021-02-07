@@ -11,7 +11,7 @@
     "dev": "tsc -w"
   },
   "devDependencies": {
-    "typescript": "^4",
+    "typescript": "~4.1.3",
     "rimraf": "~3.0.2",
     "npm-run-all": "~4.1.5"
   }

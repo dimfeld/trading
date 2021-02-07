@@ -1,5 +1,9 @@
+import { useMutation, useQuery } from '@sveltestack/svelte-query';
+import { getContext, setContext } from 'svelte';
+import { mutationOptions } from './mutations';
+import ky from './ssr-ky';
 import get from 'lodash/get';
-import shortid from 'shortid';
+import { uid } from 'uid/secure';
 import {
   OptionLeg,
   Trade,
@@ -9,59 +13,7 @@ import {
   optionInfoFromSymbol,
 } from 'options-analysis';
 import { DbTrade, DbPosition } from './api/entities';
-
-export enum OpeningLegType {
-  Call = 'call',
-  Put = 'put',
-  Stock = 'stock',
-}
-
-export interface OpeningLegByDelta {
-  size: number;
-  type: OpeningLegType;
-  dte: string;
-  delta: number;
-}
-
-export enum OpenAtTime {
-  EndOfDay = 'end_of_day',
-}
-
-export enum Operator {
-  Gt = '>',
-  Lt = '<',
-}
-
-export enum DataPoint {
-  StockPrice = 'stock_price',
-  Ma10 = 'ma10',
-  Ma21 = 'ma21',
-  Ma50 = 'ma50',
-  Ma200 = 'ma200',
-}
-
-export interface OpeningCondition {
-  l: DataPoint;
-  r: DataPoint | number;
-  op: Operator;
-}
-
-export interface PositionStructure {
-  legs?: OpeningLegByDelta[];
-  conditions?: {
-    closing: {
-      profit_target?: number;
-      stop_loss?: number;
-      after_days?: number;
-    };
-    open_at?: OpenAtTime;
-    opening?: OpeningCondition[];
-  };
-}
-
-export interface Strategy {
-  structure: PositionStructure;
-}
+import { Strategy, PositionStructure } from './strategies';
 
 export interface HasStructureAndStrategy {
   structure?: PositionStructure;
@@ -112,7 +64,7 @@ export function applyTrade(
   let newTrade: DbTrade = {
     position: position.id,
     commissions: 0,
-    id: shortid.generate(),
+    id: uid(),
     legs,
     gross,
     traded: new Date(),
@@ -130,4 +82,30 @@ export function applyTrade(
     },
     trade: newTrade,
   };
+}
+
+export function createPositionsQuery(initialData: Record<string, DbPosition>) {
+  let q = useQuery<Record<string, DbPosition>>('positions', { initialData });
+  setContext('positions', q);
+  return q;
+}
+
+export function positionsQuery() {
+  return getContext<ReturnType<typeof createPositionsQuery>>('positions');
+}
+
+export function updatePositionMutation() {
+  return useMutation(
+    (position: DbPosition) =>
+      ky
+        .put(`/api/positions/${position.id}`, { json: position })
+        .json<DbPosition>(),
+    mutationOptions({ optimisticUpdateKey: ['positions'] })
+  );
+}
+
+export function createPositionMutation() {
+  return useMutation((position: Omit<DbPosition, 'id'>) =>
+    ky.post(`/api/positions`, { json: position }).json<DbPosition>()
+  );
 }

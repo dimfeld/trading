@@ -6,12 +6,11 @@ import { BrokerChoice } from 'types';
 
 (async () => {
   let api = await createBrokers();
-  let nextMonth = new Date();
-  nextMonth.setDate(nextMonth.getDate() + 15);
 
   let startDate = date.setHours(new Date(), 23);
-  //startDate = date.subBusinessDays(startDate, 2);
-  let endDate = date.addDays(new Date(startDate), 1);
+  startDate = date.subBusinessDays(startDate, 1);
+  let endDate = date.addBusinessDays(new Date(startDate), 1);
+  endDate = new Date();
 
   let data = await api.getOrders(BrokerChoice.tda, {
     startDate,

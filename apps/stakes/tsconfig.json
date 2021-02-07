@@ -4,6 +4,7 @@
     "sourceMap": true,
     "noImplicitThis": false,
     "preserveConstEnums": true,
+    "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
