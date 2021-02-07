@@ -1,5 +1,8 @@
-import { useMutation, useQuery } from '@sveltestack/svelte-query';
-import { getContext, setContext } from 'svelte';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@sveltestack/svelte-query';
 import { mutationOptions } from './mutations';
 import ky from './ssr-ky';
 
@@ -9,14 +12,13 @@ export interface Tag {
   color: string;
 }
 
-export function createTagsQuery(initialData: Record<string, Tag>) {
-  let q = useQuery<Record<string, Tag>>('tags', { initialData });
-  setContext('tags', q);
-  return q;
+export function initTagsQuery(initialData: Record<string, Tag>) {
+  let client = useQueryClient();
+  client.setQueryDefaults('tags', { initialData });
 }
 
 export function tagsQuery() {
-  return getContext<ReturnType<typeof createTagsQuery>>('tags');
+  return useQuery<Record<string, Tag>>('tags');
 }
 
 export function updateTagMutation() {

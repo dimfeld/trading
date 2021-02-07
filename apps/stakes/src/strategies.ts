@@ -1,5 +1,8 @@
-import { useMutation, useQuery } from '@sveltestack/svelte-query';
-import { getContext, setContext } from 'svelte';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@sveltestack/svelte-query';
 import { mutationOptions } from './mutations';
 import ky from './ssr-ky';
 
@@ -63,14 +66,13 @@ export interface Strategy {
   short_name: string;
 }
 
-export function createStrategiesQuery(initialData: Record<string, Strategy>) {
-  let q = useQuery<Record<string, Strategy>>('strategies', { initialData });
-  setContext('strategies', q);
-  return q;
+export function initStrategiesQuery(initialData: Record<string, Strategy>) {
+  let client = useQueryClient();
+  client.setQueryDefaults('strategies', { initialData });
 }
 
 export function strategiesQuery() {
-  return getContext<ReturnType<typeof createStrategiesQuery>>('strategies');
+  return useQuery<Record<string, Strategy>>('strategies');
 }
 
 export function updateStrategyMutation() {

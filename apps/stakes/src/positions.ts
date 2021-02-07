@@ -1,5 +1,8 @@
-import { useMutation, useQuery } from '@sveltestack/svelte-query';
-import { getContext, setContext } from 'svelte';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@sveltestack/svelte-query';
 import { mutationOptions } from './mutations';
 import ky from './ssr-ky';
 import get from 'lodash/get';
@@ -8,12 +11,13 @@ import {
   OptionLeg,
   Trade,
   PositionSimulator,
-  Position,
   TradeLeg,
   optionInfoFromSymbol,
 } from 'options-analysis';
 import { DbTrade, DbPosition } from './api/entities';
 import { Strategy, PositionStructure } from './strategies';
+
+export type Position = Omit<DbPosition, 'trades'> & { trades: DbTrade[] };
 
 export interface HasStructureAndStrategy {
   structure?: PositionStructure;
@@ -31,14 +35,11 @@ export function getStructureField(
 }
 
 export interface AppliedTrade {
-  position: DbPosition;
+  position: Position;
   trade: DbTrade;
 }
 
-export function applyTrade(
-  position: DbPosition,
-  legs: TradeLeg[]
-): AppliedTrade {
+export function applyTrade(position: Position, legs: TradeLeg[]): AppliedTrade {
   let simulator = new PositionSimulator(position.legs);
   simulator.addLegs(legs);
   let newLegs = simulator.getFlattenedList();
@@ -84,28 +85,27 @@ export function applyTrade(
   };
 }
 
-export function createPositionsQuery(initialData: Record<string, DbPosition>) {
-  let q = useQuery<Record<string, DbPosition>>('positions', { initialData });
-  setContext('positions', q);
-  return q;
+export function initPositionsQuery(initialData: Record<string, Position>) {
+  let client = useQueryClient();
+  client.setQueryDefaults('positions', { initialData });
 }
 
 export function positionsQuery() {
-  return getContext<ReturnType<typeof createPositionsQuery>>('positions');
+  return useQuery<Record<string, Position>>('positions');
 }
 
 export function updatePositionMutation() {
   return useMutation(
-    (position: DbPosition) =>
+    (position: Position) =>
       ky
         .put(`/api/positions/${position.id}`, { json: position })
-        .json<DbPosition>(),
+        .json<Position>(),
     mutationOptions({ optimisticUpdateKey: ['positions'] })
   );
 }
 
 export function createPositionMutation() {
-  return useMutation((position: Omit<DbPosition, 'id'>) =>
-    ky.post(`/api/positions`, { json: position }).json<DbPosition>()
+  return useMutation((position: Omit<Position, 'id'>) =>
+    ky.post(`/api/positions`, { json: position }).json<Position>()
   );
 }

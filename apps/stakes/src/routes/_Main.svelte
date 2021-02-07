@@ -12,27 +12,23 @@
 
 <script lang="typescript">
   import quotesStore from '../quotes';
-  import { useQuery } from '@sveltestack/svelte-query';
-  import { onMount, setContext } from 'svelte';
+  import { setContext } from 'svelte';
+
+  import type { DbPosition } from '../api/entities';
+  import { initPositionsQuery } from '../positions';
+  import type { Tag } from '../tags';
+  import { initTagsQuery } from '../tags';
+  import type { Strategy } from '../strategies';
+  import { initStrategiesQuery } from '../strategies';
 
   export let segment: string;
-  export let positions;
-  export let strategies;
-  export let tags;
+  export let positions: Record<string, DbPosition>;
+  export let strategies: Record<string, Strategy>;
+  export let tags: Record<string, Tag>;
 
-  const positionsQuery = useQuery('positions', {
-    initialData: positions,
-  });
-  const strategiesQuery = useQuery('strategies', {
-    initialData: strategies,
-  });
-  const tagsQuery = useQuery('tags', {
-    initialData: tags,
-  });
-
-  setContext('positions', positionsQuery);
-  setContext('strategies', strategiesQuery);
-  setContext('tags', tagsQuery);
+  initPositionsQuery(positions);
+  initTagsQuery(tags);
+  initStrategiesQuery(strategies);
 
   setContext('quotes', quotesStore());
 

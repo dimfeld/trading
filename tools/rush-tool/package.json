@@ -10,7 +10,7 @@
   "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@types/node": "~14.11.1"
+    "@types/node": "^14"
   },
   "dependencies": {
     "execa": "~4.0.3",
