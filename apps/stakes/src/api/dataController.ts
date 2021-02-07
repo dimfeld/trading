@@ -1,10 +1,7 @@
-import _, { Dictionary } from 'lodash';
-
 import { entities, getPositionsAndTrades } from './entities';
-import EntityInterface from '../state_manager/sync/lwwServer';
 import { FastifyInstance } from 'fastify';
 
-export default function(server: FastifyInstance, opts: any, next: () => void) {
+export default function (server: FastifyInstance, opts: any, next: () => void) {
   let entityInterface = new EntityInterface<any>({
     entities,
     readFilter: () => null,
@@ -13,41 +10,18 @@ export default function(server: FastifyInstance, opts: any, next: () => void) {
   });
 
   server.route({
-    url: '/entities',
+    url: '/strategies',
     method: 'GET',
     handler: (req, res) => {
-      let requests: Dictionary<string[]> = {};
-      _.each(req.query, (val, key) => {
-        if (entities[key]) {
-          requests[key] = val.split(';');
-        }
-      });
-
-      return entityInterface.read(null, requests);
+      return entityInterface.readAll(null, 'strategies');
     },
   });
 
   server.route({
-    url: '/entities',
-    method: 'POST',
-    handler: (req, res) => {
-      return entityInterface.update(null, req.body);
-    },
-  });
-
-  server.route({
-    url: '/base_data',
+    url: '/tags',
     method: 'GET',
     handler: async (req, res) => {
-      let strategies = entityInterface.readAll(null, 'strategies');
-      let tags = entityInterface.readAll(null, 'tags');
-      let positions = getPositionsAndTrades('close_date IS NULL');
-
-      return {
-        strategies: await strategies,
-        tags: await tags,
-        positions: await positions,
-      };
+      return entityInterface.readAll(null, 'tags');
     },
   });
 
@@ -55,8 +29,10 @@ export default function(server: FastifyInstance, opts: any, next: () => void) {
     url: '/positions',
     method: 'GET',
     handler: async (req, res) => {
-      let positions = await getPositionsAndTrades('true');
-      return { positions };
+      let positions = await getPositionsAndTrades(
+        req.query.all ? 'true' : 'close_date IS NULL'
+      );
+      return positions;
     },
   });
 

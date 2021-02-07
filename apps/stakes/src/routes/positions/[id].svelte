@@ -17,7 +17,6 @@
 
   const { page } = stores();
   let positionStore = getContext('positions');
-  let tradeStore = getContext('trades');
   let strategyStore = getContext('strategies');
   let quotesStore = getContext('quotes');
 
@@ -126,9 +125,7 @@
     ];
 
     let result = applyTrade(position, tradeLegs);
-    tradeStore.update((t) => {
-      t[result.trade.id] = result.trade;
-    });
+    // TODO Update trade on the server
 
     positionStore.update((positions) => {
       positions[result.position.id] = result.position;
@@ -183,7 +180,8 @@
                         exerciseDropdown = null;
                       }
                     }}
-                    class="relative inline-block text-left">
+                    class="relative inline-block text-left"
+                  >
                     <div>
                       <span class="rounded-md shadow-sm">
                         <button
@@ -195,33 +193,46 @@
                             hover:text-gray-500 focus:outline-none
                             focus:border-blue-300 focus:shadow-outline-blue
                             active:bg-gray-50 active:text-gray-800 transition
-                            ease-in-out duration-150">
+                            ease-in-out duration-150"
+                        >
                           {leg.size < 0 ? 'Assigned' : 'Exercised'}
                           <svg
                             class="-mr-1 ml-2 h-5 w-5"
                             fill="currentColor"
-                            viewBox="0 0 20 20">
+                            viewBox="0 0 20 20"
+                          >
                             <path
                               fill-rule="evenodd"
                               d="M5.293 7.293a1 1 0 011.414 0L10
                               10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0
                               01-1.414 0l-4-4a1 1 0 010-1.414z"
-                              clip-rule="evenodd" />
+                              clip-rule="evenodd"
+                            />
                           </svg>
                         </button>
                       </span>
                     </div>
                     {#if exerciseDropdown === leg.symbol}
                       <div
-                        in:scale={{ duration: 100, start: 0.95, easing: cubicOut }}
-                        out:scale={{ duration: 75, start: 0.95, easing: cubicIn }}
+                        in:scale={{
+                          duration: 100,
+                          start: 0.95,
+                          easing: cubicOut,
+                        }}
+                        out:scale={{
+                          duration: 75,
+                          start: 0.95,
+                          easing: cubicIn,
+                        }}
                         style="width:max-content"
                         class="origin-top-right absolute right-0 mt-2 rounded-md
-                          shadow-lg z-20">
+                          shadow-lg z-20"
+                      >
                         <div class="rounded-md bg-white shadow-xs p-2">
                           <div class="px-4 py-5 sm:p-6">
                             <h3
-                              class="text-lg leading-6 font-medium text-gray-900">
+                              class="text-lg leading-6 font-medium text-gray-900"
+                            >
                               Number of Contracts
                             </h3>
                             <div class="mt-5 sm:flex sm:items-center">
@@ -236,12 +247,14 @@
                                     step="1"
                                     class="form-input block w-full sm:text-sm
                                       sm:leading-5"
-                                    bind:value={exercisedNumContracts} />
+                                    bind:value={exercisedNumContracts}
+                                  />
                                 </div>
                               </div>
                               <span
                                 class="mt-3 w-full inline-flex rounded-md
-                                  shadow-sm sm:mt-0 sm:ml-3 sm:w-auto">
+                                  shadow-sm sm:mt-0 sm:ml-3 sm:w-auto"
+                              >
                                 <button
                                   type="button"
                                   on:click={() => applyExercise(leg)}
@@ -253,7 +266,8 @@
                                     focus:shadow-outline-indigo
                                     active:bg-indigo-700 transition ease-in-out
                                     duration-150 sm:w-auto sm:text-sm
-                                    sm:leading-5">
+                                    sm:leading-5"
+                                >
                                   Apply
                                 </button>
                               </span>

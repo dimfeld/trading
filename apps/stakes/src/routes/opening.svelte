@@ -9,6 +9,7 @@
 </script>
 
 <script lang="typescript">
+  import { useQuery } from '@sveltestack/svelte-query';
   import debugMod from 'debug';
   import { getContext, onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
@@ -489,12 +490,6 @@
   }
 </script>
 
-<style lang="postcss">
-  #condition-values > div:not(:first-child) {
-    @apply border-l border-gray-700;
-  }
-</style>
-
 <div class="flex flex-row items-stretch mt-4 pb-4 space-x-2">
   <div>
     <label for="new-symbols" class="sr-only">New Symbols</label>
@@ -505,7 +500,8 @@
         placeholder="New Symbols"
         on:keyup={handleEnter}
         bind:value={newSymbol}
-        bind:this={symbolBox} />
+        bind:this={symbolBox}
+      />
     </div>
   </div>
 
@@ -514,7 +510,8 @@
       items={strategyItems}
       placeholder="Select a Strategy"
       bind:selectedValue={newStrategy}
-      on:select={addNew} />
+      on:select={addNew}
+    />
   </div>
   <button on:click={addNew}>Add</button>
 </div>
@@ -533,7 +530,13 @@
       <div class="flex flex-row space-x-4">
         {#each position.conditions as condition}
           <span
-            class="rounded-lg py-1 px-3 {maItemClass(position.symbol, condition, technicalsValues, $quotesStore)}">
+            class="rounded-lg py-1 px-3 {maItemClass(
+              position.symbol,
+              condition,
+              technicalsValues,
+              $quotesStore
+            )}"
+          >
             {maValueLabel(condition.l)}
             {condition.op}
             {maValueLabel(condition.r)}
@@ -545,7 +548,12 @@
           <div class="px-2">
             <span>{maValueLabel(field)}</span>
             <span class="text-gray-700">
-              {maValueText(position.symbol, field, technicalsValues, $quotesStore) || '...'}
+              {maValueText(
+                position.symbol,
+                field,
+                technicalsValues,
+                $quotesStore
+              ) || '...'}
             </span>
           </div>
         {/each}
@@ -554,7 +562,8 @@
       <div class="mt-4">
         <div
           class="inline cursor-pointer"
-          on:click={() => toggleCollapsed(position.id)}>
+          on:click={() => toggleCollapsed(position.id)}
+        >
           Structure
           <Icon data={collapsed[position.id] ? faAngleRight : faAngleDown} />
         </div>
@@ -562,7 +571,8 @@
       {#if !collapsed[position.id]}
         <div
           transition:slide|local
-          class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+          class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4"
+        >
           <div class="flex flex-col w-full ml-2 space-y-4">
             {#each position.legTargets as dateLegs}
               <div class="flex flex-col w-full">
@@ -576,7 +586,9 @@
                         <thead>
                           <th class="text-left">
                             {match.legDesc.size}
-                            {match.legDesc.dte}DTE {match.legDesc.delta} Delta {capitalize(match.legDesc.type)}
+                            {match.legDesc.dte}DTE {match.legDesc.delta} Delta {capitalize(
+                              match.legDesc.type
+                            )}
                           </th>
                           <th class="w-1/6 text-right">D</th>
                           <th class="w-1/3 text-right sm:w-1/6">B/A</th>
@@ -586,17 +598,31 @@
                         <tbody>
                           {#each sortBy(get(match, ['deltas', 0, 'contracts'], []), 'strikePrice') as contract (contract.strikePrice)}
                             <tr
-                              on:click={() => selectLeg(position.id, match.legDesc, contract.symbol)}
+                              on:click={() =>
+                                selectLeg(
+                                  position.id,
+                                  match.legDesc,
+                                  contract.symbol
+                                )}
                               class="cursor-pointer"
-                              class:bg-gray-300={selectedLegs[legDescKey(position.id, match.legDesc)] === contract.symbol}
-                              class:hover:bg-gray-200={selectedLegs[legDescKey(position.id, match.legDesc)] !== contract.symbol}
-                              class:text-gray-500={!optionMeetsLiquidityRequirements(contract)}>
+                              class:bg-gray-300={selectedLegs[
+                                legDescKey(position.id, match.legDesc)
+                              ] === contract.symbol}
+                              class:hover:bg-gray-200={selectedLegs[
+                                legDescKey(position.id, match.legDesc)
+                              ] !== contract.symbol}
+                              class:text-gray-500={!optionMeetsLiquidityRequirements(
+                                contract
+                              )}
+                            >
                               <td>${contract.strikePrice}</td>
                               <td class="w-1/6 text-right">
                                 {(Math.abs(contract.delta) * 100).toFixed(0)}
                               </td>
                               <td class="w-1/3 text-right sm:w-1/6">
-                                {contract.bid.toFixed(2)} - {contract.ask.toFixed(2)}
+                                {contract.bid.toFixed(2)} - {contract.ask.toFixed(
+                                  2
+                                )}
                               </td>
                               <td class="w-1/6 text-right">
                                 {contract.openInterest}
@@ -616,8 +642,13 @@
           </div>
           <div
             class="flex flex-col pl-2 border-l-0 border-gray-700 sm:border-l
-              space-y-2">
-            Position <span> {position.totals.bid.toFixed(2)} - {position.totals.ask.toFixed(2)} </span>
+              space-y-2"
+          >
+            Position <span>
+              {position.totals.bid.toFixed(2)} - {position.totals.ask.toFixed(
+                2
+              )}
+            </span>
             {#each position.legStructure as leg}
               <span>
                 {#if leg.selected}{leg.selected.symbol}{/if}
@@ -629,3 +660,9 @@
     </div>
   </div>
 {:else}No positions waiting to open{/each}
+
+<style lang="postcss">
+  #condition-values > div:not(:first-child) {
+    @apply border-l border-gray-700;
+  }
+</style>

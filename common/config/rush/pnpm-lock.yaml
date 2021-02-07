@@ -28,6 +28,7 @@ dependencies:
   '@rush-temp/tm-automation': 'file:projects/tm-automation.tgz'
   '@rush-temp/trading-data': 'file:projects/trading-data.tgz'
   '@rush-temp/types': 'file:projects/types.tgz'
+  '@sveltestack/svelte-query': 1.0.6
   '@tailwindcss/ui': 0.6.2_tailwindcss@1.8.10
   '@types/bluebird': 3.5.32
   '@types/chai': 4.2.12
@@ -104,7 +105,7 @@ dependencies:
   svelte: 3.28.0
   svelte-awesome: 2.3.0
   svelte-notifications: 0.9.9
-  svelte-preprocess: 4.3.0_0e9669baf46278d39d6725c1e028932c
+  svelte-preprocess: 4.3.0_33fd0efd1dfb18084854bdd880945291
   svelte-preprocess-postcss: 1.1.1_postcss@7.0.32
   svelte-select: 3.11.1
   syncthrough: 0.5.0
@@ -118,7 +119,7 @@ dependencies:
   watchlist: 0.2.3
   xstate: 4.13.0
   yargs: 16.0.3
-lockfileVersion: 5.1
+lockfileVersion: 5.2
 packages:
   /@alpacahq/alpaca-trade-api/1.4.1:
     dependencies:
@@ -1627,6 +1628,12 @@ packages:
       node: '>=10'
     resolution:
       integrity: sha512-JiX9vxoKMmu8Y3Zr2RVathBL1Cdu4Nt4MuNWemt1Nc06A0RAin9c5FArkhGsyMBWfCu4zj+9b+GxtjAnE4qqLQ==
+  /@sveltestack/svelte-query/1.0.6:
+    dev: false
+    engines:
+      npm: use yarn instead of npm.
+    resolution:
+      integrity: sha512-j7anuzvoFhPzoIPiSdF+ckLeITxjbGY4t027jNFnmIgeVd5vkNQ4huNw6D1wk9kLQHaaFZmu8hjx3mcMakEDRg==
   /@szmarczak/http-timer/1.1.2:
     dependencies:
       defer-to-connect: 1.1.3
@@ -7310,7 +7317,7 @@ packages:
       integrity: sha512-ujanxJJB9CSDUvlAOshtjdKAywOPR2vY0a7D+vvgk5rbrYcthZA7TjpN+Z+UwZsz/G/bUexYDT6huE33vYVN0g==
   /pg-pool/3.2.1_pg@8.3.3:
     dependencies:
-      pg: 8.3.3_pg@8.3.3
+      pg: 8.3.3
     dev: false
     peerDependencies:
       pg: '>=8.0'
@@ -7319,7 +7326,7 @@ packages:
   /pg-promise/10.6.1:
     dependencies:
       assert-options: 0.6.2
-      pg: 8.3.3_pg@8.3.3
+      pg: 8.3.3
       pg-minify: 1.6.1
       spex: 3.0.2
     dev: false
@@ -7343,7 +7350,7 @@ packages:
       node: '>=4'
     resolution:
       integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==
-  /pg/8.3.3_pg@8.3.3:
+  /pg/8.3.3:
     dependencies:
       buffer-writer: 2.0.0
       packet-reader: 1.0.0
@@ -7356,8 +7363,6 @@ packages:
     dev: false
     engines:
       node: '>= 8.0.0'
-    peerDependencies:
-      pg: '*'
     resolution:
       integrity: sha512-wmUyoQM/Xzmo62wgOdQAn5tl7u+IA1ZYK7qbuppi+3E+Gj4hlUxVHjInulieWrd0SfHi/ADriTb5ILJ/lsJrSg==
   /pgpass/1.0.2:
@@ -9325,7 +9330,7 @@ packages:
       postcss: 7.x || 6.x
     resolution:
       integrity: sha512-zNrd8VC0695H2j/UhrAsDVsYOsMK7DrvB9nXguho9C/D8ZtoN4IJl9PGZ/1UC/ABUG6kmOanh2Z4uCRjYCwitw==
-  /svelte-preprocess/4.3.0_0e9669baf46278d39d6725c1e028932c:
+  /svelte-preprocess/4.3.0_33fd0efd1dfb18084854bdd880945291:
     dependencies:
       '@babel/core': 7.11.6
       '@types/pug': 2.0.4
@@ -9333,6 +9338,7 @@ packages:
       detect-indent: 6.0.0
       postcss: 7.0.32
       strip-indent: 3.0.0
+      svelte: 3.28.0
     dev: false
     engines:
       node: '>= 9.11.2'
@@ -10408,7 +10414,7 @@ packages:
   'file:projects/alpaca-cml.tgz':
     dependencies:
       '@alpacahq/alpaca-trade-api': 1.4.1
-      '@types/node': 14.6.4
+      '@types/node': 14.11.2
       chalk: 4.1.0
       date-fns: 2.16.1
       got: 11.6.2
@@ -10562,6 +10568,7 @@ packages:
       '@rollup/plugin-json': 4.1.0_rollup@2.27.1
       '@rollup/plugin-node-resolve': 9.0.0_rollup@2.27.1
       '@rollup/plugin-replace': 2.3.3_rollup@2.27.1
+      '@sveltestack/svelte-query': 1.0.6
       '@tailwindcss/ui': 0.6.2_tailwindcss@1.8.10
       '@types/debug': 4.1.5
       '@types/jest': 24.9.1
@@ -10621,7 +10628,7 @@ packages:
     dev: false
     name: '@rush-temp/stakes'
     resolution:
-      integrity: sha512-MyYXGHF/iA/DrkJFakXnp2S64PfvJBH5gYc7wcQmq1qp929wQ2/PeDzPx9vRbKFK16N91cCZw2Y8iobY7S2Zbg==
+      integrity: sha512-h8XA4ykrlRTg+4c/qBqWoEoisZiNAKReOSyoKko8ZIqD8VIGONjcHJFAh/ipLmQDJvbTusX5l7daApMK4rG/qA==
       tarball: 'file:projects/stakes.tgz'
     version: 0.0.0
   'file:projects/tm-automation.tgz':
@@ -10758,6 +10765,7 @@ specifiers:
   '@rush-temp/tm-automation': 'file:./projects/tm-automation.tgz'
   '@rush-temp/trading-data': 'file:./projects/trading-data.tgz'
   '@rush-temp/types': 'file:./projects/types.tgz'
+  '@sveltestack/svelte-query': ~1.0.6
   '@tailwindcss/ui': ~0.6.2
   '@types/bluebird': ^3.5.20
   '@types/chai': ^4.1.3
