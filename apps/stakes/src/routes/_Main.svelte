@@ -11,8 +11,7 @@
 </script>
 
 <script lang="typescript">
-  import quotesStore from '../quotes';
-  import { setContext } from 'svelte';
+  import { makeQuotesStore, setQuotesStoreContext } from '../quotes';
 
   import type { DbPosition } from '../api/entities';
   import { initPositionsQuery } from '../positions';
@@ -30,7 +29,8 @@
   initTagsQuery(tags);
   initStrategiesQuery(strategies);
 
-  setContext('quotes', quotesStore());
+  const quotesStore = makeQuotesStore();
+  setQuotesStoreContext(quotesStore);
 
   let navOpen = false;
 </script>

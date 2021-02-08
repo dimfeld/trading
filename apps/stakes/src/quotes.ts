@@ -1,6 +1,7 @@
 import { Dictionary } from 'lodash';
 import isNil from 'lodash/isNil';
 import { writable, Readable } from 'svelte/store';
+import { getContext, setContext } from 'svelte';
 import { Quote } from 'types';
 import ky from './ssr-ky';
 import debugMod from 'debug';
@@ -16,9 +17,7 @@ export interface QuotesStore extends Readable<QuotesData> {
   unregisterInterest: (key: string) => void;
 }
 
-export default function quotesStore(
-  initialData?: Map<string, Quote>
-): QuotesStore {
+export function makeQuotesStore(initialData?: Map<string, Quote>): QuotesStore {
   let interest = new Map<string, string[] | Set<string>>();
   let refreshSymbols = new Set<string>();
 
@@ -87,6 +86,14 @@ export default function quotesStore(
     },
     unregisterInterest,
   };
+}
+
+export function setQuotesStoreContext(qs: QuotesStore) {
+  setContext('quotes', qs);
+}
+
+export function getQuotesStore() {
+  return getContext<QuotesStore>('quotes');
 }
 
 export function quoteLabel(quoteData: Quote | undefined) {
