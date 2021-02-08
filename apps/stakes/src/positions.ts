@@ -11,6 +11,7 @@ import {
   optimisticUpdateCollectionMember,
   optimisticUpdateSingleton,
 } from './mutations';
+import { getNotificationsContext } from 'svelte-notifications';
 import ky from './ssr-ky';
 import get from 'lodash/get';
 import { uid } from 'uid/secure';
@@ -121,12 +122,14 @@ export function positionQueryOptions(
 }
 
 export function updatePositionMutation() {
+  let notifications = getNotificationsContext();
   return useMutation(
     (position: Position) =>
       ky
         .put(`/api/positions/${position.id}`, { json: position })
         .json<Position>(),
     mutationOptions({
+      notifications,
       optimisticUpdates: (queryClient: QueryClient, position: Position) =>
         Promise.all([
           optimisticUpdateCollectionMember(queryClient, 'positions', position),
@@ -141,7 +144,12 @@ export function updatePositionMutation() {
 }
 
 export function createPositionMutation() {
-  return useMutation((position: Omit<Position, 'id'>) =>
-    ky.post(`/api/positions`, { json: position }).json<Position>()
+  let notifications = getNotificationsContext();
+  return useMutation(
+    (position: Omit<Position, 'id'>) =>
+      ky.post(`/api/positions`, { json: position }).json<Position>(),
+    mutationOptions({
+      notifications,
+    })
   );
 }

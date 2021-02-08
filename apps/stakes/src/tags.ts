@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@sveltestack/svelte-query';
 import { mutationOptions, optimisticUpdateCollectionMember } from './mutations';
+import { getNotificationsContext } from 'svelte-notifications';
 import ky from './ssr-ky';
 
 export interface Tag {
@@ -23,9 +24,11 @@ export function tagsQuery() {
 }
 
 export function updateTagMutation() {
+  let notifications = getNotificationsContext();
   return useMutation(
     (tag: Tag) => ky.put(`/api/tags/${tag.id}`, { json: tag }).json<Tag>(),
     mutationOptions({
+      notifications,
       optimisticUpdates: (client: QueryClient, tag: Tag) =>
         Promise.all([optimisticUpdateCollectionMember(client, 'tags', tag)]),
     })
@@ -33,7 +36,11 @@ export function updateTagMutation() {
 }
 
 export function createTagMutation() {
-  return useMutation((tag: Omit<Tag, 'id'>) =>
-    ky.post(`/api/tags`, { json: tag }).json<Tag>()
+  let notifications = getNotificationsContext();
+  return useMutation(
+    (tag: Omit<Tag, 'id'>) => ky.post(`/api/tags`, { json: tag }).json<Tag>(),
+    mutationOptions({
+      notifications,
+    })
   );
 }

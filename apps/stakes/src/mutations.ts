@@ -19,6 +19,10 @@ export interface MutationOptions<
   invalidate?: QueryKey[];
   optimisticUpdates?: (client: QueryClient, item: T) => Promise<PreviousData>;
 
+  notifications?: {
+    addNotification: (n: { text: string; theme?: string }) => void;
+  };
+
   onMutate?: UseMutationOptions<
     T,
     HTTPError,
@@ -55,7 +59,18 @@ export function mutationOptions<
         }
       }
 
+      options.notifications?.addNotification({
+        theme: 'error',
+        text: err.message,
+      });
+
       return options.onError?.(err, data, context);
+    },
+    onSuccess() {
+      options.notifications?.addNotification({
+        theme: 'success',
+        text: 'Success!',
+      });
     },
     onSettled(data, error, variables, context) {
       for (let key of options.invalidate ?? []) {
@@ -83,7 +98,7 @@ export async function optimisticUpdateCollectionMember<T extends HasId>(
   client: QueryClient,
   key: QueryKey,
   data: T
-): Promise<[QueryKey, Record<string, T | undefined>]> {
+): Promise<[QueryKey, Record<string, T> | undefined]> {
   await client.cancelQueries(key);
   let overall = client.getQueryData<Record<string, T>>(key);
   client.setQueryData(key, {

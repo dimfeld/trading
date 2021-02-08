@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from '@sveltestack/svelte-query';
 import { mutationOptions, optimisticUpdateCollectionMember } from './mutations';
+import { getNotificationsContext } from 'svelte-notifications';
 import ky from './ssr-ky';
 
 export enum OpeningLegType {
@@ -77,12 +78,14 @@ export function strategiesQuery() {
 }
 
 export function updateStrategyMutation() {
+  let notifications = getNotificationsContext();
   return useMutation(
     (strategy: Strategy) =>
       ky
         .put(`/api/strategies/${strategy.id}`, { json: strategy })
         .json<Strategy>(),
     mutationOptions({
+      notifications,
       optimisticUpdates: (client: QueryClient, strategy: Strategy) =>
         Promise.all([
           optimisticUpdateCollectionMember(client, 'strategies', strategy),
@@ -92,7 +95,12 @@ export function updateStrategyMutation() {
 }
 
 export function createStrategyMutation() {
-  return useMutation((strategy: Omit<Strategy, 'id'>) =>
-    ky.post(`/api/strategies`, { json: strategy }).json<Strategy>()
+  let notifications = getNotificationsContext();
+  return useMutation(
+    (strategy: Omit<Strategy, 'id'>) =>
+      ky.post(`/api/strategies`, { json: strategy }).json<Strategy>(),
+    mutationOptions({
+      notifications,
+    })
   );
 }
