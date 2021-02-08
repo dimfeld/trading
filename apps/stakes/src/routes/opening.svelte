@@ -1,20 +1,10 @@
-<script context="module" lang="typescript">
-  import ky from '../ssr-ky';
-  export async function preload() {
-    let data = await ky('api/potential_positions').then((r) => r.json());
-    return { initialOpening: data.potential_positions };
-  }
-</script>
-
 <script lang="typescript">
-  import type { UseQueryStoreResult } from '@sveltestack/svelte-query';
-  import { useQuery } from '@sveltestack/svelte-query';
   import debugMod from 'debug';
-  import { getContext, onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { slide } from 'svelte/transition';
   import { getStructureField } from '../positions';
-  import type { QuotesData, QuotesStore } from '../quotes';
-  import type { LatestTechnicals } from 'options-analysis';
+  import { getQuotesStore } from '../quotes';
+  import type { OptionLeg } from 'options-analysis';
   import { analyzeSide, optionInfoFromSymbol } from 'options-analysis';
   import endOfDay from 'date-fns/endOfDay';
   import { uid } from 'uid/secure';
@@ -24,16 +14,14 @@
   import Select from 'svelte-select';
   import capitalize from 'lodash/capitalize';
   import each from 'lodash/each';
-  import filter from 'lodash/filter';
   import get from 'lodash/get';
-  import map from 'lodash/map';
   import flatMap from 'lodash/flatMap';
-  import pick from 'lodash/pick';
+  import pick from 'just-pick';
   import uniq from 'lodash/uniq';
-  import uniqBy from 'lodash/uniqBy';
+  import uniqBy from '@dimfeld/unique-by';
   import toUpper from 'lodash/toUpper';
   import sortBy from 'lodash/sortBy';
-  import orderBy from 'lodash/orderBy';
+  import sorter from 'sorters';
   import type {
     TechnicalsMap,
     TechnicalsConditionOp,
@@ -50,7 +38,15 @@
     maItemClass,
     conditionFields,
   } from '../technicals';
+  import type { OptionChain } from 'types';
   import { BarTimeframe } from 'types';
+  import { strategiesQuery } from '../strategies';
+  import {
+    potentialPositionsQuery,
+    createPotentialPositionMutation,
+    deletePotentialPositionMutation,
+  } from '../potential_positions';
+  import { chainQueries, chainQueryOptions } from '../chains';
 
   const debug = debugMod('opening');
 
@@ -58,8 +54,7 @@
   const chainStorageKey = 'opening:chain_data';
   const collapsedKey = 'opening:collapsed';
   const selectedKey = 'opening:selected';
-  let collapsed = {};
-  let chains = {};
+  let collapsed: Record<string, boolean> = {};
   let selectedLegs = {};
   let mounted = false;
 
@@ -67,15 +62,6 @@
     mounted = true;
     collapsed = JSON.parse(window.localStorage.getItem(collapsedKey) || '{}');
     selectedLegs = JSON.parse(window.localStorage.getItem(selectedKey) || '{}');
-    each(chains, (chain) => updateByLegChain(chain));
-
-    let chainInterval = setInterval(getChains, 120000);
-    return () => {
-      clearInterval(chainInterval);
-      for (let v of technicalsUnsub.values()) {
-        v();
-      }
-    };
   });
 
   $: mounted &&
@@ -83,38 +69,41 @@
   $: mounted &&
     window.localStorage.setItem(selectedKey, JSON.stringify(selectedLegs));
 
-  export let initialOpening = {};
-
-  let quotesStore: QuotesStore = getContext('quotes');
-  let strategiesQuery = getContext<UseQueryStoreResult>('strategies');
-  $: strategies = $strategiesQuery.data;
+  let quotesStore = getQuotesStore();
+  let strategiesQ = strategiesQuery();
+  $: strategies = $strategiesQ.data ?? {};
 
   $: console.dir($quotesStore);
 
-  $: strategyItems = orderBy(
-    filter($strategies, (strategy) =>
-      Boolean(get(strategy, ['structure', 'legs']))
-    ).map((strategy) => {
+  $: strategyItems = Object.values(strategies)
+    .filter((strategy) => Boolean(strategy.structure?.legs))
+    .map((strategy) => {
       return {
         value: strategy.id,
         label: strategy.name,
       };
-    }),
-    ['sort', 'label'],
-    ['desc', 'asc']
-  );
+    })
+    .sort(sorter({ value: 'sort', descending: true }, { value: 'label' }));
 
-  let potentialPositions = useQuery('potential_positions', {
-    initialData: initialOpening,
-  });
+  let potentialPositionsQ = potentialPositionsQuery();
+  $: potentialPositions = $potentialPositionsQ.data ?? {};
 
-  $: collapsed = pick(collapsed, Object.keys($potentialPositions));
+  $: collapsed = $potentialPositionsQ.isSuccess
+    ? Object.keys(potentialPositions).reduce(
+        (acc: Record<string, boolean>, key) => {
+          // Only keep collapsed state for positions we still have
+          acc[key] = collapsed[key];
+          return acc;
+        },
+        {}
+      )
+    : collapsed ?? {};
 
   let positionSymbols = new Set<string>();
   $: {
-    let symbols = map($potentialPositions, (pos) => pos?.symbol).filter(
-      Boolean
-    );
+    let symbols = Object.values(potentialPositions)
+      .map((pos) => pos?.symbol)
+      .filter(Boolean);
     positionSymbols = new Set(symbols);
 
     if (mounted) {
@@ -129,8 +118,6 @@
           technicalsValues.delete(symbol);
         }
       }
-
-      getChains(true);
     }
   }
 
@@ -168,7 +155,6 @@
   }
 
   // Generate a direct lookup from symbol to contract info.
-  let byLegChain = {};
   function updateByLegChain(symbolChain) {
     let buildByLegChain = {};
     each(['callExpDateMap', 'putExpDateMap'], (key) => {
@@ -181,126 +167,48 @@
       });
     });
 
-    byLegChain = {
-      ...byLegChain,
-      ...buildByLegChain,
+    return buildByLegChain;
+  }
+
+  let chainsQ = chainQueries(Array.from(positionSymbols));
+  $: chainsQ.setQueries(chainQueryOptions(Array.from(positionSymbols)));
+  $: chains = Object.fromEntries(
+    $chainsQ
+      .filter((q) => q.data)
+      .map((q) => [(q.data as OptionChain).symbol, q.data as OptionChain])
+  );
+
+  $: byLegChain = Object.values(chains).reduce((acc, symbolChain) => {
+    return {
+      ...acc,
+      ...updateByLegChain(symbolChain),
     };
-  }
-
-  enum GetChainState {
-    idle,
-    scheduled,
-    loading,
-    loadingWithPendingNew,
-    loadingWithPendingAll,
-  }
-
-  let getChainState = GetChainState.idle;
-
-  let scheduledAll = false;
-  async function getChains(newOnly = false, fromScheduled = false) {
-    switch (getChainState) {
-      case GetChainState.scheduled:
-        if (!fromScheduled) {
-          // This is another request, but there's one just about to run, so skip this one.
-          if (!newOnly) {
-            scheduledAll = true;
-          }
-          return;
-        }
-
-        break;
-      case GetChainState.loading:
-      case GetChainState.loadingWithPendingNew:
-        getChainState = newOnly
-          ? GetChainState.loadingWithPendingNew
-          : GetChainState.loadingWithPendingAll;
-        return;
-
-      case GetChainState.loadingWithPendingAll:
-        return;
-    }
-
-    let symbols = newOnly
-      ? missingSymbolData(chains)
-      : Array.from(positionSymbols);
-    if (!symbols.length) {
-      getChainState = GetChainState.idle;
-      return;
-    }
-
-    if (scheduledAll) {
-      newOnly = false;
-    }
-
-    // If we get here, then the state is idle, so start loading.
-    getChainState = GetChainState.loading;
-
-    try {
-      for (let symbol of symbols) {
-        let symbolChain = await ky(`api/chain/${symbol}`, {
-          method: 'POST',
-          json: {},
-        }).then((r) => r.json());
-
-        updateByLegChain(symbolChain);
-
-        chains = {
-          ...chains,
-          [symbol]: symbolChain,
-        };
-      }
-    } finally {
-      scheduledAll = false;
-      switch (getChainState) {
-        // TS flags these since it sees the above assignment and assumes it must be loading,
-        // but this could happen if the state changes while awaiting the chain requests.
-        // @ts-ignore;
-        case GetChainState.loadingWithPendingAll:
-        // @ts-ignore;
-        case GetChainState.loadingWithPendingNew:
-          let nextNewOnly =
-            getChainState === GetChainState.loadingWithPendingNew;
-          getChainState = GetChainState.scheduled;
-          setTimeout(() => {
-            getChainState = GetChainState.idle;
-            getChains(nextNewOnly, true);
-          }, 0);
-
-        default:
-          // All done loading, and nothing is pending
-          getChainState = GetChainState.idle;
-          break;
-      }
-    }
-  }
+  }, {});
 
   $: mounted && quotesStore.registerInterest('opening', positionSymbols);
   onDestroy(() => quotesStore.unregisterInterest('opening'));
 
-  function remove(id) {
-    potentialPositions.update((values) => {
-      delete values[id];
-    });
+  const deleteMutation = deletePotentialPositionMutation();
+  function remove(id: string) {
+    $deleteMutation.mutate(id);
   }
 
-  function legDescKey(positionId, leg) {
+  function legDescKey(positionId: string, leg: OptionLeg) {
     return `${positionId}-${leg.dte}-${leg.type}-${leg.delta}`;
   }
 
-  let positionsWithStrategy = [];
-  $: positionsWithStrategy = Object.values($potentialPositions)
+  $: positionsWithStrategy = Object.values(potentialPositions)
     .filter(Boolean)
     .map((position) => {
       return {
         ...position,
-        strategyInfo: $strategies[position.strategy],
+        strategyInfo: strategies[position.strategy],
       };
     });
 
-  $: positionsWithData = sortBy(
-    positionsWithStrategy.map((position) => {
-      position.conditions =
+  $: positionsWithData = positionsWithStrategy
+    .map((position) => {
+      let conditions =
         getStructureField(['conditions', 'opening'], position) || [];
 
       let chain = chains[position.symbol] || {};
@@ -360,13 +268,13 @@
         }
       }
 
-      position.legTargets = sortBy(expirations, (e) => e[0].dte);
+      let legTargets = Object.values(expirations).sort(sorter((e) => e[0].dte));
 
       // Create information about the position given the selected contracts.
       let bid = 0;
       let ask = 0;
 
-      position.legStructure = legStructure.map((l) => {
+      let positionLegStructure = legStructure.map((l) => {
         let symbol = selectedLegs[legDescKey(position.id, l)];
         let contract = byLegChain[symbol];
 
@@ -381,21 +289,29 @@
         };
       });
 
-      position.totals = {
+      let totals = {
         bid,
         ask,
       };
 
-      debug('position data', position.symbol, position);
+      let result = {
+        ...position,
+        conditions,
+        totals,
+        legStructure: positionLegStructure,
+        legTargets,
+      };
 
-      return position;
-    }),
-    ['symbol', 'strategyInfo.name']
-  );
+      debug('position data', result.symbol, result);
+
+      return result;
+    })
+    .sort('symbol', 'strategyInfo.name');
 
   let newStrategy;
   let newSymbol = '';
   let symbolBox;
+  let createMutation = createPotentialPositionMutation();
   function addNew() {
     if (newSymbol && newStrategy) {
       let symbols = uniq(
@@ -404,8 +320,7 @@
       for (let symbol of symbols) {
         let strategy = newStrategy.value;
         let source = 'manual';
-        let alreadyExists = find(
-          $potentialPositions,
+        let alreadyExists = Object.values(potentialPositions).find(
           (pos) =>
             pos.symbol === symbol &&
             pos.strategy === strategy &&
@@ -416,20 +331,17 @@
           continue;
         }
 
-        potentialPositions.update((values) => {
-          let pos = {
-            id: uid(),
-            symbol,
-            strategy,
-            source,
-            expires: endOfDay(new Date()),
-            structure: null,
-            notes: null,
-            opened: false,
-          };
-
-          values[pos.id] = pos;
-        });
+        let pos = {
+          id: uid(),
+          symbol,
+          strategy,
+          source,
+          expires: endOfDay(new Date()),
+          structure: null,
+          notes: null,
+          opened: false,
+        };
+        $createMutation.mutate(pos);
       }
 
       newSymbol = '';

@@ -1,34 +1,63 @@
-import { useMutation, useQuery } from '@sveltestack/svelte-query';
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+} from '@sveltestack/svelte-query';
 import { getContext, setContext } from 'svelte';
-import { mutationOptions } from './mutations';
+import {
+  mutationOptions,
+  optimisticUpdateCollectionMember,
+  optimisticUpdateSingleton,
+} from './mutations';
 import { PositionStructure } from './strategies';
 import ky from './ssr-ky';
+import { arrayToObject } from './query';
+import { HTTPError } from 'ky-universal';
 
 export interface PotentialPosition {
   id: string;
   symbol: string;
   source: string;
   strategy: number;
-  structure: PositionStructure;
+  structure: PositionStructure | null;
   expires?: Date;
   notes: any;
   opened: boolean;
 }
 
-export function createPotentialPositionsQuery(
-  initialData: Record<string, PotentialPosition>
-) {
-  let q = useQuery<Record<string, PotentialPosition>>('potential_positions', {
-    initialData,
+export function initPotentialPositionsQuery() {
+  let client = useQueryClient();
+  client.setQueryDefaults('potential_positions', {
+    select: arrayToObject,
   });
-  setContext('potential_positions', q);
-  return q;
 }
 
 export function potentialPositionsQuery() {
-  return getContext<ReturnType<typeof createPotentialPositionsQuery>>(
+  return useQuery<Record<string, PotentialPosition>, HTTPError>(
     'potential_positions'
   );
+}
+
+export function potentialPositionQuery(id: string) {
+  return useQuery<PotentialPosition, HTTPError>(
+    potentialPositionQueryOptions(useQueryClient(), id)
+  );
+}
+
+export function potentialPositionQueryOptions(
+  client: QueryClient,
+  id: string
+): UseQueryOptions<PotentialPosition, HTTPError> {
+  return {
+    queryKey: ['potential_positions', id],
+    initialData: () => {
+      return client.getQueryData<Record<string, PotentialPosition>>(
+        'potential_positions'
+      )?.[id];
+    },
+  };
 }
 
 export function updatePotentialPositionMutation() {
@@ -37,7 +66,17 @@ export function updatePotentialPositionMutation() {
       ky
         .put(`/api/potential_positions/${position.id}`, { json: position })
         .json<PotentialPosition>(),
-    mutationOptions({ optimisticUpdateKey: ['potential_positions'] })
+    mutationOptions({
+      optimisticUpdates: (client: QueryClient, position: PotentialPosition) =>
+        Promise.all([
+          optimisticUpdateCollectionMember(client, 'positions', position),
+          optimisticUpdateSingleton(
+            client,
+            ['potential_positions', position.id],
+            position
+          ),
+        ]),
+    })
   );
 }
 
@@ -46,5 +85,11 @@ export function createPotentialPositionMutation() {
     ky
       .post(`/api/potential_positions`, { json: position })
       .json<PotentialPosition>()
+  );
+}
+
+export function deletePotentialPositionMutation() {
+  return useMutation((id: string) =>
+    ky.delete(`/api/potential_positions/${id}`)
   );
 }

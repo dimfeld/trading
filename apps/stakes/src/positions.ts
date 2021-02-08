@@ -25,6 +25,7 @@ import {
 import { DbTrade, DbPosition } from './api/entities';
 import { Strategy, PositionStructure } from './strategies';
 import { HTTPError } from 'ky-universal';
+import { arrayToObject } from './query';
 
 export type Position = Omit<DbPosition, 'trades'> & { trades: DbTrade[] };
 
@@ -97,6 +98,9 @@ export function applyTrade(position: Position, legs: TradeLeg[]): AppliedTrade {
 export function initPositionsQuery(initialData: Record<string, Position>) {
   let client = useQueryClient();
   client.setQueryData('positions', initialData);
+  client.setQueryDefaults('positions', {
+    select: arrayToObject,
+  });
 }
 
 export function positionsQuery() {

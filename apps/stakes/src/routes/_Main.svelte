@@ -13,21 +13,23 @@
 <script lang="typescript">
   import { makeQuotesStore, setQuotesStoreContext } from '../quotes';
 
-  import type { DbPosition } from '../api/entities';
+  import type { Position } from '../positions';
   import { initPositionsQuery } from '../positions';
+  import { initPotentialPositionsQuery } from '../potential_positions';
   import type { Tag } from '../tags';
   import { initTagsQuery } from '../tags';
   import type { Strategy } from '../strategies';
   import { initStrategiesQuery } from '../strategies';
 
   export let segment: string;
-  export let positions: Record<string, DbPosition>;
+  export let positions: Record<string, Position>;
   export let strategies: Record<string, Strategy>;
   export let tags: Record<string, Tag>;
 
   initPositionsQuery(positions);
   initTagsQuery(tags);
   initStrategiesQuery(strategies);
+  initPotentialPositionsQuery();
 
   const quotesStore = makeQuotesStore();
   setQuotesStoreContext(quotesStore);

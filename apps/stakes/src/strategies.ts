@@ -7,6 +7,7 @@ import {
 import { mutationOptions, optimisticUpdateCollectionMember } from './mutations';
 import { getNotificationsContext } from 'svelte-notifications';
 import ky from './ssr-ky';
+import { arrayToObject } from './query';
 
 export enum OpeningLegType {
   Call = 'call',
@@ -71,6 +72,9 @@ export interface Strategy {
 export function initStrategiesQuery(initialData: Record<string, Strategy>) {
   let client = useQueryClient();
   client.setQueryData('strategies', initialData);
+  client.setQueryDefaults('strategies', {
+    select: arrayToObject,
+  });
 }
 
 export function strategiesQuery() {

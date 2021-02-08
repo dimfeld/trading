@@ -7,6 +7,7 @@ import {
 import { mutationOptions, optimisticUpdateCollectionMember } from './mutations';
 import { getNotificationsContext } from 'svelte-notifications';
 import ky from './ssr-ky';
+import { arrayToObject } from './query';
 
 export interface Tag {
   id: number;
@@ -17,6 +18,9 @@ export interface Tag {
 export function initTagsQuery(initialData: Record<string, Tag>) {
   let client = useQueryClient();
   client.setQueryData('tags', initialData);
+  client.setQueryDefaults('tags', {
+    select: arrayToObject,
+  });
 }
 
 export function tagsQuery() {
