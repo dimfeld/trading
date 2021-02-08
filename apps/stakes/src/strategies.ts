@@ -1,9 +1,10 @@
 import {
+  QueryClient,
   useMutation,
   useQuery,
   useQueryClient,
 } from '@sveltestack/svelte-query';
-import { mutationOptions } from './mutations';
+import { mutationOptions, optimisticUpdateCollectionMember } from './mutations';
 import ky from './ssr-ky';
 
 export enum OpeningLegType {
@@ -68,7 +69,7 @@ export interface Strategy {
 
 export function initStrategiesQuery(initialData: Record<string, Strategy>) {
   let client = useQueryClient();
-  client.setQueryDefaults('strategies', { initialData });
+  client.setQueryData('strategies', initialData);
 }
 
 export function strategiesQuery() {
@@ -81,7 +82,12 @@ export function updateStrategyMutation() {
       ky
         .put(`/api/strategies/${strategy.id}`, { json: strategy })
         .json<Strategy>(),
-    mutationOptions({ optimisticUpdateKey: ['strategies'] })
+    mutationOptions({
+      optimisticUpdates: (client: QueryClient, strategy: Strategy) =>
+        Promise.all([
+          optimisticUpdateCollectionMember(client, 'strategies', strategy),
+        ]),
+    })
   );
 }
 

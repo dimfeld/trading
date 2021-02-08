@@ -1,9 +1,10 @@
 import {
+  QueryClient,
   useMutation,
   useQuery,
   useQueryClient,
 } from '@sveltestack/svelte-query';
-import { mutationOptions } from './mutations';
+import { mutationOptions, optimisticUpdateCollectionMember } from './mutations';
 import ky from './ssr-ky';
 
 export interface Tag {
@@ -14,7 +15,7 @@ export interface Tag {
 
 export function initTagsQuery(initialData: Record<string, Tag>) {
   let client = useQueryClient();
-  client.setQueryDefaults('tags', { initialData });
+  client.setQueryData('tags', initialData);
 }
 
 export function tagsQuery() {
@@ -24,7 +25,10 @@ export function tagsQuery() {
 export function updateTagMutation() {
   return useMutation(
     (tag: Tag) => ky.put(`/api/tags/${tag.id}`, { json: tag }).json<Tag>(),
-    mutationOptions({ optimisticUpdateKey: ['tags'] })
+    mutationOptions({
+      optimisticUpdates: (client: QueryClient, tag: Tag) =>
+        Promise.all([optimisticUpdateCollectionMember(client, 'tags', tag)]),
+    })
   );
 }
 

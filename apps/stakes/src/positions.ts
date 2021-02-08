@@ -1,9 +1,16 @@
 import {
+  QueryClient,
+  QueryKey,
   useMutation,
   useQuery,
   useQueryClient,
+  UseQueryOptions,
 } from '@sveltestack/svelte-query';
-import { mutationOptions } from './mutations';
+import {
+  mutationOptions,
+  optimisticUpdateCollectionMember,
+  optimisticUpdateSingleton,
+} from './mutations';
 import ky from './ssr-ky';
 import get from 'lodash/get';
 import { uid } from 'uid/secure';
@@ -16,6 +23,7 @@ import {
 } from 'options-analysis';
 import { DbTrade, DbPosition } from './api/entities';
 import { Strategy, PositionStructure } from './strategies';
+import { HTTPError } from 'ky-universal';
 
 export type Position = Omit<DbPosition, 'trades'> & { trades: DbTrade[] };
 
@@ -87,11 +95,29 @@ export function applyTrade(position: Position, legs: TradeLeg[]): AppliedTrade {
 
 export function initPositionsQuery(initialData: Record<string, Position>) {
   let client = useQueryClient();
-  client.setQueryDefaults('positions', { initialData });
+  client.setQueryData('positions', initialData);
 }
 
 export function positionsQuery() {
-  return useQuery<Record<string, Position>>('positions');
+  return useQuery<Record<string, Position>, HTTPError>('positions');
+}
+
+export function positionQuery(id: string) {
+  return useQuery<Position, HTTPError>(
+    positionQueryOptions(useQueryClient(), id)
+  );
+}
+
+export function positionQueryOptions(
+  client: QueryClient,
+  id: string
+): UseQueryOptions<Position, HTTPError> {
+  return {
+    queryKey: ['positions', id],
+    initialData: () => {
+      return client.getQueryData<Record<string, Position>>('positions')?.[id];
+    },
+  };
 }
 
 export function updatePositionMutation() {
@@ -100,7 +126,17 @@ export function updatePositionMutation() {
       ky
         .put(`/api/positions/${position.id}`, { json: position })
         .json<Position>(),
-    mutationOptions({ optimisticUpdateKey: ['positions'] })
+    mutationOptions({
+      optimisticUpdates: (queryClient: QueryClient, position: Position) =>
+        Promise.all([
+          optimisticUpdateCollectionMember(queryClient, 'positions', position),
+          optimisticUpdateSingleton(
+            queryClient,
+            ['positions', position.id],
+            position
+          ),
+        ]),
+    })
   );
 }
 
