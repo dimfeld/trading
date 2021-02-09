@@ -1,3 +1,9 @@
+<script context="module">
+  export async function preload() {
+    return {};
+  }
+</script>
+
 <script>
   import {
     QueryClient,
