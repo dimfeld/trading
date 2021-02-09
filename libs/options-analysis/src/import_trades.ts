@@ -17,7 +17,7 @@ export function orderGross(order: Order) {
 
 export function orderToDbTrade(order: Order) {
   let trade: DbTrade = {
-    id: order.id,
+    id: order.id.toString(),
     commissions: order.commissions,
     traded: order.traded,
     gross: orderGross(order),
