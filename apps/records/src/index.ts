@@ -4,6 +4,7 @@ import * as _ from 'lodash';
 import * as fs from 'fs';
 import * as dashdash from 'dashdash';
 import { orderToDbTrade } from 'options-analysis';
+import 'source-map-support/register';
 
 import {
   parse_tw_emails,

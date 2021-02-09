@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import * as debugMod from 'debug';
+import debugMod from 'debug';
 import { BrokerChoice, DbTrade } from 'types';
 import { UnderlyingWithTrade } from '../ui';
 

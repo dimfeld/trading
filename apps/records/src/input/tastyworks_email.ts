@@ -1,13 +1,12 @@
 import * as _ from 'lodash';
 import * as analysis from 'options-analysis';
-import * as hyperid_factory from 'hyperid';
-import * as debug_factory from 'debug';
+import { uid } from 'uid';
+import debug_factory from 'debug';
 import { DbTrade, DbOptionTradeLeg } from 'types';
 import { gcd } from './gcd';
 import * as cheerio from 'cheerio';
 
 const debug = debug_factory('tastyworks_email');
-const hyperid = hyperid_factory({ urlSafe: true });
 
 const trade_re = /(Bought|Sold) (\d+) (\S+) (?:(\S+) (\S+) ([\d.]+) )?@ ([\d.]+)/;
 
@@ -113,7 +112,7 @@ export function get_trades(input: string) {
       }
 
       let trade: DbTrade = {
-        id: hyperid(),
+        id: uid(),
         note: null,
         tags: [],
         gross,

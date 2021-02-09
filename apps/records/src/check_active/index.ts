@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as fs from 'fs';
 import chalk from 'chalk';
-import * as debug_factory from 'debug';
+import debug_factory from 'debug';
 
 import { DbData, DbPosition, DbStrategies, Quote, AssetType } from 'types';
 import { check_expired_legs } from './expired_legs';

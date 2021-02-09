@@ -1,9 +1,7 @@
 import * as _ from 'lodash';
-import * as hyperid_factory from 'hyperid';
+import { uid } from 'uid/secure';
 import { DbPosition, DbOptionLeg } from 'types';
 import * as analyze from 'options-analysis';
-
-const hyperid = hyperid_factory({ urlSafe: true });
 
 export function check_expired_legs(positions: DbPosition[]) {
   let updated_positions: analyze.PositionChange[] = [];
@@ -32,7 +30,7 @@ export function check_expired_legs(positions: DbPosition[]) {
 
       let trade = {
         gross: 0,
-        id: hyperid(),
+        id: uid(),
         legs: _.map(expired_legs, (leg) => {
           return {
             symbol: leg.symbol,

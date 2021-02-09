@@ -1,11 +1,9 @@
 const parse = require('csv-parse/lib/sync');
 import * as _ from 'lodash';
-import * as hyperid_factory from 'hyperid';
+import { uid } from 'uid/secure';
 
 import { DbTrade } from 'types';
 import { UnderlyingWithTrade } from '../ui';
-
-const hyperid = hyperid_factory({ urlSafe: true });
 
 function to_number(x: string) {
   return +x.replace(/,/g, '');
@@ -18,7 +16,7 @@ export function get_trades(lines: string): UnderlyingWithTrade[] {
     let price = to_number(trade['Average Price']) / to_number(trade.Multiplier);
     let bought = trade.Action.startsWith('BUY');
     let output_trade = {
-      id: hyperid(),
+      id: uid(),
       note: trade.Description,
       traded: trade.Date,
       tags: [],
