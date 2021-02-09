@@ -1,13 +1,15 @@
 import { db, pgp } from '../api/services';
-import { EntityDef } from '../state_manager/sync/lwwServer';
 import { OptionLeg, TradeLeg } from 'options-analysis';
+import index from 'just-index';
 
 const ColumnSet = pgp.helpers.ColumnSet;
 
+let idColumnSet = new ColumnSet([{ name: 'id', cnd: true }]);
+
+let idIntColumnSet = new ColumnSet([{ name: 'id', cnd: true, cast: 'int' }]);
+
 const positions = new ColumnSet(
   [
-    { name: 'id', cnd: true },
-    { name: 'version', cnd: true },
     'tags',
     'symbol',
     'strategy',
@@ -44,8 +46,6 @@ export interface DbPosition {
 
 const potentialPositions = new ColumnSet(
   [
-    { name: 'id', cnd: true },
-    { name: 'version', cnd: true },
     'symbol',
     'source',
     'strategy',
@@ -59,8 +59,6 @@ const potentialPositions = new ColumnSet(
 
 const trades = new ColumnSet(
   [
-    { name: 'id', cnd: true },
-    { name: 'version', cnd: true },
     'position',
     { name: 'legs', mod: ':json' },
     'tags',
@@ -83,8 +81,6 @@ export interface DbTrade {
 
 const strategies = new ColumnSet(
   [
-    { name: 'id', cnd: true, cast: 'int' },
-    { name: 'version', cnd: true },
     'name',
     'description',
     'color',
@@ -96,40 +92,102 @@ const strategies = new ColumnSet(
   { table: 'strategies' }
 );
 
-const tags = new ColumnSet(
-  [
-    { name: 'id', cnd: true, cast: 'int' },
-    { name: 'version', cnd: true },
-    'name',
-    'color',
-  ],
-  { table: 'tags' }
-);
+const tags = new ColumnSet(['name', 'color'], { table: 'tags' });
 
-export const entities: { [key: string]: EntityDef<any> } = {
+export const entities = {
   positions: {
     singleton: false,
-    columns: positions,
+    idIsInt: false,
+    insertColumns: positions,
+    columns: idColumnSet.merge(positions),
   },
   potential_positions: {
     singleton: false,
-    columns: potentialPositions,
+    idIsInt: false,
+    insertColumns: potentialPositions,
+    columns: idColumnSet.merge(potentialPositions),
   },
   trades: {
     singleton: false,
-    columns: trades,
+    idIsInt: false,
+    insertColumns: trades,
+    columns: idColumnSet.merge(trades),
   },
   strategies: {
     singleton: false,
     idIsInt: true,
-    columns: strategies,
+    insertColumns: strategies,
+    columns: idIntColumnSet.merge(strategies),
   },
   tags: {
     singleton: false,
     idIsInt: true,
-    columns: tags,
+    insertColumns: tags,
+    columns: idIntColumnSet.merge(tags),
   },
 };
+
+export interface ReadOptions {
+  entity: keyof typeof entities;
+  fields?: Record<string, any>;
+  where?: string;
+}
+
+export async function read(options: ReadOptions) {
+  let entityDef = entities[options.entity];
+  let query = `SELECT ${entityDef.columns.names} FROM ${entityDef.columns.table}`;
+
+  let whereClause = [];
+  if (options.fields) {
+    let conditions = Object.entries(options.fields)
+      .map(([k, v]) => {
+        if (Array.isArray(v)) {
+          return `${pgp.as.name(k)} = ANY($[k])`;
+        } else {
+          return `${pgp.as.name(k)}=$[k]`;
+        }
+      })
+      .join(' AND ');
+
+    whereClause.push(...conditions);
+  }
+
+  if (options.where) {
+    whereClause.push(options.where);
+  }
+
+  if (whereClause) {
+    query += ` WHERE ${whereClause.join(' AND ')}`;
+  }
+
+  let results = await db.query(query);
+  return index(results, 'id');
+}
+
+export function create<T extends object>(
+  entity: keyof typeof entities,
+  object: T
+) {
+  let query = pgp.helpers.insert(object, entities[entity].insertColumns);
+  query += ' RETURNING *';
+  return db.one<T>(query);
+}
+
+export function update<T extends object>(
+  entity: keyof typeof entities,
+  id: string | number,
+  object: T
+) {
+  let query = pgp.helpers.update(object, entities[entity].columns);
+  query += ` WHERE id=$[id] RETURNING *`;
+  return db.one<T>(query, { id });
+}
+
+export function del(entity: keyof typeof entities, id: string | int) {
+  let e = entities[entity];
+  let query = `DELETE FROM ${e.columns.table} WHERE id=$[id]`;
+  return db.none(query, { id: e.idIsInt ? +id : id });
+}
 
 export async function getPositionsAndTrades(conditions: string, args = {}) {
   let results = await db.query(
@@ -141,10 +199,5 @@ export async function getPositionsAndTrades(conditions: string, args = {}) {
     args
   );
 
-  let output: _.Dictionary<Position> = {};
-  for (let result of results) {
-    output[result.id] = result;
-  }
-
-  return output;
+  return index(results, 'id');
 }

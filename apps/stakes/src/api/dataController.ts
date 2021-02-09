@@ -1,29 +1,54 @@
-import { entities, getPositionsAndTrades } from './entities';
+import {
+  entities,
+  read,
+  create,
+  update,
+  del,
+  getPositionsAndTrades,
+} from './entities';
 import { FastifyInstance } from 'fastify';
 
-export default function (server: FastifyInstance, opts: any, next: () => void) {
-  let entityInterface = new EntityInterface<any>({
-    entities,
-    readFilter: () => null,
-    writeFilter: () => null,
-    newItemValues: () => ({}),
-  });
-
+function generateSimpleCrud(
+  server: FastifyInstance,
+  entity: keyof typeof entities
+) {
   server.route({
-    url: '/strategies',
+    url: `/${entity}`,
     method: 'GET',
     handler: (req, res) => {
-      return entityInterface.readAll(null, 'strategies');
+      return read({ entity });
     },
   });
 
   server.route({
-    url: '/tags',
-    method: 'GET',
-    handler: async (req, res) => {
-      return entityInterface.readAll(null, 'tags');
+    url: `${entity}`,
+    method: 'POST',
+    handler: (req, res) => {
+      return create(entity, req.body);
     },
   });
+
+  server.route({
+    url: `${entity}/:id`,
+    method: 'PUT',
+    handler: (req, res) => {
+      return update(entity, req.params.id, req.body);
+    },
+  });
+
+  server.route({
+    url: `${entity}/:id`,
+    method: 'DELETE',
+    handler: (req, res) => {
+      return del(entity, req.params.id);
+    },
+  });
+}
+
+export default function (server: FastifyInstance, opts: any, next: () => void) {
+  generateSimpleCrud(server, 'strategies');
+  generateSimpleCrud(server, 'tags');
+  generateSimpleCrud(server, 'potential_positions');
 
   server.route({
     url: '/positions',
