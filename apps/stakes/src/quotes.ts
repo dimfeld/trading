@@ -97,7 +97,6 @@ export function getQuotesStore() {
 }
 
 export function quoteLabel(quoteData: Quote | undefined) {
-  console.dir(quoteData);
   if (!quoteData) {
     return null;
   }

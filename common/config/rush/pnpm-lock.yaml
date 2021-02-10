@@ -72,7 +72,6 @@ dependencies:
   fuzzy: 0.1.3
   got: 11.6.2
   hyperid: 2.1.0
-  immer: 5.3.6
   inquirer: 5.2.0
   inquirer-autocomplete-prompt: 0.12.2
   jest-fetch-mock: 2.1.2
@@ -9861,6 +9860,7 @@ packages:
       '@babel/preset-modules': 0.1.4_@babel+core@7.11.6
       '@babel/preset-typescript': 7.10.4_@babel+core@7.11.6
       '@types/debug': 4.1.5
+      '@types/just': github.com/dimfeld/just-types/ce107e034211c4de06cdc316bef83964147cef38
       '@types/lodash': 4.14.168
       '@types/node': 14.14.25
       date-fns: 2.16.1
@@ -9868,6 +9868,7 @@ packages:
       hyperid: 2.1.0
       just-is-empty: 2.0.1
       just-pick: 2.1.0
+      just-safe-get: 2.0.0
       lodash: 4.17.20
       npm-run-all: 4.1.5
       rimraf: 3.0.2
@@ -9879,7 +9880,7 @@ packages:
     dev: false
     name: '@rush-temp/options-analysis'
     resolution:
-      integrity: sha512-4unNgsdxuOx16Zy5EhBz7fe5sRaHkuXCQml5LnoW24vF/YlQ6dyaZB+tTqj0rNqbPp3TXMohD2zeixK/JXPO1w==
+      integrity: sha512-jwTjVX3ZMPQ3GkhTnoU55ee8ae48jy6A4MXEPnoXiN8xczRxhfjZzUCRB8HX7xOLsVl+w8aP5RTGvDOPsE1plg==
       tarball: file:projects/options-analysis.tgz
     version: 0.0.0
   file:projects/options-liquidity.tgz:
@@ -9947,7 +9948,7 @@ packages:
     dev: false
     name: '@rush-temp/records'
     resolution:
-      integrity: sha512-/1OWyLaWf0eT7GjllKJH9BKVz7BTE4CrdwyMCZqBryJzS0vMAnTYDU7uSSgizrcfV2qNGdOQj3lMGWkeoA4jZg==
+      integrity: sha512-2yOXLysfVVSfy09z1N4HRWIhYoX7DsyX2mPHMGsFKHXHPJk94+VbvwSUICFRousyewQwYr6L2v7Mi1Ysk+mvkg==
       tarball: file:projects/records.tgz
     version: 0.0.0
   file:projects/rush-tool.tgz_debug@4.3.1:
@@ -10050,7 +10051,7 @@ packages:
     dev: false
     name: '@rush-temp/stakes'
     resolution:
-      integrity: sha512-TxrSHb9etWLCQz3sG80VZeIgEODawCgO1g35zsriP7dh9/R3jGB3wAN3Op4e9qzjvXtAOilL007uFYQ97GdEFw==
+      integrity: sha512-bsMvc+s8CoVSYxTe9tutOaGOBq7PjCUVSPh00LPSxiS4xqbvjXTHdXsConSsd0t3dDgE4JyKWPZML9GjbWgx7A==
       tarball: file:projects/stakes.tgz
     version: 0.0.0
   file:projects/tm-automation.tgz:
@@ -10097,7 +10098,7 @@ packages:
     dev: false
     name: '@rush-temp/trading-data'
     resolution:
-      integrity: sha512-Xrbq/wNIVZfhc1D3hB3swdlgtoplpynmb3AZKsnuixALxm16MFUpunAy0FKI0Ih0oT+7pkIyBTf7BpcfvRtdug==
+      integrity: sha512-XEADLcZBJdR4F62DTCvdiGfAdOVYKaVUsJ//qZ7AOD32dLhiX+AtD6XpROR82iNLtFonw0zC0DAHTY2Oeku9QA==
       tarball: file:projects/trading-data.tgz
     version: 0.0.0
   file:projects/types.tgz:
@@ -10192,7 +10193,6 @@ specifiers:
   fuzzy: ^0.1.3
   got: ~11.6.2
   hyperid: ~2.1.0
-  immer: ^5.0.0
   inquirer: ^5.2.0
   inquirer-autocomplete-prompt: ^0.12.2
   jest-fetch-mock: ^2.1.2
@@ -10231,7 +10231,7 @@ specifiers:
   source-map-support: ~0.5.19
   split2: ^2.2.0
   strip-ansi: ^4.0.0
-  svelte: 3.32.2
+  svelte: ~3.32.2
   svelte-awesome: ^2.2.1
   svelte-notifications: ^0.9.8
   svelte-preprocess: ~4.6.6

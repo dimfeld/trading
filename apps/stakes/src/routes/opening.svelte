@@ -22,20 +22,13 @@
   import toUpper from 'lodash/toUpper';
   import sortBy from 'lodash/sortBy';
   import sorter from 'sorters';
-  import type {
-    TechnicalsMap,
-    TechnicalsConditionOp,
-    TechnicalsConditionValue,
-    TechnicalsCondition,
-  } from '../technicals';
+  import type { TechnicalsMap } from '../technicals';
   import {
     barsStore,
     technicalsStore,
-    legacyMaKeyTranslator,
-    maValue,
     maValueText,
     maValueLabel,
-    maItemClass,
+    maItemLabels,
     conditionFields,
   } from '../technicals';
   import type { OptionChain } from 'types';
@@ -430,15 +423,8 @@
         </button>
       </div>
       <div class="flex flex-row space-x-4">
-        {#each position.conditions as condition}
-          <span
-            class="rounded-lg py-1 px-3 {maItemClass(
-              position.symbol,
-              condition,
-              technicalsValues,
-              $quotesStore
-            )}"
-          >
+        {#each maItemLabels(position.symbol, position.conditions, technicalsValues) as condition}
+          <span class="rounded-lg py-1 px-3 {condition.bg}">
             {maValueLabel(condition.l)}
             {condition.op}
             {maValueLabel(condition.r)}

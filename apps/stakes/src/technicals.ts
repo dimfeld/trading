@@ -4,6 +4,8 @@ import ky from './ssr-ky';
 import {
   LatestTechnicals,
   TechnicalCalculator,
+  TechnicalCondition,
+  DataPoint,
   technicalCalculator,
 } from 'options-analysis';
 import { derived, Readable, writable } from 'svelte/store';
@@ -11,18 +13,6 @@ import { quoteLabel } from './quotes';
 import type { QuotesData } from './quotes';
 
 export type TechnicalsMap = Map<string, LatestTechnicals>;
-export type TechnicalsConditionValue = string | number;
-export enum TechnicalsConditionOp {
-  lt = '<',
-  gt = '>',
-  lte = '<=',
-  gte = '>=',
-}
-export interface TechnicalsCondition {
-  l: TechnicalsConditionValue;
-  op: string;
-  r: TechnicalsConditionValue;
-}
 
 export const legacyMaKeyTranslator: { [key: string]: string | undefined } = {
   ma5: 'ema5',
@@ -33,18 +23,12 @@ export const legacyMaKeyTranslator: { [key: string]: string | undefined } = {
 
 export function maValue(
   symbol: string,
-  item: TechnicalsConditionValue,
-  maData: TechnicalsMap,
-  quotes: QuotesData
+  item: DataPoint,
+  maData: TechnicalsMap
 ) {
   if (typeof item === 'string') {
-    if (item === 'stock_price') {
-      let quoteData = quotes.get(symbol);
-      return quoteData && (quoteData.mark || quoteData.lastPrice);
-    } else {
-      item = legacyMaKeyTranslator[item] || item;
-      return get(maData.get(symbol) || {}, item);
-    }
+    item = legacyMaKeyTranslator[item] || item;
+    return maData.get(symbol)?.get(item) || {};
   } else {
     return item;
   }
@@ -52,7 +36,7 @@ export function maValue(
 
 export function maValueText(
   symbol: string,
-  item: TechnicalsConditionValue,
+  item: DataPoint,
   maData: TechnicalsMap,
   quotes: QuotesData
 ) {
@@ -65,7 +49,13 @@ export function maValueText(
 }
 
 const maValueLabels: { [key: string]: string | undefined } = {
-  stock_price: 'Stock',
+  [DataPoint.StockPrice]: 'Stock',
+  [DataPoint.BollingerLower1SD]: 'BB-1SD',
+  [DataPoint.BollingerUpper1SD]: 'BB+1SD',
+  [DataPoint.BollingerLower2SD]: 'BB-2SD',
+  [DataPoint.BollingerUpper2SD]: 'BB+2SD',
+  [DataPoint.BollingerLower3SD]: 'BB-3SD',
+  [DataPoint.BollingerUpper3SD]: 'BB+3SD',
 };
 
 export function maValueLabel(field: string) {
@@ -76,64 +66,28 @@ export function maValueLabel(field: string) {
   return maValueLabels[field] || field.toUpperCase();
 }
 
-export function maItemClass(
+export function maItemLabels(
   symbol: string,
-  condition: TechnicalsCondition,
-  maData: TechnicalsMap,
-  quotes: QuotesData
+  conditions: TechnicalCondition[],
+  maData: TechnicalsMap
 ) {
-  let left = maValue(symbol, condition.l, maData, quotes);
-  let right = maValue(symbol, condition.r, maData, quotes);
-
-  if (!left || !right) {
-    console.dir({ symbol, condition, maData, left, right });
-    return '';
+  let calc = maData.get(symbol);
+  if (!calc) {
+    return conditions.map((c) => ({ ...c, met: undefined, bg: 'bg-gray-200' }));
   }
 
-  let met = false;
-  switch (condition.op) {
-    case '>':
-      met = left > right;
-      break;
-
-    case '>=':
-      met = left >= right;
-      break;
-
-    case '<':
-      met = left < right;
-      break;
-
-    case '<=':
-      met = left <= right;
-      break;
-  }
-
-  console.dir({ symbol, condition, met, left, right });
-  return met ? 'bg-green-200' : 'bg-red-200';
+  return calc.evaluate(conditions).map((c) => ({
+    ...c,
+    bg: c.met ? 'bg-green-200' : 'bg-red-200',
+  }));
 }
 
-const allConditionFields = [
-  'stock_price',
-  'ema5',
-  'ema10',
-  'ema21',
-  'ma50',
-  'ma200',
-  'rsi20',
-  'rsi14',
-  'bollinger-upper-1sd',
-  'bollinger-lower-1sd',
-  'bollinger-upper-2sd',
-  'bollinger-lower-2sd',
-  'bollinger-upper-3sd',
-  'bollinger-lower-3sd',
-];
+const allConditionFields = Object.values(DataPoint);
 
 // TODO Update this with the full OpeningPosition type
 export interface OpeningPosition {
   symbol: string;
-  conditions: TechnicalsCondition[];
+  conditions: TechnicalCondition[];
 }
 
 export function conditionFields(position: OpeningPosition) {
