@@ -24,8 +24,6 @@
     "fastify": "^2.10.0",
     "fastify-helmet": "^3.0.2",
     "got": "~11.6.2",
-    "hyperid": "~2.1.0",
-    "immer": "^5.0.0",
     "ky": "^0.15.0",
     "ky-universal": "^0.3.0",
     "lodash": "~4.17.20",

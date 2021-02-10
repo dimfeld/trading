@@ -7,12 +7,12 @@ import { technicalCalculator } from './technicals';
 
 // This is imported from CMLViz on 2020-09-10
 const correctNumbers = {
-  rsi: 46.10546893597823,
-  rsi14: 43.089773381915791,
+  rsi: 49.97,
+  rsi14: 49.14,
   UnadjustedClose: 205.31,
 };
 
-const barData: any[] = require('./test-bars.json');
+const barData: any[] = require('./T.json');
 const bars = barData
   .map((c) => {
     return {
@@ -22,9 +22,10 @@ const bars = barData
   })
   .sort(sorter({ value: (d) => d.time.valueOf(), descending: true }));
 
-const calc = technicalCalculator('MSFT', bars);
-const latestQuote = 205.31;
+const calc = technicalCalculator('T', bars);
+const latestQuote = 28.81;
 const latestCalc = calc.latest(latestQuote);
+console.dir(latestCalc);
 
 function closeTo(actual, expected) {
   if (Math.abs(actual - expected) > 0.01) {
@@ -47,7 +48,7 @@ const sameDataBars = new Array(500).fill(0).map((_, index) => {
 
 let allDataSameTest = suite('all data the same');
 
-const sameDataCalcBase = technicalCalculator('MSFT', sameDataBars);
+const sameDataCalcBase = technicalCalculator('T', sameDataBars);
 const sameDataCalc = sameDataCalcBase.latest(100);
 
 allDataSameTest('ema10', () => {
@@ -79,19 +80,19 @@ allDataSameTest.run();
 let realDataTest = suite('real data');
 
 realDataTest('ema10', () => {
-  closeTo(latestCalc.ema10, 214.27);
+  closeTo(latestCalc.ema10, 28.79);
 });
 
 realDataTest('ema21', () => {
-  closeTo(latestCalc.ema21, 214.71);
+  closeTo(latestCalc.ema21, 28.821);
 });
 
 realDataTest('ma50', () => {
-  closeTo(latestCalc.ma50, 211.34);
+  closeTo(latestCalc.ma50, 28.93);
 });
 
 realDataTest('ma200', () => {
-  closeTo(latestCalc.ma200, 180.22);
+  closeTo(latestCalc.ma200, 28.442);
 });
 
 realDataTest('rsi14', () => {
@@ -108,15 +109,15 @@ let bollinger = suite('bollinger bands');
 
 // These expected values were taking from ThinkOrSwim charts on 2020-09-10
 bollinger('ma20', () => {
-  closeTo((latestCalc as any).ma20, 215.94);
+  closeTo((latestCalc as any).ma20, 28.96);
 });
 
 bollinger('lower 2SD', () => {
-  closeTo(latestCalc.bollinger.lower2SD, 199.82);
+  closeTo(latestCalc.bollinger.lower2SD, 28.24);
 });
 
 bollinger('upper 2SD', () => {
-  closeTo(latestCalc.bollinger.upper2SD, 232.06);
+  closeTo(latestCalc.bollinger.upper2SD, 29.68);
 });
 
 bollinger.run();
