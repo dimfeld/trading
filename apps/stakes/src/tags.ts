@@ -30,7 +30,7 @@ export function tagsQuery() {
 export function updateTagMutation() {
   let notifications = getNotificationsContext();
   return useMutation(
-    (tag: Tag) => ky.put(`/api/tags/${tag.id}`, { json: tag }).json<Tag>(),
+    (tag: Tag) => ky.put(`api/tags/${tag.id}`, { json: tag }).json<Tag>(),
     mutationOptions({
       notifications,
       optimisticUpdates: (client: QueryClient, tag: Tag) =>
@@ -42,7 +42,7 @@ export function updateTagMutation() {
 export function createTagMutation() {
   let notifications = getNotificationsContext();
   return useMutation(
-    (tag: Omit<Tag, 'id'>) => ky.post(`/api/tags`, { json: tag }).json<Tag>(),
+    (tag: Omit<Tag, 'id'>) => ky.post(`api/tags`, { json: tag }).json<Tag>(),
     mutationOptions({
       notifications,
     })

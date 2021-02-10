@@ -5,6 +5,8 @@ import {
   update,
   del,
   getPositionsAndTrades,
+  DbPosition,
+  updatePositionAndTrades,
 } from './entities';
 import { FastifyInstance } from 'fastify';
 
@@ -21,7 +23,7 @@ function generateSimpleCrud(
   });
 
   server.route({
-    url: `${entity}`,
+    url: `/${entity}`,
     method: 'POST',
     handler: (req, res) => {
       return create(entity, req.body);
@@ -29,7 +31,7 @@ function generateSimpleCrud(
   });
 
   server.route({
-    url: `${entity}/:id`,
+    url: `/${entity}/:id`,
     method: 'PUT',
     handler: (req, res) => {
       return update(entity, req.params.id, req.body);
@@ -37,7 +39,7 @@ function generateSimpleCrud(
   });
 
   server.route({
-    url: `${entity}/:id`,
+    url: `/${entity}/:id`,
     method: 'DELETE',
     handler: (req, res) => {
       return del(entity, req.params.id);
@@ -70,6 +72,14 @@ export default function (server: FastifyInstance, opts: any, next: () => void) {
       });
 
       return result[0];
+    },
+  });
+
+  server.route({
+    url: '/positions/:id',
+    method: 'PUT',
+    handler: async (req, res) => {
+      return updatePositionAndTrades(req.params.id, req.body);
     },
   });
 

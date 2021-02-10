@@ -14,10 +14,16 @@ export type PreviousData = [QueryKey, any][];
 
 export interface MutationOptions<
   T extends HasId,
-  CONTEXT extends { previousData?: PreviousData }
+  VARIABLES = T,
+  CONTEXT extends { previousData?: PreviousData } = {
+    previousData?: PreviousData;
+  }
 > {
   invalidate?: QueryKey[];
-  optimisticUpdates?: (client: QueryClient, item: T) => Promise<PreviousData>;
+  optimisticUpdates?: (
+    client: QueryClient,
+    item: VARIABLES
+  ) => Promise<PreviousData>;
 
   notifications?: {
     addNotification: (n: { text: string; theme?: string }) => void;
@@ -26,23 +32,26 @@ export interface MutationOptions<
   onMutate?: UseMutationOptions<
     T,
     HTTPError,
-    T,
+    VARIABLES,
     Omit<CONTEXT, 'previousData'>
   >['onMutate'];
-  onError?: UseMutationOptions<T, any, any, CONTEXT>['onError'];
-  onSettled?: UseMutationOptions<T, any, any, CONTEXT>['onSettled'];
+  onError?: UseMutationOptions<T, HTTPError, VARIABLES, CONTEXT>['onError'];
+  onSettled?: UseMutationOptions<T, HTTPError, VARIABLES, CONTEXT>['onSettled'];
 }
 
 export function mutationOptions<
   T extends HasId,
-  CONTEXT extends { previousData?: PreviousData }
+  VARIABLES = T,
+  CONTEXT extends { previousData?: PreviousData } = {
+    previousData?: PreviousData;
+  }
 >(
-  options: MutationOptions<T, CONTEXT>
-): Partial<UseMutationOptions<T, HTTPError, T, CONTEXT>> {
+  options: MutationOptions<T, VARIABLES, CONTEXT>
+): Partial<UseMutationOptions<T, HTTPError, VARIABLES, CONTEXT>> {
   let queryClient = useQueryClient();
 
   return {
-    async onMutate(data: T) {
+    async onMutate(data: VARIABLES) {
       let previousData: PreviousData | undefined;
       if (options.optimisticUpdates) {
         previousData = await options.optimisticUpdates(queryClient, data);
@@ -106,5 +115,17 @@ export async function optimisticUpdateCollectionMember<T extends HasId>(
     [data.id]: data,
   });
 
+  return [key, overall];
+}
+
+export async function optimisticDeleteCollectionMember<T extends HasId>(
+  client: QueryClient,
+  key: QueryKey,
+  id: string
+): Promise<[QueryKey, Record<string, T> | undefined]> {
+  await client.cancelQueries(key);
+  let overall = client.getQueryData<Record<string, T>>(key);
+  let { [id]: _, ...rest } = overall ?? {};
+  client.setQueryData(key, rest);
   return [key, overall];
 }

@@ -386,7 +386,7 @@
                     class="ml-auto text-right text-gray-700 sm:pl-2 sm:ml-2
                       sm:border-l sm:border-gray-700 sm:text-left"
                   >
-                    {#if position.strategyInfo.short_name}
+                    {#if position.strategyInfo?.short_name}
                       <span class="hidden sm:inline">
                         {position.strategyInfo.name}
                       </span>

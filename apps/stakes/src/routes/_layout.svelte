@@ -1,10 +1,16 @@
-<script context="module">
+<script context="module" lang="typescript">
+  import ky from '../ssr-ky';
   export async function preload() {
-    return {};
+    let [positions, strategies, tags] = await Promise.all([
+      ky('api/positions').then((r) => r.json()),
+      ky('api/strategies').then((r) => r.json()),
+      ky('api/tags').then((r) => r.json()),
+    ]);
+    return { positions, strategies, tags };
   }
 </script>
 
-<script>
+<script lang="typescript">
   import {
     QueryClient,
     QueryClientProvider,
@@ -14,12 +20,15 @@
   import Notification from '../components/Notification.svelte';
   import Main from './_Main.svelte';
 
-  export let segment;
+  export let segment: string;
+  export let positions: Record<string, Position>;
+  export let strategies: Record<string, Strategy>;
+  export let tags: Record<string, Tag>;
 
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        queryFn: (key) => ky.get('/api/' + key.join('/')).json(),
+        queryFn: ({ queryKey }) => ky.get('api/' + queryKey.join('/')).json(),
       },
     },
   });
@@ -33,7 +42,7 @@
 
 <QueryClientProvider client={queryClient}>
   <Notifications item={Notification}>
-    <Main {segment}>
+    <Main {segment} {positions} {strategies} {tags}>
       <slot />
     </Main>
   </Notifications>

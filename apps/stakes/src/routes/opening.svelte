@@ -306,7 +306,7 @@
 
       return result;
     })
-    .sort('symbol', 'strategyInfo.name');
+    .sort(sorter('symbol', 'strategyInfo.name'));
 
   let newStrategy;
   let newSymbol = '';
@@ -561,7 +561,13 @@
       {/if}
     </div>
   </div>
-{:else}No positions waiting to open{/each}
+{:else}
+  {#if $potentialPositionsQ.isSuccess}
+    No positions waiting to open
+  {:else if $potentialPositionsQ.isLoading}
+    Loading...
+  {/if}
+{/each}
 
 <style lang="postcss">
   #condition-values > div:not(:first-child) {

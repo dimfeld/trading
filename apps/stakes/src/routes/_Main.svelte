@@ -1,15 +1,3 @@
-<script context="module" lang="typescript">
-  import ky from '../ssr-ky';
-  export async function preload() {
-    let [positions, strategies, tags] = await Promise.all([
-      ky('api/positions').then((r) => r.json()),
-      ky('api/strategies').then((r) => r.json()),
-      ky('api/tags').then((r) => r.json()),
-    ]);
-    return { positions, strategies, tags };
-  }
-</script>
-
 <script lang="typescript">
   import { makeQuotesStore, setQuotesStoreContext } from '../quotes';
 

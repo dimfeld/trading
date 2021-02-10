@@ -46,6 +46,7 @@ export interface DbPosition {
 
 const potentialPositions = new ColumnSet(
   [
+    { name: 'id', cnd: true },
     'symbol',
     'source',
     'strategy',
@@ -100,30 +101,35 @@ export const entities = {
     idIsInt: false,
     insertColumns: positions,
     columns: idColumnSet.merge(positions),
+    table: 'positions',
   },
   potential_positions: {
     singleton: false,
     idIsInt: false,
     insertColumns: potentialPositions,
-    columns: idColumnSet.merge(potentialPositions),
+    columns: potentialPositions,
+    table: 'potential_positions',
   },
   trades: {
     singleton: false,
     idIsInt: false,
     insertColumns: trades,
     columns: idColumnSet.merge(trades),
+    table: 'trades',
   },
   strategies: {
     singleton: false,
     idIsInt: true,
     insertColumns: strategies,
     columns: idIntColumnSet.merge(strategies),
+    table: 'strategies',
   },
   tags: {
     singleton: false,
     idIsInt: true,
     insertColumns: tags,
     columns: idIntColumnSet.merge(tags),
+    table: 'tags',
   },
 };
 
@@ -135,7 +141,7 @@ export interface ReadOptions {
 
 export async function read(options: ReadOptions) {
   let entityDef = entities[options.entity];
-  let query = `SELECT ${entityDef.columns.names} FROM ${entityDef.columns.table}`;
+  let query = `SELECT ${entityDef.columns.names} FROM ${entityDef.table}`;
 
   let whereClause = [];
   if (options.fields) {
@@ -156,7 +162,7 @@ export async function read(options: ReadOptions) {
     whereClause.push(options.where);
   }
 
-  if (whereClause) {
+  if (whereClause.length) {
     query += ` WHERE ${whereClause.join(' AND ')}`;
   }
 
@@ -185,7 +191,7 @@ export function update<T extends object>(
 
 export function del(entity: keyof typeof entities, id: string | int) {
   let e = entities[entity];
-  let query = `DELETE FROM ${e.columns.table} WHERE id=$[id]`;
+  let query = `DELETE FROM ${e.table} WHERE id=$[id]`;
   return db.none(query, { id: e.idIsInt ? +id : id });
 }
 
@@ -200,4 +206,28 @@ export async function getPositionsAndTrades(conditions: string, args = {}) {
   );
 
   return index(results, 'id');
+}
+
+export async function updatePositionAndTrades(
+  id: string,
+  position: DbPosition
+) {
+  let positionUpdate =
+    pgp.helpers.update(position, entities.positions.columns) +
+    ` WHERE id=$[positionId]`;
+
+  let tradesUpdate: string | undefined;
+  if (position.trades?.length) {
+    let conflictUpdate = entities.trades.columns.columns
+      .filter((c) => !c.cnd)
+      .map((c) => `${c.name}=EXCLUDED.${c.name}`)
+      .join(', ');
+    tradesUpdate =
+      pgp.helpers.insert(position.trades, entities.trades.columns) +
+      ` ON CONFLICT DO UPDATE SET ${conflictUpdate}`;
+  }
+
+  let queries = pgp.helpers.concat([positionUpdate, tradesUpdate || '']);
+
+  return db.tx((tx) => tx.query(queries, { positionId: id }));
 }

@@ -6,9 +6,8 @@ module.exports = {
   // Need an actual preprocess key here to make editor plugins work
   preprocess: sveltePreprocess({
     postcss: require('./postcss.config'),
-    typescript: {
-      transpileOnly: true,
-    },
+    sourceMap: true,
+    typescript: true,
     aliases: [['ts', 'typescript']],
   }),
 };

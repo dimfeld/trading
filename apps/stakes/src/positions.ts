@@ -130,7 +130,7 @@ export function updatePositionMutation() {
   return useMutation(
     (position: Position) =>
       ky
-        .put(`/api/positions/${position.id}`, { json: position })
+        .put(`api/positions/${position.id}`, { json: position })
         .json<Position>(),
     mutationOptions({
       notifications,
@@ -151,7 +151,7 @@ export function createPositionMutation() {
   let notifications = getNotificationsContext();
   return useMutation(
     (position: Omit<Position, 'id'>) =>
-      ky.post(`/api/positions`, { json: position }).json<Position>(),
+      ky.post(`api/positions`, { json: position }).json<Position>(),
     mutationOptions({
       notifications,
     })

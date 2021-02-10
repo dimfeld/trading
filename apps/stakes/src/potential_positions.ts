@@ -8,6 +8,7 @@ import {
 import { getContext, setContext } from 'svelte';
 import {
   mutationOptions,
+  optimisticDeleteCollectionMember,
   optimisticUpdateCollectionMember,
   optimisticUpdateSingleton,
 } from './mutations';
@@ -64,12 +65,16 @@ export function updatePotentialPositionMutation() {
   return useMutation(
     (position: PotentialPosition) =>
       ky
-        .put(`/api/potential_positions/${position.id}`, { json: position })
+        .put(`api/potential_positions/${position.id}`, { json: position })
         .json<PotentialPosition>(),
     mutationOptions({
       optimisticUpdates: (client: QueryClient, position: PotentialPosition) =>
         Promise.all([
-          optimisticUpdateCollectionMember(client, 'positions', position),
+          optimisticUpdateCollectionMember(
+            client,
+            'potential_positions',
+            position
+          ),
           optimisticUpdateSingleton(
             client,
             ['potential_positions', position.id],
@@ -81,15 +86,32 @@ export function updatePotentialPositionMutation() {
 }
 
 export function createPotentialPositionMutation() {
-  return useMutation((position: Omit<PotentialPosition, 'id'>) =>
-    ky
-      .post(`/api/potential_positions`, { json: position })
-      .json<PotentialPosition>()
+  return useMutation(
+    (position: Omit<PotentialPosition, 'id'>) =>
+      ky
+        .post(`api/potential_positions`, { json: position })
+        .json<PotentialPosition>(),
+    mutationOptions({
+      optimisticUpdates: (client: QueryClient, position: PotentialPosition) =>
+        Promise.all([
+          optimisticUpdateCollectionMember(
+            client,
+            'potential_positions',
+            position
+          ),
+        ]),
+    })
   );
 }
 
 export function deletePotentialPositionMutation() {
-  return useMutation((id: string) =>
-    ky.delete(`/api/potential_positions/${id}`)
+  return useMutation(
+    (id: string) => ky.delete(`api/potential_positions/${id}`),
+    mutationOptions<any, string>({
+      optimisticUpdates: (client: QueryClient, id: string) =>
+        Promise.all([
+          optimisticDeleteCollectionMember(client, 'potential_positions', id),
+        ]),
+    })
   );
 }

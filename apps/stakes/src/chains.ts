@@ -27,6 +27,8 @@ export function chainQueryOptions(
       queryKey: ['chains', symbol],
       queryFn: getChain,
       keepPreviousData: true,
+      staleTime: 120000,
+      refetchInterval: 120000,
     };
   });
 }

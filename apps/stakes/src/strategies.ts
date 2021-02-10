@@ -86,7 +86,7 @@ export function updateStrategyMutation() {
   return useMutation(
     (strategy: Strategy) =>
       ky
-        .put(`/api/strategies/${strategy.id}`, { json: strategy })
+        .put(`api/strategies/${strategy.id}`, { json: strategy })
         .json<Strategy>(),
     mutationOptions({
       notifications,
@@ -102,7 +102,7 @@ export function createStrategyMutation() {
   let notifications = getNotificationsContext();
   return useMutation(
     (strategy: Omit<Strategy, 'id'>) =>
-      ky.post(`/api/strategies`, { json: strategy }).json<Strategy>(),
+      ky.post(`api/strategies`, { json: strategy }).json<Strategy>(),
     mutationOptions({
       notifications,
     })
