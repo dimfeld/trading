@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import { Bar } from 'types';
 import * as date from 'date-fns';
-import * as get from 'just-safe-get';
+import get from 'just-safe-get';
 
 const MA_LENGTH = 50;
 
@@ -66,6 +66,7 @@ export interface LatestTechnicals {
   fullDayToday: boolean;
   previous: PreviousTechnicals;
   latest: number;
+  get: (point: DataPoint) => number;
   evaluate: (conditions: TechnicalCondition[]) => TechnicalConditionMatches[];
 
   stock_price: number;

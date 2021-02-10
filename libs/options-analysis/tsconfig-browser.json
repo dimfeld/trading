@@ -1,23 +1,24 @@
 {
-    "compilerOptions": {
-        "outDir": "./lib-browser",
-        "target": "es5",
-        "sourceMap": true,
-        "module": "commonjs",
-        "alwaysStrict": true,
-        "declaration": true,
-        "lib": [
-            "dom",
-            "es6",
-            "dom.iterable",
-            "scripthost",
-            "esnext.asynciterable"
-        ]
-    },
-    "include": [
-        "src/**/*"
-    ],
-    "exclude": [
-        "src/**/*.spec.ts"
+  "compilerOptions": {
+    "outDir": "./lib-browser",
+    "target": "es2020",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "module": "es2020",
+    "alwaysStrict": true,
+    "declaration": true,
+    "lib": [
+      "dom",
+      "es6",
+      "dom.iterable",
+      "scripthost",
+      "esnext.asynciterable"
     ]
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts"
+  ]
 }
