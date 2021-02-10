@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import chalk from 'chalk';
-import * as hyperid_factory from 'hyperid';
-import * as inquirer from 'inquirer';
+import { uid } from 'uid/secure';
+import inquirer from 'inquirer';
 import {
   Change,
   MatchingPositionScore,
@@ -16,8 +16,8 @@ import {
   BrokerChoice,
 } from 'types';
 
-import * as autocomplete from 'inquirer-autocomplete-prompt';
-import * as fuzzy from 'fuzzy';
+import autocomplete from 'inquirer-autocomplete-prompt';
+import fuzzy from 'fuzzy';
 
 inquirer.registerPrompt('autocomplete', autocomplete);
 
@@ -32,8 +32,6 @@ export interface UnderlyingWithTrade {
 export interface TradeMatches extends UnderlyingWithTrade {
   matches: Array<MatchingPositionScore<DbPosition>>;
 }
-
-const hyperid = hyperid_factory({ urlSafe: true });
 
 export function format_money(
   amt: number,
@@ -228,7 +226,7 @@ export async function position_for_unmatched_trade(
 
   if (!position) {
     position = {
-      id: hyperid(),
+      id: uid(),
       broker: null,
       open_date: new Date(trade.traded),
       close_date: null,

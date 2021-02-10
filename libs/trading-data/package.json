@@ -13,30 +13,30 @@
     "test": "mocha --opts mocha.opts"
   },
   "devDependencies": {
-    "@types/debug": "^0.0.30",
+    "@types/debug": "~4.1.5",
     "@types/find-up": "^2.1.1",
     "@types/got": "^9.4.1",
-    "@types/lodash": "^4.14.108",
-    "@types/node": "^11.13.0",
+    "@types/lodash": "~4.14.168",
+    "@types/node": "^14",
     "ts-node": "^9",
-    "typescript": "^4",
+    "typescript": "~4.1.3",
     "rimraf": "~3.0.2",
     "npm-run-all": "~4.1.5"
   },
   "dependencies": {
     "date-fns": "~2.16.1",
-    "debug": "^3.1.0",
+    "debug": "~4.3.1",
     "find-up": "~5.0.0",
     "got": "~11.6.2",
-    "hyperid": "^1.4.1",
-    "lodash": "^4.17.10",
+    "hyperid": "~2.1.0",
+    "lodash": "~4.17.20",
     "options-analysis": "~1.6.2",
     "pg-promise": "~10.6.1",
     "sorters": "~0.0.4",
-    "@alpacahq/alpaca-trade-api": "~1.4.1",
+    "@alpacahq/alpaca-trade-api": "~1.4.2",
     "types": "~1.0.0",
     "just-split": "~2.1.0",
-    "date-fns-tz": "~1.0.10",
+    "date-fns-tz": "~1.1.1",
     "just-partition": "~1.1.0"
   }
 }

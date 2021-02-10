@@ -1,15 +1,14 @@
-<script>
+<script lang="typescript">
   import get from 'lodash/get';
   import map from 'lodash/map';
-  import flatMap from 'lodash/flatMap';
   import minBy from 'lodash/minBy';
   import orderBy from 'lodash/orderBy';
   import groupBy from 'lodash/groupBy';
-  import values from 'lodash/values';
   import isNaN from 'lodash/isNaN';
   import differenceInCalendarDays from 'date-fns/differenceInCalendarDays';
   import { getContext } from 'svelte';
   import { positionInfo, optionInfoFromSymbol } from 'options-analysis';
+  import sorter from 'sorters';
 
   import { onDestroy, onMount } from 'svelte';
   import { goto } from '@sapper/app';
@@ -19,13 +18,18 @@
   import Icon from 'svelte-awesome';
   import ButtonRow from '../components/ButtonRow.svelte';
   import { quoteLabel } from '../quotes.ts';
+  import { positionsQuery } from '../positions';
+  import { strategiesQuery } from '../strategies';
+  import type { Position } from '../positions';
 
-  let positionStore = getContext('positions');
-  let strategyStore = getContext('strategies');
+  let positionsQ = positionsQuery();
+  $: positions = $positionsQ.data ?? {};
+  let strategiesQ = strategiesQuery();
+  $: strategies = $strategiesQ.data ?? {};
   let quotesStore = getContext('quotes');
 
   $: allSymbols = new Set(
-    flatMap($positionStore, (position) => {
+    Object.values(positions).flatMap((position) => {
       return [position.symbol, ...position.legs.map((leg) => leg.symbol)];
     })
   );
@@ -44,7 +48,7 @@
   let mounted = false;
   onMount(() => {
     let initialUiSettings = JSON.parse(
-      window.localStorage.getItem(positionsUiKey)
+      window.localStorage.getItem(positionsUiKey) || 'null'
     );
 
     if (initialUiSettings) {
@@ -58,18 +62,16 @@
     mounted = true;
   });
 
-  $: {
-    if (mounted) {
-      window.localStorage.setItem(
-        positionsUiKey,
-        JSON.stringify({
-          sortDirection,
-          sortField,
-          selectedStrategies,
-          closingOnly,
-        })
-      );
-    }
+  $: if (mounted) {
+    window.localStorage.setItem(
+      positionsUiKey,
+      JSON.stringify({
+        sortDirection,
+        sortField,
+        selectedStrategies,
+        closingOnly,
+      })
+    );
   }
 
   function toggleSort(field) {
@@ -91,9 +93,9 @@
     sortButtonSelect = sortField;
   }
 
-  let positionsWithData = [];
+  let positionsWithData: Position[] = [];
   $: {
-    positionsWithData = values($positionStore)
+    positionsWithData = Object.values(positions)
       .filter((position) => !position.close_date)
       .map((position) => {
         let legs = position.legs.map((leg) => {
@@ -150,7 +152,7 @@
 
         let output = {
           ...position,
-          strategyInfo: $strategyStore[position.strategy],
+          strategyInfo: strategies[position.strategy],
           info,
           nearestExpiration: nearestExpiration.expiration,
           legs,
@@ -174,33 +176,34 @@
 
     let strategyTags = new Set();
 
-    let singleStrategies = map($strategyStore, (strategy) => {
-      for (let tag of strategy.tags || []) {
-        strategyTags.add(tag);
-      }
+    let singleStrategies = Object.values(strategies)
+      .map((strategy) => {
+        for (let tag of strategy.tags || []) {
+          strategyTags.add(tag);
+        }
 
-      return {
-        value: strategy.id,
-        label: strategy.name,
-        isTag: false,
-      };
-    });
+        return {
+          value: strategy.id,
+          label: strategy.name,
+          isTag: false,
+        };
+      })
+      .sort(sorter('label'));
 
-    let tags = Array.from(strategyTags).map((tag) => {
-      return {
-        value: tag,
-        label: tag,
-        isTag: true,
-      };
-    });
+    let tags = Array.from(strategyTags)
+      .map((tag) => {
+        return {
+          value: tag,
+          label: tag,
+          isTag: true,
+        };
+      })
+      .sort(sorter('label'));
 
-    strategyItems = [
-      ...orderBy(tags, (s) => s.label, ['asc']),
-      ...orderBy(singleStrategies, (s) => s.label, ['asc']),
-    ];
+    strategyItems = [...tags, ...singleStrategies];
   }
 
-  let positions = [];
+  let positionRows = [];
   $: {
     let selected = selectedStrategies || [];
 
@@ -214,21 +217,19 @@
       }
     }
 
-    positions = orderBy(
-      positionsWithData.filter((pos) => {
+    positionRows = positionsWithData
+      .filter((pos) => {
         if (!selected.length) {
           return true;
         }
 
-        let strategyTags = $strategyStore[pos.strategy].tags || [];
+        let strategyTags = strategies[pos.strategy]?.tags || [];
         return (
           selectedStrategiesSet.has(pos.strategy) ||
           strategyTags.some((tag) => strategyTagsSet.has(tag))
         );
-      }),
-      (a) => get(a, sortField),
-      sortDirection ? 'asc' : 'desc'
-    );
+      })
+      .sort(sorter({ value: sortField, descending: !sortDirection }));
   }
 
   function formatPct(p) {
@@ -259,7 +260,7 @@
   const ClosePositionStopLoss = Symbol('stopLoss');
   const ClosePositionOpenDuration = Symbol('openDuration');
 
-  function shouldClose(position) {
+  function shouldClose(position: Position) {
     let profitTarget = getStructureField(
       ['conditions', 'closing', 'profit_target'],
       position
@@ -295,9 +296,9 @@
     [ClosePositionOpenDuration]: 'bg-yellow-200 hover:bg-yellow-300',
   };
 
-  function indicatorClass(position) {
+  function indicatorClass(position: Position) {
     let closeStatus = shouldClose(position);
-    return indicatorClasses[closeStatus] || 'hover:bg-gray-200';
+    return closeStatus ? indicatorClasses[closeStatus] : 'hover:bg-gray-200';
   }
 
   const sortItems = [
@@ -316,7 +317,8 @@
     <div class="flex flex-col justify-start sm:flex-row">
       <div
         class="flex flex-row items-center justify-center w-full pl-2 sm:w-auto
-          sm:justify-start sm:p-0">
+          sm:justify-start sm:p-0"
+      >
         <div class="hidden mr-2 sm:inline">Sort:</div>
         <ButtonRow
           items={sortItems}
@@ -324,7 +326,8 @@
           on:click={(e) => toggleSort(e.detail)}
           bind:selected={sortButtonSelect}
           let:item
-          let:selected>
+          let:selected
+        >
           <span class="flex flex-row">
             {item.label}
             <span class="ml-2 w-4 flex-none">
@@ -338,7 +341,8 @@
 
       <div
         class="flex flex-row items-center flex-grow pl-2 mt-4 space-x-2 sm:mt-0
-          sm:ml-4">
+          sm:ml-4"
+      >
         <input type="checkbox" bind:checked={closingOnly} id="closing_only" />
         <label class="flex-grow" for="closing_only">Closing Only</label>
       </div>
@@ -350,32 +354,39 @@
         groupBy={(item) => (item.isTag ? 'Tags' : 'Strategies')}
         isMulti={true}
         placeholder="Filter by Strategies"
-        bind:selectedValue={selectedStrategies} />
+        bind:selectedValue={selectedStrategies}
+      />
     </div>
   </div>
 
   <div class="bg-white shadow overflow-hidden sm:rounded-md">
     <ul>
-      {#each positions as position (position.id)}
+      {#each positionRows as position (position.id)}
         <li>
           <a
             href="positions/{position.id}"
             class="block hover:bg-gray-50 focus:outline-none focus:bg-gray-50
-              transition duration-150 ease-in-out {indicatorClass(position)}">
+              transition duration-150 ease-in-out {indicatorClass(
+              position
+            )}"
+          >
             <div class="px-4 py-2 sm:py-4 sm:px-6">
               <div
                 class="flex flex-col sm:flex-row items-start sm:items-center
-                  sm:items-baseline sm:justify-between">
+                  sm:items-baseline sm:justify-between"
+              >
                 <div
-                  class="text-sm leading-5 font-medium text-indigo-600 truncate">
+                  class="text-sm leading-5 font-medium text-indigo-600 truncate"
+                >
                   {position.symbol}
                   <span class="ml-2 text-gray-700">
                     ${quoteLabel($quotesStore.get(position.symbol)) || '...'}
                   </span>
                   <span
                     class="ml-auto text-right text-gray-700 sm:pl-2 sm:ml-2
-                      sm:border-l sm:border-gray-700 sm:text-left">
-                    {#if position.strategyInfo.short_name}
+                      sm:border-l sm:border-gray-700 sm:text-left"
+                  >
+                    {#if position.strategyInfo?.short_name}
                       <span class="hidden sm:inline">
                         {position.strategyInfo.name}
                       </span>
@@ -397,21 +408,30 @@
                     <span class="hidden sm:inline">Total</span>
                     <strong
                       class:text-green-900={position.info.totalPlPct > 1}
-                      class:text-red-900={position.info.totalPlPct < -1}>
-                      {formatMoney(position.info.totalRealized + position.info.unrealized)}
+                      class:text-red-900={position.info.totalPlPct < -1}
+                    >
+                      {formatMoney(
+                        position.info.totalRealized + position.info.unrealized
+                      )}
                       = {formatPct(position.info.totalPlPct)}
-                    </strong> from {formatCostBasis(position.info.totalBasis)}
+                    </strong>
+                    from {formatCostBasis(position.info.totalBasis)}
                   </div>
                 </div>
                 <div
                   class="mt-2 items-center text-sm leading-5 text-gray-500
-                    hidden sm:flex sm:mt-0">
+                    hidden sm:flex sm:mt-0"
+                >
                   <span class="inline">
                     Open <strong
                       class:text-green-900={position.info.openPlPct > 1}
-                      class:text-red-900={position.info.openPlPct < -1}>
-                      {formatMoney(position.info.unrealized)} = {formatPct(position.info.openPlPct)}
-                    </strong> from {formatCostBasis(position.info.openBasis)}
+                      class:text-red-900={position.info.openPlPct < -1}
+                    >
+                      {formatMoney(position.info.unrealized)} = {formatPct(
+                        position.info.openPlPct
+                      )}
+                    </strong>
+                    from {formatCostBasis(position.info.openBasis)}
                   </span>
                 </div>
               </div>

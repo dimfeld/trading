@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
-import * as bb from 'bluebird';
-import * as debug_factory from 'debug';
+import debug_factory from 'debug';
 import { DbData } from 'types';
+import { db } from 'trading-data';
 
 import {
   PositionSimulator,
@@ -34,8 +34,18 @@ export async function match_trades(
   let open_positions = db_data.positions;
   debug(trades);
 
+  let tradeIds = trades.map((t) => t.trade.id);
+  let alreadySeenTrades = await db.query<{ id: string }[]>(
+    `SELECT id FROM trades WHERE id = ANY($[ids])`,
+    { ids: tradeIds }
+  );
+  let alreadySeenIds = new Set(alreadySeenTrades.map((t) => t.id));
+
+  trades = trades.filter((t) => !alreadySeenIds.has(t.trade.id));
+
   // Match open positions to incoming trades
-  let matched: PositionChange[] = await bb.mapSeries(trades, async (t) => {
+  let matched: PositionChange[] = [];
+  for (let t of trades) {
     let symbol = underlyingEquivalents[t.underlying] || t.underlying;
     t.underlying = symbol;
 
@@ -54,7 +64,7 @@ export async function match_trades(
       db_data
     );
     if (!position) {
-      return;
+      continue;
     }
     let change = applyTradeToPosition(position, t.trade);
 
@@ -71,12 +81,14 @@ export async function match_trades(
 
     debug('Matched trade to position', t.trade, position);
 
-    return change;
-  });
+    if (change) {
+      matched.push(change);
+    }
+  }
 
   return {
     open_positions,
-    changes: _.compact(matched),
+    changes: matched,
   };
 }
 
@@ -86,6 +98,11 @@ export async function process_trades(
 ) {
   trades = _.sortBy(trades, (t) => new Date(t.trade.traded).getTime());
   let matched = await match_trades(trades, db_data);
+
+  if (matched.changes.length === 0) {
+    console.log('No trades to add');
+    return;
+  }
 
   let outputTrades = matched.changes.map((m) => {
     return {

@@ -1,15 +1,17 @@
 {
-    "compilerOptions": {
-        "outDir": "./dist",
-        "target": "es2017",
-        "sourceMap": true,
-        "alwaysStrict": true,
-        "module": "commonjs"
-    },
-    "include": [
-        "./src/**/*.ts"
-    ],
-    "exclude": [
-        "./src/**/*.spec.ts"
-    ]
+  "compilerOptions": {
+    "outDir": "./dist",
+    "target": "es2020",
+    "sourceMap": true,
+    "alwaysStrict": true,
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "importHelpers": true
+  },
+  "include": [
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "./src/**/*.spec.ts"
+  ]
 }

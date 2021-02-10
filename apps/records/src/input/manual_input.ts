@@ -1,10 +1,8 @@
 import * as inquirer from 'inquirer';
-import * as hyperidMod from 'hyperid';
-import * as moment from 'moment';
+import { uid } from 'uid';
+import moment from 'moment';
 import { DbTrade } from 'types';
 import { UnderlyingWithTrade } from '../ui';
-
-const hyperid = hyperidMod({ urlSafe: true });
 
 export async function get_trades() {
   let trades: UnderlyingWithTrade[] = [];
@@ -35,7 +33,7 @@ export async function get_trades() {
     let bought = size > 0;
 
     let t: DbTrade = {
-      id: hyperid(),
+      id: uid(),
       commissions: 0,
       gross: -size * price,
       traded: new Date(data.date).toISOString(),

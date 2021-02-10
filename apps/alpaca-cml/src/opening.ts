@@ -9,6 +9,7 @@ import {
   DbTrade,
   DbPosition,
   OrderStatus,
+  Order,
   Account,
   Bar,
 } from 'types';
@@ -248,13 +249,13 @@ async function run() {
 
   console.dir(account);
   let maxRiskPerTrade = account.portfolioValue * 0.02;
-  let maxTrades = Math.min(
+  let maxTrades = Math.max(Math.min(
     MAX_TRADES,
-    Math.floor(account.cash / maxRiskPerTrade)
-  );
+    Math.floor(account.buyingPower / maxRiskPerTrade)
+  ), 0);
   let riskPerTrade = Math.min(
     maxRiskPerTrade,
-    (account.cash / Math.min(results.length, maxTrades || 1)) * 0.95
+    (account.buyingPower / Math.min(results.length, maxTrades || 1)) * 0.95
   );
 
   console.log(`Max risk ${riskPerTrade.toFixed(2)} for ${maxTrades} trades`);
@@ -322,13 +323,16 @@ async function run() {
     }
   }
 
-  let doneOrders = await api.waitForOrders(BrokerChoice.alpaca, {
-    orderIds,
-    after: currDate,
-    progress: ({ message }) => {
-      console.log(message);
-    },
-  });
+  let doneOrders = new Map<string, Order>();
+  if(orderIds.size) {
+    doneOrders = await api.waitForOrders(BrokerChoice.alpaca, {
+      orderIds,
+      after: currDate,
+      progress: ({ message }) => {
+        console.log(message);
+      },
+    });
+  }
 
   let orderDb: DbTrade[] = [];
   let positionDb: DbPosition[] = [];

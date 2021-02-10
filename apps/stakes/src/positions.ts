@@ -1,67 +1,33 @@
+import {
+  QueryClient,
+  QueryKey,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+} from '@sveltestack/svelte-query';
+import {
+  mutationOptions,
+  optimisticUpdateCollectionMember,
+  optimisticUpdateSingleton,
+} from './mutations';
+import { getNotificationsContext } from 'svelte-notifications';
+import ky from './ssr-ky';
 import get from 'lodash/get';
-import shortid from 'shortid';
+import { uid } from 'uid/secure';
 import {
   OptionLeg,
   Trade,
   PositionSimulator,
-  Position,
   TradeLeg,
   optionInfoFromSymbol,
 } from 'options-analysis';
 import { DbTrade, DbPosition } from './api/entities';
+import { Strategy, PositionStructure } from './strategies';
+import { HTTPError } from 'ky-universal';
+import { arrayToObject } from './query';
 
-export enum OpeningLegType {
-  Call = 'call',
-  Put = 'put',
-  Stock = 'stock',
-}
-
-export interface OpeningLegByDelta {
-  size: number;
-  type: OpeningLegType;
-  dte: string;
-  delta: number;
-}
-
-export enum OpenAtTime {
-  EndOfDay = 'end_of_day',
-}
-
-export enum Operator {
-  Gt = '>',
-  Lt = '<',
-}
-
-export enum DataPoint {
-  StockPrice = 'stock_price',
-  Ma10 = 'ma10',
-  Ma21 = 'ma21',
-  Ma50 = 'ma50',
-  Ma200 = 'ma200',
-}
-
-export interface OpeningCondition {
-  l: DataPoint;
-  r: DataPoint | number;
-  op: Operator;
-}
-
-export interface PositionStructure {
-  legs?: OpeningLegByDelta[];
-  conditions?: {
-    closing: {
-      profit_target?: number;
-      stop_loss?: number;
-      after_days?: number;
-    };
-    open_at?: OpenAtTime;
-    opening?: OpeningCondition[];
-  };
-}
-
-export interface Strategy {
-  structure: PositionStructure;
-}
+export type Position = Omit<DbPosition, 'trades'> & { trades: DbTrade[] };
 
 export interface HasStructureAndStrategy {
   structure?: PositionStructure;
@@ -79,14 +45,11 @@ export function getStructureField(
 }
 
 export interface AppliedTrade {
-  position: DbPosition;
+  position: Position;
   trade: DbTrade;
 }
 
-export function applyTrade(
-  position: DbPosition,
-  legs: TradeLeg[]
-): AppliedTrade {
+export function applyTrade(position: Position, legs: TradeLeg[]): AppliedTrade {
   let simulator = new PositionSimulator(position.legs);
   simulator.addLegs(legs);
   let newLegs = simulator.getFlattenedList();
@@ -112,7 +75,7 @@ export function applyTrade(
   let newTrade: DbTrade = {
     position: position.id,
     commissions: 0,
-    id: shortid.generate(),
+    id: uid(),
     legs,
     gross,
     traded: new Date(),
@@ -130,4 +93,67 @@ export function applyTrade(
     },
     trade: newTrade,
   };
+}
+
+export function initPositionsQuery(initialData: Record<string, Position>) {
+  let client = useQueryClient();
+  client.setQueryData('positions', initialData);
+  client.setQueryDefaults('positions', {
+    select: arrayToObject,
+  });
+}
+
+export function positionsQuery() {
+  return useQuery<Record<string, Position>, HTTPError>('positions');
+}
+
+export function positionQuery(id: string) {
+  return useQuery<Position, HTTPError>(
+    positionQueryOptions(useQueryClient(), id)
+  );
+}
+
+export function positionQueryOptions(
+  client: QueryClient,
+  id: string
+): UseQueryOptions<Position, HTTPError> {
+  return {
+    queryKey: ['positions', id],
+    initialData: () => {
+      return client.getQueryData<Record<string, Position>>('positions')?.[id];
+    },
+  };
+}
+
+export function updatePositionMutation() {
+  let notifications = getNotificationsContext();
+  return useMutation(
+    (position: Position) =>
+      ky
+        .put(`api/positions/${position.id}`, { json: position })
+        .json<Position>(),
+    mutationOptions({
+      notifications,
+      optimisticUpdates: (queryClient: QueryClient, position: Position) =>
+        Promise.all([
+          optimisticUpdateCollectionMember(queryClient, 'positions', position),
+          optimisticUpdateSingleton(
+            queryClient,
+            ['positions', position.id],
+            position
+          ),
+        ]),
+    })
+  );
+}
+
+export function createPositionMutation() {
+  let notifications = getNotificationsContext();
+  return useMutation(
+    (position: Omit<Position, 'id'>) =>
+      ky.post(`api/positions`, { json: position }).json<Position>(),
+    mutationOptions({
+      notifications,
+    })
+  );
 }

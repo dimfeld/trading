@@ -1,62 +1,65 @@
-import _, { Dictionary } from 'lodash';
-
-import { entities, getPositionsAndTrades } from './entities';
-import EntityInterface from '../state_manager/sync/lwwServer';
+import {
+  entities,
+  read,
+  create,
+  update,
+  del,
+  getPositionsAndTrades,
+  DbPosition,
+  updatePositionAndTrades,
+} from './entities';
 import { FastifyInstance } from 'fastify';
 
-export default function(server: FastifyInstance, opts: any, next: () => void) {
-  let entityInterface = new EntityInterface<any>({
-    entities,
-    readFilter: () => null,
-    writeFilter: () => null,
-    newItemValues: () => ({}),
-  });
-
+function generateSimpleCrud(
+  server: FastifyInstance,
+  entity: keyof typeof entities
+) {
   server.route({
-    url: '/entities',
+    url: `/${entity}`,
     method: 'GET',
     handler: (req, res) => {
-      let requests: Dictionary<string[]> = {};
-      _.each(req.query, (val, key) => {
-        if (entities[key]) {
-          requests[key] = val.split(';');
-        }
-      });
-
-      return entityInterface.read(null, requests);
+      return read({ entity });
     },
   });
 
   server.route({
-    url: '/entities',
+    url: `/${entity}`,
     method: 'POST',
     handler: (req, res) => {
-      return entityInterface.update(null, req.body);
+      return create(entity, req.body);
     },
   });
 
   server.route({
-    url: '/base_data',
-    method: 'GET',
-    handler: async (req, res) => {
-      let strategies = entityInterface.readAll(null, 'strategies');
-      let tags = entityInterface.readAll(null, 'tags');
-      let positions = getPositionsAndTrades('close_date IS NULL');
-
-      return {
-        strategies: await strategies,
-        tags: await tags,
-        positions: await positions,
-      };
+    url: `/${entity}/:id`,
+    method: 'PUT',
+    handler: (req, res) => {
+      return update(entity, req.params.id, req.body);
     },
   });
+
+  server.route({
+    url: `/${entity}/:id`,
+    method: 'DELETE',
+    handler: (req, res) => {
+      return del(entity, req.params.id);
+    },
+  });
+}
+
+export default function (server: FastifyInstance, opts: any, next: () => void) {
+  generateSimpleCrud(server, 'strategies');
+  generateSimpleCrud(server, 'tags');
+  generateSimpleCrud(server, 'potential_positions');
 
   server.route({
     url: '/positions',
     method: 'GET',
     handler: async (req, res) => {
-      let positions = await getPositionsAndTrades('true');
-      return { positions };
+      let positions = await getPositionsAndTrades(
+        req.query.all ? 'true' : 'close_date IS NULL'
+      );
+      return positions;
     },
   });
 
@@ -69,6 +72,14 @@ export default function(server: FastifyInstance, opts: any, next: () => void) {
       });
 
       return result[0];
+    },
+  });
+
+  server.route({
+    url: '/positions/:id',
+    method: 'PUT',
+    handler: async (req, res) => {
+      return updatePositionAndTrades(req.params.id, req.body);
     },
   });
 
