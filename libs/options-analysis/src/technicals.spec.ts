@@ -3,16 +3,19 @@ import sorter from 'sorters';
 import * as date from 'date-fns';
 import { test, suite } from 'uvu';
 import * as assert from 'uvu/assert';
-import { technicalCalculator } from './technicals';
+import {
+  DataPoint,
+  technicalCalculator,
+  TechnicalCondition,
+} from './technicals';
 
-// This is imported from CMLViz on 2020-09-10
 const correctNumbers = {
-  rsi: 49.97,
-  rsi14: 49.14,
+  rsi: 45.98,
+  rsi14: 42.98,
   UnadjustedClose: 205.31,
 };
 
-const barData: any[] = require('./T.json');
+const barData: any[] = require('./test-bars.json');
 const bars = barData
   .map((c) => {
     return {
@@ -22,10 +25,10 @@ const bars = barData
   })
   .sort(sorter({ value: (d) => d.time.valueOf(), descending: true }));
 
-const calc = technicalCalculator('T', bars);
-const latestQuote = 28.81;
+const calc = technicalCalculator('MSFT', bars);
+const latestQuote = 205.31;
 const latestCalc = calc.latest(latestQuote);
-console.dir(latestCalc);
+//console.dir(latestCalc);
 
 function closeTo(actual, expected) {
   if (Math.abs(actual - expected) > 0.01) {
@@ -80,19 +83,19 @@ allDataSameTest.run();
 let realDataTest = suite('real data');
 
 realDataTest('ema10', () => {
-  closeTo(latestCalc.ema10, 28.79);
+  closeTo(latestCalc.ema10, 214.27);
 });
 
 realDataTest('ema21', () => {
-  closeTo(latestCalc.ema21, 28.821);
+  closeTo(latestCalc.ema21, 214.71);
 });
 
 realDataTest('ma50', () => {
-  closeTo(latestCalc.ma50, 28.93);
+  closeTo(latestCalc.ma50, 211.34);
 });
 
 realDataTest('ma200', () => {
-  closeTo(latestCalc.ma200, 28.442);
+  closeTo(latestCalc.ma200, 180.22);
 });
 
 realDataTest('rsi14', () => {
@@ -109,15 +112,35 @@ let bollinger = suite('bollinger bands');
 
 // These expected values were taking from ThinkOrSwim charts on 2020-09-10
 bollinger('ma20', () => {
-  closeTo((latestCalc as any).ma20, 28.96);
+  closeTo((latestCalc as any).ma20, 215.94);
 });
 
 bollinger('lower 2SD', () => {
-  closeTo(latestCalc.bollinger.lower2SD, 28.24);
+  closeTo(latestCalc.bollinger.lower2SD, 199.82);
 });
 
 bollinger('upper 2SD', () => {
-  closeTo(latestCalc.bollinger.upper2SD, 29.68);
+  closeTo(latestCalc.bollinger.upper2SD, 232.06);
 });
 
 bollinger.run();
+
+let evaluate = suite('evaluate');
+
+evaluate('conditions', () => {
+  let conditions: TechnicalCondition[] = [
+    { l: DataPoint.Ma50, op: '>', r: 28 },
+    { l: DataPoint.Ma50, op: '<', r: DataPoint.Ma200 },
+    { l: DataPoint.Ma50, op: '>', r: DataPoint.Ma200 },
+    { l: DataPoint.StockPrice, op: '>=', r: DataPoint.Ema10 },
+  ];
+
+  let expectedMet = [true, false, true, false];
+  let expected = conditions.map((c, i) => ({ ...c, met: expectedMet[i] }));
+
+  let results = latestCalc.evaluate(conditions);
+
+  assert.equal(results, expected);
+});
+
+evaluate.run();

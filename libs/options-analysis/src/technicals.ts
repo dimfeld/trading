@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import { Bar } from 'types';
 import * as date from 'date-fns';
+import * as get from 'just-safe-get';
 
 const MA_LENGTH = 50;
 
@@ -39,6 +40,7 @@ export function ema(
 }
 
 export interface PreviousTechnicals {
+  stock_price: number;
   ma50: number[];
   ma200: number[];
   ema9: number[];
@@ -64,7 +66,9 @@ export interface LatestTechnicals {
   fullDayToday: boolean;
   previous: PreviousTechnicals;
   latest: number;
+  evaluate: (conditions: TechnicalCondition[]) => TechnicalConditionMatches[];
 
+  stock_price: number;
   ma50: number;
   ma200: number;
   ema9: number;
@@ -82,6 +86,34 @@ export interface LatestTechnicals {
     upper3SD: number;
     lower3SD: number;
   };
+}
+
+export enum DataPoint {
+  StockPrice = 'stock_price',
+  Ema10 = 'ema10',
+  Ema12 = 'ema12',
+  Ema21 = 'ema21',
+  Ema26 = 'ema26',
+  Ma50 = 'ma50',
+  Ma200 = 'ma200',
+  Rsi14 = 'rsi14',
+  Rsi20 = 'rsi20',
+  BollingerUpper1SD = 'bollinger.upper1SD',
+  BollingerLower1SD = 'bollinger.lower1SD',
+  BollingerUpper2SD = 'bollinger.upper2SD',
+  BollingerLower2SD = 'bollinger.lower2SD',
+  BollingerUpper3SD = 'bollinger.upper3SD',
+  BollingerLower3SD = 'bollinger.lower3SD',
+}
+
+export interface TechnicalCondition {
+  l: DataPoint | number;
+  r: DataPoint | number;
+  op: '<' | '>' | '<=' | '>=';
+}
+
+export interface TechnicalConditionMatches extends TechnicalCondition {
+  met: boolean;
 }
 
 export interface TechnicalCalculator {
@@ -195,6 +227,7 @@ export function technicalCalculator(
 
   let previous = {
     prices: pricesWithoutToday,
+    stock_price: pricesWithoutToday[0],
     ema5: ema5Yesterday,
     ema9: ema9Yesterday,
     ema10: ema10Yesterday,
@@ -237,6 +270,37 @@ export function technicalCalculator(
       fullDayToday,
       previous,
       latest,
+      stock_price: latest,
+      get(point: DataPoint) {
+        return get(this, point);
+      },
+      evaluate(conditions: TechnicalCondition[]) {
+        return conditions.map((c) => {
+          let l: number = typeof c.l === 'string' ? get(this, c.l) : c.l;
+          let r: number = typeof c.r === 'string' ? get(this, c.r) : c.r;
+
+          let met: boolean | undefined;
+          switch (c.op) {
+            case '>':
+              met = l > r;
+              break;
+            case '<':
+              met = l < r;
+              break;
+            case '>=':
+              met = l >= r;
+              break;
+            case '<=':
+              met = l <= r;
+              break;
+          }
+
+          return {
+            ...c,
+            met,
+          };
+        });
+      },
       ma20,
       ma50: (firstTotal49 + latest) / 50,
       ma200: (firstTotal199 + latest) / 200,
