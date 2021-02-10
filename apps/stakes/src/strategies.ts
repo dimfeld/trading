@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@sveltestack/svelte-query';
+import { TechnicalCondition } from 'options-analysis';
 import { mutationOptions, optimisticUpdateCollectionMember } from './mutations';
 import { getNotificationsContext } from 'svelte-notifications';
 import ky from './ssr-ky';
@@ -26,33 +27,6 @@ export enum OpenAtTime {
   EndOfDay = 'end_of_day',
 }
 
-export enum Operator {
-  Gt = '>',
-  Lt = '<',
-}
-
-export enum DataPoint {
-  StockPrice = 'stock_price',
-  Ma10 = 'ma10',
-  Ma21 = 'ma21',
-  Ma50 = 'ma50',
-  Ma200 = 'ma200',
-  Rsi14 = 'rsi14',
-  Rsi20 = 'rsi20',
-  BollingerUpper1SD = 'bollinger-upper-1sd',
-  BollingerLower1SD = 'bollinger-upper-1sd',
-  BollingerUpper2SD = 'bollinger-upper-2sd',
-  BollingerLower2SD = 'bollinger-upper-2sd',
-  BollingerUpper3SD = 'bollinger-upper-3sd',
-  BollingerLower3SD = 'bollinger-upper-3sd',
-}
-
-export interface OpeningCondition {
-  l: DataPoint;
-  r: DataPoint | number;
-  op: Operator;
-}
-
 export interface PositionStructure {
   legs?: OpeningLegByDelta[];
   conditions?: {
@@ -62,7 +36,7 @@ export interface PositionStructure {
       after_days?: number;
     };
     open_at?: OpenAtTime;
-    opening?: OpeningCondition[];
+    opening?: TechnicalCondition[];
   };
 }
 
