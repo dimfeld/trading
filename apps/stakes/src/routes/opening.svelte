@@ -31,7 +31,7 @@
     maItemLabels,
     conditionFields,
   } from '../technicals';
-  import type { OptionChain } from 'types';
+  import type { OptionChain, ContractInfo } from 'types';
   import { BarTimeframe } from 'types';
   import { strategiesQuery } from '../strategies';
   import {
@@ -114,17 +114,6 @@
     }
   }
 
-  function missingSymbolData(data) {
-    let neededSymbols = [];
-    for (let symbol of positionSymbols) {
-      if (!data[symbol]) {
-        neededSymbols.push(symbol);
-      }
-    }
-
-    return neededSymbols;
-  }
-
   let technicalsValues: TechnicalsMap = new Map();
   let technicalsUnsub = new Map<string, () => void>();
   function createTechnicalsStore(symbol: string) {
@@ -148,17 +137,20 @@
   }
 
   // Generate a direct lookup from symbol to contract info.
-  function updateByLegChain(symbolChain) {
-    let buildByLegChain = {};
-    each(['callExpDateMap', 'putExpDateMap'], (key) => {
-      each(symbolChain[key] || {}, (strikes) => {
+  function updateByLegChain(symbolChain: OptionChain) {
+    let buildByLegChain: Record<string, ContractInfo> = {};
+    for (let dateMap of [
+      symbolChain.callExpDateMap,
+      symbolChain.putExpDateMap,
+    ]) {
+      each(dateMap || {}, (strikes) => {
         each(strikes, (strike) => {
           each(strike, (contract) => {
             buildByLegChain[contract.symbol] = contract;
           });
         });
       });
-    });
+    }
 
     return buildByLegChain;
   }
