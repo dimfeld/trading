@@ -8,9 +8,8 @@ import { BrokerChoice } from 'types';
   let api = await createBrokers();
 
   let startDate = date.setHours(new Date(), 23);
-  startDate = date.subBusinessDays(startDate, 1);
-  let endDate = date.addBusinessDays(new Date(startDate), 1);
-  endDate = new Date();
+  startDate = date.subBusinessDays(startDate, 3);
+  let endDate = new Date();
 
   let data = await api.getOrders(BrokerChoice.tda, {
     startDate,
