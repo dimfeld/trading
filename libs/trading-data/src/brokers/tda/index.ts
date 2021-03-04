@@ -213,6 +213,31 @@ export class Api implements Broker {
         headers: {
           authorization: 'Bearer ' + this.access_token,
         },
+        retry: {
+          maxRetryAfter: 120000,
+          calculateDelay: ({ attemptCount, error }) => {
+            let baseDelay = 1000;
+            let jitterDelay = 100;
+            if (error.response?.statusCode === 429) {
+              // Rate limit errors have longer delays and retry more times
+              baseDelay = 5000;
+              jitterDelay = 2000;
+
+              if (attemptCount > 5) {
+                // Eventually just give up.
+                return 0;
+              }
+            } else if (attemptCount > 2) {
+              // Other errors only retry twice.
+              return 0;
+            }
+
+            return (
+              baseDelay * Math.pow(2, attemptCount - 1) +
+              Math.random() * jitterDelay
+            );
+          },
+        },
       }).json<T>();
 
       return result;
