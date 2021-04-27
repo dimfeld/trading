@@ -2,6 +2,9 @@
 import * as date from 'date-fns';
 import sorter from 'sorters';
 import * as chalk from 'chalk';
+import got from 'got';
+import dotenv = require('dotenv');
+import findUp = require('find-up');
 import {
   createBrokers,
   defaultAlpacaAuth,
@@ -21,6 +24,7 @@ import {
   OrderStatus,
 } from 'types';
 
+dotenv.config({ path: findUp.sync('.env') });
 const dryRun = Boolean(process.env.DRY_RUN);
 
 function format(x, digits = 2) {
@@ -101,7 +105,7 @@ async function run() {
     }
 
     let price = quotes[pos.broker.symbol]?.mark;
-    if(price === undefined) {
+    if (price === undefined) {
       console.error(`WARNING: Position ${pos.broker.symbol} has no quote`);
       continue;
     }
@@ -123,15 +127,14 @@ async function run() {
     let closeDateText = date.isToday(closeDate)
       ? 'today'
       : `in ${date.formatDistanceToNowStrict(closeDate)}`;
+
+    let pl = `$${format(unrealizedPl)} (${format(unrealizedPlPct, 1)}%)`;
     console.log(
-      `${pos.broker.symbol.padEnd(5, ' ')} -- P/L $${format(
-        unrealizedPl
-      )} (${format(unrealizedPlPct, 1)}%), Today $${format(todayPl)} (${format(
-        todayPlPct,
-        1
-      )}%), Value $${format(marketValue)} from $${format(
-        costBasis
-      )}. Close ${closeDateText}`
+      `${pos.broker.symbol.padEnd(5, ' ')} -- P/L ${pl}, Today $${format(
+        todayPl
+      )} (${format(todayPlPct, 1)}%), Value $${format(
+        marketValue
+      )} from $${format(costBasis)}. Close ${closeDateText}`
     );
 
     if (date.isToday(closeDate) || date.isPast(closeDate)) {
@@ -140,6 +143,42 @@ async function run() {
           pos.broker.size
         } shares of ${pos.broker.symbol}`
       );
+
+      if (process.env.DISCORD_WEBHOOK_AUTOTRADING) {
+        try {
+          await got
+            .post(process.env.DISCORD_WEBHOOK_AUTOTRADING, {
+              json: {
+                content: `Closing Trade: ${pos.broker.symbol} ${pos.broker.size} shares at $${price}`,
+                embeds: [
+                  {
+                    fields: [
+                      {
+                        name: 'P/L',
+                        value: pl,
+                        inline: true,
+                      },
+                      {
+                        name: 'Value',
+                        value: `$${format(marketValue)} from $${format(
+                          costBasis
+                        )}`,
+                        inline: true,
+                      },
+                      {
+                        name: 'ID',
+                        value: pos.db.id,
+                      },
+                    ],
+                  },
+                ],
+              },
+            })
+            .json();
+        } catch (e) {
+          console.dir(e.response?.body);
+        }
+      }
 
       if (!dryRun) {
         let order = await api.createOrder(BrokerChoice.alpaca, {
