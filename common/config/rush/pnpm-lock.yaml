@@ -63,6 +63,7 @@ dependencies:
   date-fns-tz: 1.1.1_date-fns@2.16.1
   debug: 4.3.1
   decoders: 1.23.3
+  dotenv: 8.2.0
   eslint: 7.9.0
   eventsourcemock: 2.0.0
   execa: 4.0.3
@@ -3638,6 +3639,12 @@ packages:
       node: '>=6'
     resolution:
       integrity: sha512-HygQCKUBSFl8wKQZBSemMywRWcEDNidvNbjGVyZu3nbZ8qq9ubiPoGLMdRDpfSrpkkm9BXYFkpKxxFX38o/76w==
+  /dotenv/8.2.0:
+    dev: false
+    engines:
+      node: '>=8'
+    resolution:
+      integrity: sha512-8sJ78ElpbDJBHNeBzUbUVLsqKdccaa/BXF1uPTw3GrvQTBgrQrtObr2mUrE38vzYd8cEv+m/JBfDLioYcfXoaw==
   /ecc-jsbn/0.1.2:
     dependencies:
       jsbn: 0.1.1
@@ -9855,6 +9862,7 @@ packages:
       '@types/node': 14.14.25
       chalk: 4.1.0
       date-fns: 2.16.1
+      dotenv: 8.2.0
       got: 11.6.2
       hyperid: 2.1.0
       just-unique: 3.2.0
@@ -9868,7 +9876,7 @@ packages:
     dev: false
     name: '@rush-temp/alpaca-cml'
     resolution:
-      integrity: sha512-VlLPzdQE/jOBohvInXF15yPDYy24csm6z+xU1A8o8Cby3/tXl4xDLJ5Qp3c/iUimB3LDujoFKISjoA00Jt9vlQ==
+      integrity: sha512-pAyj/FKqE4YwPNv35cdWMZ6TyEbwIGAY7BzoTcFAjAOe9cZy6fMISctDP1JIt0aU85iCxW23q5sNJ3Llr22+Kg==
       tarball: file:projects/alpaca-cml.tgz
     version: 0.0.0
   file:projects/options-analysis.tgz:
@@ -10205,6 +10213,7 @@ specifiers:
   date-fns-tz: ~1.1.1
   debug: ~4.3.1
   decoders: ^1.16.1
+  dotenv: ~8.2.0
   eslint: ~7.9.0
   eventsourcemock: ^2.0.0
   execa: ~4.0.3

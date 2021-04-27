@@ -13,7 +13,10 @@ import {
   Account,
   Bar,
 } from 'types';
+import dotenv = require('dotenv');
+import findUp = require('find-up');
 import * as date from 'date-fns';
+import got from 'got';
 import * as uniq from 'just-unique';
 import sorter from 'sorters';
 import * as hyperidMod from 'hyperid';
@@ -32,6 +35,8 @@ import {
   technicalCalculator,
 } from 'options-analysis';
 const hyperid = hyperidMod();
+
+dotenv.config({ path: findUp.sync('.env') });
 
 interface OpeningTrade {
   symbol: string;
@@ -249,18 +254,18 @@ async function run() {
 
   console.dir(account);
   let maxRiskPerTrade = account.portfolioValue * 0.02;
-  let maxTrades = Math.max(Math.min(
-    MAX_TRADES,
-    Math.floor(account.buyingPower / maxRiskPerTrade)
-  ), 0);
+  let maxTrades = Math.max(
+    Math.min(MAX_TRADES, Math.floor(account.buyingPower / maxRiskPerTrade)),
+    0
+  );
   let riskPerTrade = Math.min(
     maxRiskPerTrade,
     (account.buyingPower / Math.min(results.length, maxTrades || 1)) * 0.95
   );
 
   console.log(`Max risk ${riskPerTrade.toFixed(2)} for ${maxTrades} trades`);
-  if(!maxTrades) {
-    if(riskPerTrade > 50) {
+  if (!maxTrades) {
+    if (riskPerTrade > 50) {
       maxTrades = 1;
     } else {
       return;
@@ -290,13 +295,44 @@ async function run() {
     }
 
     let numShares = Math.floor(riskPerTrade / trade.price);
-    console.log(
-      `Opening Trade: ${
-        trade.symbol
-      } -- ${numShares} shares at ${trade.price.toFixed(2)} -- score ${
-        trade.efficiencyScore
-      } -- close after ${trade.closeAfter} days`
-    );
+    let tradeMsg = `Opening Trade: ${
+      trade.symbol
+    } -- ${numShares} shares at ${trade.price.toFixed(2)} -- score ${
+      trade.efficiencyScore
+    } -- close after ${trade.closeAfter} days`;
+    console.log(tradeMsg);
+
+    if (process.env.DISCORD_WEBHOOK_AUTOTRADING) {
+      try {
+        await got
+          .post(process.env.DISCORD_WEBHOOK_AUTOTRADING, {
+            json: {
+              content: `Opening Trade: ${
+                trade.symbol
+              } ${numShares} shares at $${trade.price.toFixed(2)}`,
+              embeds: [
+                {
+                  fields: [
+                    {
+                      name: 'Efficiency Score',
+                      value: trade.efficiencyScore.toString(),
+                      inline: true,
+                    },
+                    {
+                      name: 'Close After',
+                      value: `${trade.closeAfter} days`,
+                      inline: true,
+                    },
+                  ],
+                },
+              ],
+            },
+          })
+          .json();
+      } catch (e) {
+        console.dir(e.response?.body);
+      }
+    }
 
     if (!dryRun) {
       // todo replace market orders with a more intellligent price adjustmeng algorithm.
@@ -324,7 +360,7 @@ async function run() {
   }
 
   let doneOrders = new Map<string, Order>();
-  if(orderIds.size) {
+  if (orderIds.size) {
     doneOrders = await api.waitForOrders(BrokerChoice.alpaca, {
       orderIds,
       after: currDate,

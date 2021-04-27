@@ -23,7 +23,9 @@
     "types": "~1.0.0",
     "trading-data": "~1.0.1",
     "source-map-support": "~0.5.19",
-    "options-analysis": "~1.6.2"
+    "options-analysis": "~1.6.2",
+    "dotenv": "~8.2.0",
+    "find-up": "~5.0.0"
   },
   "devDependencies": {
     "@types/node": "^14",
